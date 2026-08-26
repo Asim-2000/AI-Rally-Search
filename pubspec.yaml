@@ -41,6 +41,7 @@ dependencies:
   http: ^1.2.0
   mysql_client: ^0.0.27
   video_player: ^2.14.0
+  record: ^6.2.0
 
 dev_dependencies:
   flutter_test:

@@ -23,12 +23,17 @@ import '../widgets/rally_result_card.dart';
 import '../widgets/uploader_leaderboard.dart';
 import '../widgets/video_action_card.dart';
 import '../widgets/video_result_card.dart';
+import '../widgets/voice_search_button.dart';
+import '../models/voice_state.dart';
+import '../services/speech/speech_to_text_service.dart';
+import '../services/speech/speech_service_factory.dart';
 
 class GeneralSearchScreen extends StatefulWidget {
   final SearchQuery? initialQuery;
   final ISearchRepository? repository;
   final NaturalLanguageSearchService? nlSearchService;
   final LlmQueryParser? llmParser;
+  final ISpeechToTextService? speechService;
 
   const GeneralSearchScreen({
     super.key,
@@ -36,6 +41,7 @@ class GeneralSearchScreen extends StatefulWidget {
     this.repository,
     this.nlSearchService,
     this.llmParser,
+    this.speechService,
   });
 
   @override
@@ -45,6 +51,7 @@ class GeneralSearchScreen extends StatefulWidget {
 class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   late final ISearchRepository _repository;
   late final NaturalLanguageSearchService _nlSearchService;
+  late final ISpeechToTextService _speechService;
 
   // Selected application / query language
   SupportedLanguage _selectedLanguage = SupportedLanguages.defaultLanguage;
@@ -197,6 +204,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           entityResolver: resolver,
           repository: _repository,
         );
+    _speechService = widget.speechService ?? SpeechServiceFactory.create();
 
     if (widget.initialQuery != null) {
       final q = widget.initialQuery!;
@@ -213,6 +221,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   @override
   void dispose() {
+    _speechService.dispose();
     _nlController.dispose();
     _searchController.dispose();
     _driverController.dispose();
@@ -797,6 +806,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                     Expanded(
                       child: TextField(
                         controller: _nlController,
+                        textDirection: _selectedLanguage.isRtl ? TextDirection.rtl : TextDirection.ltr,
+                        textAlign: _selectedLanguage.isRtl ? TextAlign.right : TextAlign.left,
                         decoration: InputDecoration(
                           hintText: 'Ask in plain English (e.g. "Show jumps featuring Moffett in 2025")...',
                           hintStyle: const TextStyle(fontSize: 13),
@@ -826,6 +837,16 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                         ),
                         onSubmitted: (_) => _executeNaturalLanguageSearch(),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    VoiceSearchButton(
+                      speechService: _speechService,
+                      selectedLanguage: _selectedLanguage,
+                      onTranscriptReceived: (transcript) {
+                        setState(() {
+                          _nlController.text = transcript;
+                        });
+                      },
                     ),
                     const SizedBox(width: 8),
                     FilledButton.icon(

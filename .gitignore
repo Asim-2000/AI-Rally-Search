@@ -49,3 +49,9 @@ app.*.map.json
 
 # Environment variables
 .env
+
+# Human Voice Evaluation Data (Never commit raw human voice recordings)
+test/eval/audio/human/*
+!test/eval/audio/human/.gitkeep
+test/eval/audio/human_private/*
+

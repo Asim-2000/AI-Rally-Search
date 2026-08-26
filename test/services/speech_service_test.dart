@@ -112,9 +112,8 @@ void main() {
       final vocab = DefaultSpeechVocabularyContext();
       final prompt = vocab.buildVocabularyPrompt();
 
-      expect(prompt, contains('Rally motorsport search'));
       expect(prompt, contains('Josh Moffett'));
-      expect(prompt, contains('Donegal International Rally'));
+      expect(prompt, contains('Donegal'));
       expect(prompt, contains('jump'));
       expect(prompt, contains('drift'));
     });

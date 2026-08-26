@@ -144,14 +144,19 @@ class VoiceEntityRecoveryService {
         final canonical = countryEntry.key;
         for (final langEntry in countryEntry.value.entries) {
           final lang = langEntry.key;
-          // Priority to current languageCode if provided, but scan all
+          // If languageCode is specified, constrain fuzzy search to that language to avoid cross-language corruption
+          if (languageCode != null && lang != languageCode && !languageCode.startsWith(lang)) {
+            continue;
+          }
           final langWeight = (languageCode != null && (lang == languageCode || languageCode.startsWith(lang))) ? 1.05 : 1.0;
 
           for (final alias in langEntry.value) {
             if (alias.length < 4) continue;
+            // Short tokens (< 5 chars) require strict length parity
+            if (rawToken.length < 5 && (rawToken.length - alias.length).abs() > 1) continue;
 
-            final jw = PhoneticMatchingHelper.jaroWinkler(rawToken, alias);
-            final lev = PhoneticMatchingHelper.normalizedLevenshtein(rawToken, alias);
+            final jw = PhoneticMatchingHelper.jaroWinkler(rawToken.toLowerCase(), alias.toLowerCase());
+            final lev = PhoneticMatchingHelper.normalizedLevenshtein(rawToken.toLowerCase(), alias.toLowerCase());
             double score = (0.60 * jw + 0.40 * lev) * langWeight;
 
             // Transliteration matching for Arabic/Urdu tokens
@@ -173,8 +178,9 @@ class VoiceEntityRecoveryService {
         }
       }
 
-      // High confidence fuzzy threshold (>= 0.85) required to prevent false transformations
-      if (bestScore >= 0.85 && bestCanonicalCountry != null) {
+      // High confidence threshold (>= 0.90 for unconstrained, >= 0.85 for language-constrained)
+      final threshold = languageCode != null ? 0.85 : 0.90;
+      if (bestScore >= threshold && bestCanonicalCountry != null) {
         final pattern = RegExp(
           r'(?<=^|\s|[^\w\p{L}])' + RegExp.escape(rawToken) + r'(?=$|\s|[^\w\p{L}])',
           caseSensitive: false,

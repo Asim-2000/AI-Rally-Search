@@ -110,6 +110,7 @@ class EntityResolution {
 
 /// Comprehensive outcome of the multi-stage entity resolution pipeline.
 class EntityResolutionResult {
+  final SearchQuery? parsedQuery;
   final SearchQuery? resolvedQuery;
   final bool requiresClarification;
   final String? clarificationQuestion;
@@ -118,6 +119,7 @@ class EntityResolutionResult {
   final String? error;
 
   const EntityResolutionResult({
+    this.parsedQuery,
     this.resolvedQuery,
     this.requiresClarification = false,
     this.clarificationQuestion,
@@ -126,6 +128,21 @@ class EntityResolutionResult {
     this.error,
   });
 
+  bool get isSuccess => resolvedQuery != null && !requiresClarification && error == null;
+
+  factory EntityResolutionResult.success({
+    required SearchQuery parsedQuery,
+    required SearchQuery resolvedQuery,
+    Map<String, EntityResolution> resolutions = const {},
+  }) {
+    return EntityResolutionResult(
+      parsedQuery: parsedQuery,
+      resolvedQuery: resolvedQuery,
+      requiresClarification: false,
+      resolutions: resolutions,
+    );
+  }
+
   factory EntityResolutionResult.clarification({
     required SearchQuery parsedQuery,
     required String clarificationQuestion,
@@ -133,6 +150,7 @@ class EntityResolutionResult {
     Map<String, EntityResolution> resolutions = const {},
   }) {
     return EntityResolutionResult(
+      parsedQuery: parsedQuery,
       resolvedQuery: parsedQuery,
       requiresClarification: true,
       clarificationQuestion: clarificationQuestion,
@@ -141,9 +159,11 @@ class EntityResolutionResult {
     );
   }
 
-  factory EntityResolutionResult.failure(String error) {
+  factory EntityResolutionResult.failure(String error, {SearchQuery? parsedQuery}) {
     return EntityResolutionResult(
+      parsedQuery: parsedQuery,
       error: error,
     );
   }
 }
+

@@ -152,6 +152,7 @@ class DatabaseEntityResolver implements EntityResolver {
       final cityRes = await _resolveCity(
         rawCity.trim(),
         country: query.country,
+        targetRallyName: resolvedRallyCandidate?.canonicalName ?? query.targetRallyName,
       );
 
       resolutions['city'] = cityRes;
@@ -173,6 +174,7 @@ class DatabaseEntityResolver implements EntityResolver {
     }
 
     return EntityResolutionResult(
+      parsedQuery: query,
       resolvedQuery: workingQuery,
       requiresClarification: false,
       resolutions: resolutions,
@@ -348,10 +350,35 @@ class DatabaseEntityResolver implements EntityResolver {
   Future<EntityResolution> _resolveCity(
     String phrase, {
     String? country,
+    String? targetRallyName,
   }) async {
-    final cacheKey = 'city:${phrase.toLowerCase()}:${country ?? ''}';
+    final cacheKey = 'city:${phrase.toLowerCase()}:${country ?? ''}:${targetRallyName ?? ''}';
     final cached = _getFromCache(cacheKey);
     if (cached != null) return cached;
+
+    // Check if phrase also matches a prominent rally name (e.g. "Donegal") when no rally name was specified
+    if (targetRallyName == null) {
+      final rallyMatches = await _repository.lookupRallies(phrase, limit: 5);
+      final cityMatches = await _repository.lookupCities(phrase, country: country, limit: 5);
+
+      if (rallyMatches.isNotEmpty && cityMatches.isNotEmpty) {
+        // Both city and rally interpretations exist
+        final combinedCandidates = <EntityCandidate>[
+          ...cityMatches,
+          ...rallyMatches,
+        ];
+        final res = EntityResolution(
+          type: EntityType.city,
+          rawPhrase: phrase,
+          confidence: 0.5,
+          strategy: 'location_vs_event_ambiguity',
+          isAmbiguous: true,
+          candidateOptions: combinedCandidates,
+        );
+        _putInCache(cacheKey, res);
+        return res;
+      }
+    }
 
     final candidates = await _repository.lookupCities(
       phrase,

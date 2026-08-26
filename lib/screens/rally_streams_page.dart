@@ -759,9 +759,13 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
             // Embedded Playable Video Player
             if (stream.onDemandUrl != null && stream.onDemandUrl!.isNotEmpty) ...[
               RallyVideoPlayer(
-                key: ValueKey('player_${stream.id}_${stream.onDemandUrl}'),
+                key: ValueKey('player_${stream.id}_${stream.onDemandUrl}_${stream.clipStartTime}_${stream.clipDuration}'),
                 videoUrl: stream.onDemandUrl!,
                 videoTitle: 'Stream #${stream.id} • Video #${stream.videoId ?? 'N/A'}',
+                initialStartTime: stream.clipStartTime,
+                initialEndTime: (stream.clipDuration != null && stream.clipDuration! > 0)
+                    ? ((stream.clipStartTime ?? 0.0) + stream.clipDuration!)
+                    : null,
                 autoPlay: false,
               ),
               const SizedBox(height: 12),
@@ -788,17 +792,22 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
               const SizedBox(height: 12),
             ],
 
-            // Metadata Info: Duration, Start Time, Created At, Counters
+            // Metadata Info: Duration, Clip Window, Start Time, Created At, Counters
             Wrap(
               spacing: 16,
               runSpacing: 8,
               children: [
                 _buildMetaInfo(
                   icon: Icons.timer_outlined,
-                  label: 'Duration',
+                  label: 'Clip Duration',
                   value: stream.formattedDuration,
                 ),
-                if (stream.clipStartTime != null)
+                _buildMetaInfo(
+                  icon: Icons.timelapse_rounded,
+                  label: 'Clip Window',
+                  value: stream.formattedClipRange,
+                ),
+                if (stream.clipStartTime != null && stream.clipStartTime! > 0)
                   _buildMetaInfo(
                     icon: Icons.play_circle_outline_rounded,
                     label: 'Start Offset',
@@ -1163,6 +1172,10 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                             RallyVideoPlayer(
                               videoUrl: stream.onDemandUrl!,
                               videoTitle: 'Stream #${stream.id}',
+                              initialStartTime: stream.clipStartTime,
+                              initialEndTime: (stream.clipDuration != null && stream.clipDuration! > 0)
+                                  ? ((stream.clipStartTime ?? 0.0) + stream.clipDuration!)
+                                  : null,
                               autoPlay: true,
                             ),
                             const SizedBox(height: 16),
@@ -1171,9 +1184,10 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                           _buildDetailItem('Video ID', stream.videoId?.toString() ?? 'N/A'),
                           _buildDetailItem('Video Type', stream.videoType ?? 'N/A'),
                           _buildDetailItem('Clip Status', stream.clipStatus ?? 'N/A'),
-                          _buildDetailItem('Clip Duration', '${stream.clipDuration ?? 0} seconds'),
+                          _buildDetailItem('Clip Window', stream.formattedClipRange),
+                          _buildDetailItem('Clip Duration', '${stream.clipDuration ?? 0} seconds (${stream.formattedDuration})'),
                           _buildDetailItem('Clip Start Time', '${stream.clipStartTime ?? 0} seconds'),
-                          _buildDetailItem('Created At', stream.createdAt?.toString() ?? 'N/A'),
+                          _buildDetailItem('Created At', stream.formattedDate),
                           _buildDetailItem('Updated At', stream.updatedAt?.toString() ?? 'N/A'),
                           _buildDetailItem('Download Counter', '${stream.downloadCounter}'),
                           _buildDetailItem('Share Counter', '${stream.shareCounter}'),

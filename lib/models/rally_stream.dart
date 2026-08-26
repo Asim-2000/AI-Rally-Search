@@ -70,6 +70,26 @@ class RallyStream {
     return '${minutes}m ${remainingSecs}s';
   }
 
+  String get formattedClipRange {
+    final start = clipStartTime ?? 0.0;
+    if (clipDuration != null && clipDuration! > 0) {
+      final end = start + clipDuration!;
+      return '${_formatTimeSeconds(start)} → ${_formatTimeSeconds(end)}';
+    }
+    return '${_formatTimeSeconds(start)} → End';
+  }
+
+  static String _formatTimeSeconds(double totalSeconds) {
+    final totalSecsInt = totalSeconds.floor();
+    final hours = (totalSecsInt / 3600).floor();
+    final minutes = ((totalSecsInt % 3600) / 60).floor().toString().padLeft(2, '0');
+    final seconds = (totalSecsInt % 60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '$hours:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
   String get formattedDate {
     if (createdAt == null) return 'Unknown date';
     final y = createdAt!.year.toString().padLeft(4, '0');

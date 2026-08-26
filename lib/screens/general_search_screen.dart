@@ -3,6 +3,10 @@ import '../models/search_intent.dart';
 import '../models/search_query.dart';
 import '../models/search_results.dart';
 import '../models/video_action.dart';
+import '../services/llm/llm_provider_config.dart';
+import '../services/llm/llm_query_parser.dart';
+import '../services/llm/llm_query_parser_factory.dart';
+import '../services/llm/natural_language_search_service.dart';
 import '../services/search_repository.dart';
 import '../widgets/action_player_modal.dart';
 import '../widgets/driver_participation_card.dart';
@@ -16,11 +20,15 @@ import '../widgets/video_result_card.dart';
 class GeneralSearchScreen extends StatefulWidget {
   final SearchQuery? initialQuery;
   final ISearchRepository? repository;
+  final NaturalLanguageSearchService? nlSearchService;
+  final LlmQueryParser? llmParser;
 
   const GeneralSearchScreen({
     super.key,
     this.initialQuery,
     this.repository,
+    this.nlSearchService,
+    this.llmParser,
   });
 
   @override
@@ -29,11 +37,19 @@ class GeneralSearchScreen extends StatefulWidget {
 
 class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   late final ISearchRepository _repository;
+  late final NaturalLanguageSearchService _nlSearchService;
 
   // Search input controllers
+  final TextEditingController _nlController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _driverController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
+
+  // Natural language state
+  String? _interpretedSummary;
+  String? _clarificationQuestion;
+  bool _isNlMode = false;
+  String? _lastExecutedNlQuery;
 
   SearchIntent _selectedIntent = SearchIntent.searchRallies;
   String _selectedCountry = 'ALL';
@@ -159,6 +175,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   void initState() {
     super.initState();
     _repository = widget.repository ?? SearchRepository();
+    final parser = widget.llmParser ?? LlmQueryParserFactory.create();
+    _nlSearchService = widget.nlSearchService ??
+        NaturalLanguageSearchService(
+          parser: parser,
+          repository: _repository,
+        );
+
     if (widget.initialQuery != null) {
       final q = widget.initialQuery!;
       _selectedIntent = q.intent;
@@ -174,10 +197,90 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   @override
   void dispose() {
+    _nlController.dispose();
     _searchController.dispose();
     _driverController.dispose();
     _cityController.dispose();
     super.dispose();
+  }
+
+  Future<void> _executeNaturalLanguageSearch() async {
+    final queryText = _nlController.text.trim();
+    if (queryText.isEmpty) return;
+
+    // Prevent duplicate simultaneous requests
+    if (_isLoading && _lastExecutedNlQuery == queryText) return;
+    _lastExecutedNlQuery = queryText;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _clarificationQuestion = null;
+      _currentPage = 1;
+    });
+
+    try {
+      final result = await _nlSearchService.search(queryText);
+
+      if (mounted) {
+        if (result.requiresClarification) {
+          setState(() {
+            _isLoading = false;
+            _clarificationQuestion = result.clarificationQuestion;
+            _interpretedSummary = null;
+          });
+          return;
+        }
+
+        if (!result.isSuccess || result.query == null) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = result.error ?? 'Query parsing failed';
+            _interpretedSummary = null;
+          });
+          return;
+        }
+
+        // Apply parsed query to filter controls so UI reflects what was understood
+        final q = result.query!;
+        _selectedIntent = q.intent;
+        _searchController.text = q.targetRallyName ?? '';
+        _driverController.text = q.driverName ?? '';
+        _cityController.text = q.city ?? '';
+
+        String resolvedCountry = 'ALL';
+        if (q.country != null) {
+          final match = _countryOptions.firstWhere(
+            (c) => c['value']!.toLowerCase() == q.country!.toLowerCase() ||
+                   c['label']!.toLowerCase().contains(q.country!.toLowerCase()),
+            orElse: () => {'value': 'ALL'},
+          );
+          resolvedCountry = match['value']!;
+        }
+        _selectedCountry = resolvedCountry;
+
+        _selectedActionType = q.actionType != null
+            ? (q.actionType![0].toUpperCase() + q.actionType!.substring(1))
+            : 'ALL';
+        _selectedYear = q.year;
+
+        setState(() {
+          _searchResponse = result.searchResponse;
+          _totalCount = result.totalCount;
+          _interpretedSummary = result.interpretedSummary;
+          _clarificationQuestion = null;
+          _errorMessage = null;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Natural language search failed: $e';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   SearchQuery _buildCurrentQuery({int page = 1}) {
@@ -235,12 +338,16 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   void _clearFilters() {
     setState(() {
+      _nlController.clear();
       _searchController.clear();
       _driverController.clear();
       _cityController.clear();
       _selectedCountry = 'ALL';
       _selectedActionType = 'ALL';
       _selectedYear = null;
+      _interpretedSummary = null;
+      _clarificationQuestion = null;
+      _lastExecutedNlQuery = null;
     });
     _executeSearch(resetPage: true);
   }
@@ -303,6 +410,56 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Natural Language AI Search Bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nlController,
+                        decoration: InputDecoration(
+                          hintText: 'Ask in plain English (e.g. "Show jumps featuring Moffett in 2025")...',
+                          hintStyle: const TextStyle(fontSize: 13),
+                          prefixIcon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF1E88E5), size: 20),
+                          suffixIcon: _nlController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
+                                  onPressed: () {
+                                    _nlController.clear();
+                                    setState(() {});
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 1.5),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: isDark ? Colors.blue.withValues(alpha: 0.4) : Colors.blue.withValues(alpha: 0.3),
+                            ),
+                          ),
+                        ),
+                        onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      onPressed: _executeNaturalLanguageSearch,
+                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                      label: const Text('AI Search'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
                 // Search Intent Selector (Dropdown)
                 DropdownButtonFormField<SearchIntent>(
                   value: _selectedIntent,
@@ -566,6 +723,78 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ],
             ),
           ),
+
+          // Clarification Question Banner
+          if (_clarificationQuestion != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: Colors.amber.withValues(alpha: 0.15),
+              child: Row(
+                children: [
+                  const Icon(Icons.help_outline_rounded, color: Colors.amber, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Clarification Needed',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _clarificationQuestion!,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: () => setState(() => _clarificationQuestion = null),
+                  ),
+                ],
+              ),
+            ),
+
+          // Interpreted Query Banner
+          if (_interpretedSummary != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_awesome_rounded, size: 16, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _interpretedSummary!,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() => _interpretedSummary = null),
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(Icons.close_rounded, size: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Count bar
           Container(

@@ -224,6 +224,59 @@ void main() {
       expect(find.text('Search'), findsOneWidget);
       expect(find.text('Rally Ireland 2026'), findsOneWidget);
     });
+
+    testWidgets('Submitting Natural Language query parses and updates interpreted banner', (tester) async {
+      final fakeRepo = FakeSearchRepository();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GeneralSearchScreen(
+            repository: fakeRepo,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Enter text into AI prompt field
+      final aiField = find.byWidgetPredicate(
+        (widget) => widget is TextField && widget.decoration?.hintText?.contains('Ask in plain English') == true,
+      );
+      expect(aiField, findsOneWidget);
+
+      await tester.enterText(aiField, 'Show rallies in Ireland in 2026');
+      await tester.tap(find.text('AI Search'));
+      await tester.pumpAndSettle();
+
+      // Interpreted summary banner should be displayed
+      expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
+      expect(find.text('Rally Ireland 2026'), findsOneWidget);
+    });
+
+    testWidgets('Submitting "show me rallies in poland" updates country to Poland', (tester) async {
+      final fakeRepo = FakeSearchRepository();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GeneralSearchScreen(
+            repository: fakeRepo,
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final aiField = find.byWidgetPredicate(
+        (widget) => widget is TextField && widget.decoration?.hintText?.contains('Ask in plain English') == true,
+      );
+
+      await tester.enterText(aiField, 'show me rallies in poland');
+      await tester.tap(find.text('AI Search'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Poland (PL)'), findsOneWidget);
+    });
   });
 }
+
 

@@ -97,7 +97,10 @@ class VideoActionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 2,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -114,7 +117,6 @@ class VideoActionCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Text(
                         action.formattedTimeRange,
                         style: TextStyle(
@@ -192,7 +194,7 @@ class VideoActionCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: 90,
                           height: 60,
-                          errorBuilder: (_, __, ___) => _buildFallbackThumbnail(actionColor),
+                          errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(actionColor),
                         )
                       else
                         _buildFallbackThumbnail(actionColor),
@@ -243,46 +245,48 @@ class VideoActionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: actionColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: actionColor.withValues(alpha: 0.4)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _getActionIcon(action.actionType),
-                                size: 12,
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: actionColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: actionColor.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getActionIcon(action.actionType),
+                              size: 12,
+                              color: actionColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              action.title,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
                                 color: actionColor,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                action.title,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: actionColor,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          action.formattedTimeRange,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontFamily: 'monospace',
-                            color: theme.hintColor,
-                          ),
+                      ),
+                      Text(
+                        action.formattedTimeRange,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontFamily: 'monospace',
+                          color: theme.hintColor,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                     const SizedBox(height: 4),
                     Text(
                       action.locationOrStageDescription,

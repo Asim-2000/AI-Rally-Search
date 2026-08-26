@@ -50,41 +50,45 @@ class ActionPlayerModal extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
-                          const SizedBox(width: 4),
-                          Text(
-                            action.title,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.amber,
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
+                            const SizedBox(width: 4),
+                            Text(
+                              action.title,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      action.formattedDuration,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: theme.hintColor,
-                        fontFamily: 'monospace',
+                      Text(
+                        action.formattedDuration,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: theme.hintColor,
+                          fontFamily: 'monospace',
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
@@ -130,10 +134,13 @@ class ActionPlayerModal extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Time Range in Source Video:',
-                        style: TextStyle(fontSize: 12, color: theme.hintColor),
+                      Flexible(
+                        child: Text(
+                          'Time Range in Source Video:',
+                          style: TextStyle(fontSize: 12, color: theme.hintColor),
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         action.formattedTimeRange,
                         style: const TextStyle(
@@ -148,16 +155,23 @@ class ActionPlayerModal extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Source Video / Stream:',
-                        style: TextStyle(fontSize: 12, color: theme.hintColor),
+                      Flexible(
+                        child: Text(
+                          'Source Video / Stream:',
+                          style: TextStyle(fontSize: 12, color: theme.hintColor),
+                        ),
                       ),
-                      Text(
-                        'Video #${action.videoId}${action.streamId != null ? ' (Stream #${action.streamId})' : ''}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'monospace',
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Video #${action.videoId}${action.streamId != null ? ' (Stream #${action.streamId})' : ''}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.end,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -167,10 +181,13 @@ class ActionPlayerModal extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Event / Stage:',
-                          style: TextStyle(fontSize: 12, color: theme.hintColor),
+                        Flexible(
+                          child: Text(
+                            'Event / Stage:',
+                            style: TextStyle(fontSize: 12, color: theme.hintColor),
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             action.locationOrStageDescription,

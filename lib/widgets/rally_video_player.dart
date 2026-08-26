@@ -245,8 +245,12 @@ class RallyVideoPlayerState extends State<RallyVideoPlayer> {
 
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = duration.inHours;
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
+    if (hours > 0) {
+      return '$hours:$minutes:$seconds';
+    }
     return '$minutes:$seconds';
   }
 
@@ -671,13 +675,16 @@ class RallyVideoPlayerState extends State<RallyVideoPlayer> {
                             ),
                           ),
                           if (_activeAction != null)
-                            Text(
-                              'Action: ${_activeAction!.formattedTimeRange}',
-                              style: const TextStyle(
-                                color: Colors.amber,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'monospace',
+                            Flexible(
+                              child: Text(
+                                'Action: ${_activeAction!.formattedTimeRange}',
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           Text(

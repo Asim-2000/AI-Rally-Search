@@ -85,5 +85,53 @@ void main() {
       expect(action.title, 'Crash');
       expect(action.duration, 7.5);
     });
+
+    test('prioritizes clip_start_time and clip_duration to play whole video clip from stream', () {
+      final map = {
+        'id': 65742,
+        'video_id': 181564,
+        'stream_id': 85989,
+        'action_type_id': 5187,
+        'action_name': 'drift_segments',
+        'clip_start_time': 7496.678,
+        'clip_duration': 7.17,
+        'start_action': '00:00:00.000',
+        'end_action': '00:00:02.800',
+        'on_demand_url': 'https://customer-4k8nmkwmjm37ry6h.cloudflarestream.com/535a6be924a6f968e9da445af390feab/manifest/video.m3u8',
+        'stage_name': 'St. Peter 2',
+        'stage_number': '3',
+        'event_name': 'OBM Land der 1000 Hügel Rallye 2026',
+        'event_country': 'at',
+      };
+
+      final action = VideoAction.fromMap(map);
+
+      expect(action.startTime, closeTo(7496.678, 0.001));
+      expect(action.duration, closeTo(7.17, 0.001));
+      expect(action.endTime, closeTo(7503.848, 0.001));
+      expect(action.formattedDuration, '7.2s');
+      expect(action.formattedTimeRange, '2:04:56 → 2:05:03');
+    });
+
+    test('supports default clip_start_time and default clip_duration parameters', () {
+      final map = {
+        'id': 10,
+        'video_id': 500,
+        'action_name': 'jump_segments',
+        'start_action': '00:00:01.000',
+        'end_action': '00:00:03.500',
+      };
+
+      final action = VideoAction.fromMap(
+        map,
+        defaultClipStartTime: 248.0,
+        defaultClipDuration: 8.7,
+      );
+
+      expect(action.startTime, 248.0);
+      expect(action.duration, 8.7);
+      expect(action.endTime, 256.7);
+      expect(action.formattedTimeRange, '04:08 → 04:16');
+    });
   });
 }

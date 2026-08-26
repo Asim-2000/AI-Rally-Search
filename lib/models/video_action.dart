@@ -35,7 +35,13 @@ class VideoAction {
     this.points,
   });
 
-  factory VideoAction.fromMap(Map<String, dynamic> map, {String? defaultVideoUrl, int? defaultStreamId}) {
+  factory VideoAction.fromMap(
+    Map<String, dynamic> map, {
+    String? defaultVideoUrl,
+    int? defaultStreamId,
+    double? defaultClipStartTime,
+    double? defaultClipDuration,
+  }) {
     final rawId = _parseInt(map['id']) ?? _parseInt(map['action_instance_id']) ?? 0;
     final rawVideoId = _parseInt(map['video_id']) ?? _parseInt(map['source_video_id']) ?? 0;
     final rawStreamId = _parseInt(map['stream_id']) ?? defaultStreamId;
@@ -47,13 +53,33 @@ class VideoAction {
     final normalizedType = _normalizeActionType(rawActionName);
     final actionTitle = map['title']?.toString() ?? _formatActionTitle(normalizedType);
 
-    final start = _parseTimestampToSeconds(map['start_action'] ?? map['start_time'] ?? map['clip_start_time']);
-    final end = _parseTimestampToSeconds(map['end_action'] ?? map['end_time']);
-    
-    final explicitDuration = _parseDouble(map['duration']) ?? _parseDouble(map['clip_duration']);
-    final computedDuration = (end > start) 
-        ? (end - start) 
-        : (explicitDuration ?? 0.0);
+    final clipStart = _parseDouble(map['clip_start_time']) ?? 
+        (map['clip_start_time'] != null ? _parseTimestampToSeconds(map['clip_start_time']) : null) ?? 
+        defaultClipStartTime;
+    final clipDur = _parseDouble(map['clip_duration']) ?? 
+        _parseDouble(map['duration']) ?? 
+        defaultClipDuration;
+
+    final startAct = _parseTimestampToSeconds(map['start_action'] ?? map['start_time']);
+    final endAct = _parseTimestampToSeconds(map['end_action'] ?? map['end_time']);
+
+    final double start;
+    final double duration;
+    final double end;
+
+    if (clipStart != null) {
+      start = clipStart;
+      duration = (clipDur != null && clipDur > 0)
+          ? clipDur
+          : ((endAct > startAct && endAct > 0) ? (endAct - startAct) : 0.0);
+      end = start + duration;
+    } else {
+      start = startAct;
+      duration = (endAct > startAct)
+          ? (endAct - startAct)
+          : (clipDur ?? 0.0);
+      end = endAct > start ? endAct : (start + duration);
+    }
 
     final thumb = map['thumbnail_url']?.toString() ?? 
         map['video_thumbnail']?.toString() ?? 
@@ -71,8 +97,8 @@ class VideoAction {
       actionType: normalizedType,
       title: actionTitle,
       startTime: start,
-      endTime: end > start ? end : (start + (explicitDuration ?? 0.0)),
-      duration: computedDuration,
+      endTime: end,
+      duration: duration,
       thumbnailUrl: (thumb != null && thumb.isNotEmpty && thumb != 'none') ? thumb : null,
       videoUrl: (vUrl != null && vUrl.isNotEmpty) ? vUrl : null,
       stageName: map['stage_name']?.toString(),
@@ -169,8 +195,12 @@ class VideoAction {
 
   String _formatTime(double totalSeconds) {
     final totalSecsInt = totalSeconds.floor();
-    final minutes = (totalSecsInt / 60).floor().toString().padLeft(2, '0');
+    final hours = (totalSecsInt / 3600).floor();
+    final minutes = ((totalSecsInt % 3600) / 60).floor().toString().padLeft(2, '0');
     final seconds = (totalSecsInt % 60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '$hours:$minutes:$seconds';
+    }
     return '$minutes:$seconds';
   }
 

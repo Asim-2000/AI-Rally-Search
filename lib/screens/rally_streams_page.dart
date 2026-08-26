@@ -7,6 +7,7 @@ import '../services/video_action_repository.dart';
 import '../widgets/rally_video_player.dart';
 import '../widgets/video_action_card.dart';
 import '../widgets/action_player_modal.dart';
+import 'video_action_search_screen.dart';
 
 class RallyStreamsPage extends StatefulWidget {
   const RallyStreamsPage({super.key});
@@ -41,7 +42,6 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
     'sendObs',
     'startFirstVideo',
     'nonLive',
-    'instantReplay',
   ];
 
   final List<String> _clipStatuses = [
@@ -182,26 +182,46 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Rally Streams',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  _totalCount > 0
-                      ? '$_totalCount playable streams in database'
-                      : 'Database Video Player Registry',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Rally Streams',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  Text(
+                    _totalCount > 0
+                        ? '$_totalCount playable streams in database'
+                        : 'Database Video Player Registry',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
+          FilledButton.tonalIcon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const VideoActionSearchScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.manage_search_rounded, size: 18),
+            label: const Text('Action Search'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             tooltip: 'Refresh',
             icon: _isLoading
@@ -805,7 +825,11 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
             const SizedBox(height: 10),
 
             // Actions Row
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 if (stream.onDemandUrl != null && stream.onDemandUrl!.isNotEmpty)
                   InkWell(
@@ -823,6 +847,7 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.copy_rounded, size: 13, color: theme.hintColor),
                           const SizedBox(width: 4),
@@ -837,28 +862,34 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                         ],
                       ),
                     ),
-                  ),
-                const Spacer(),
-                if (stream.videoId != null) ...[
-                  TextButton.icon(
-                    onPressed: () => _showStreamDetailsModal(context, stream, initialTab: 1),
-                    icon: const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
-                    label: const Text('Moments', style: TextStyle(fontSize: 12, color: Colors.amber)),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  )
+                else
+                  const SizedBox.shrink(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (stream.videoId != null) ...[
+                      TextButton.icon(
+                        onPressed: () => _showStreamDetailsModal(context, stream, initialTab: 1),
+                        icon: const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
+                        label: const Text('Moments', style: TextStyle(fontSize: 12, color: Colors.amber)),
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    TextButton.icon(
+                      onPressed: () => _showStreamDetailsModal(context, stream),
+                      icon: const Icon(Icons.info_outline_rounded, size: 16),
+                      label: const Text('Stream Details', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                ],
-                TextButton.icon(
-                  onPressed: () => _showStreamDetailsModal(context, stream),
-                  icon: const Icon(Icons.info_outline_rounded, size: 16),
-                  label: const Text('Stream Details', style: TextStyle(fontSize: 12)),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -917,14 +948,18 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Showing $startItem–$endItem of $_totalCount streams',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: theme.hintColor,
+                Flexible(
+                  child: Text(
+                    'Showing $startItem–$endItem of $_totalCount streams',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: theme.hintColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -967,66 +1002,69 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
             const SizedBox(height: 6),
 
             // Bottom Navigation Row: Centered Pagination Controls
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // First Page Button
-                IconButton(
-                  icon: const Icon(Icons.first_page_rounded, size: 20),
-                  tooltip: 'First Page',
-                  onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
-                  visualDensity: VisualDensity.compact,
-                ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // First Page Button
+                  IconButton(
+                    icon: const Icon(Icons.first_page_rounded, size: 20),
+                    tooltip: 'First Page',
+                    onPressed: _currentPage > 1 ? () => _goToPage(1) : null,
+                    visualDensity: VisualDensity.compact,
+                  ),
 
-                // Previous Page Button
-                IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                  tooltip: 'Previous Page',
-                  onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
-                  visualDensity: VisualDensity.compact,
-                ),
+                  // Previous Page Button
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                    tooltip: 'Previous Page',
+                    onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
+                    visualDensity: VisualDensity.compact,
+                  ),
 
-                const SizedBox(width: 4),
+                  const SizedBox(width: 4),
 
-                // Page Number Button (Clickable to jump)
-                InkWell(
-                  onTap: _totalPages > 1 ? _showJumpToPageDialog : null,
-                  borderRadius: BorderRadius.circular(6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFEDF2F7),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Page $_currentPage of $_totalPages',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
+                  // Page Number Button (Clickable to jump)
+                  InkWell(
+                    onTap: _totalPages > 1 ? _showJumpToPageDialog : null,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFEDF2F7),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Page $_currentPage of $_totalPages',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 4),
+                  const SizedBox(width: 4),
 
-                // Next Page Button
-                IconButton(
-                  icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                  tooltip: 'Next Page',
-                  onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
-                  visualDensity: VisualDensity.compact,
-                ),
+                  // Next Page Button
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                    tooltip: 'Next Page',
+                    onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
+                    visualDensity: VisualDensity.compact,
+                  ),
 
-                // Last Page Button
-                IconButton(
-                  icon: const Icon(Icons.last_page_rounded, size: 20),
-                  tooltip: 'Last Page',
-                  onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
+                  // Last Page Button
+                  IconButton(
+                    icon: const Icon(Icons.last_page_rounded, size: 20),
+                    tooltip: 'Last Page',
+                    onPressed: _currentPage < _totalPages ? () => _goToPage(_totalPages) : null,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1150,6 +1188,8 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                                 stream.videoId!,
                                 defaultVideoUrl: stream.onDemandUrl,
                                 defaultStreamId: stream.id,
+                                defaultClipStartTime: stream.clipStartTime,
+                                defaultClipDuration: stream.clipDuration,
                               )
                             : Future.value(<VideoAction>[]),
                         builder: (context, snapshot) {

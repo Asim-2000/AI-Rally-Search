@@ -1,4 +1,5 @@
 import '../models/video_action.dart';
+import '../models/video_action_search_query.dart';
 import 'database_service.dart';
 
 abstract class IVideoActionRepository {
@@ -6,11 +7,15 @@ abstract class IVideoActionRepository {
     int videoId, {
     String? defaultVideoUrl,
     int? defaultStreamId,
+    double? defaultClipStartTime,
+    double? defaultClipDuration,
   });
 
   Future<List<VideoAction>> getVideoActionsForStream(
     int streamId, {
     String? defaultVideoUrl,
+    double? defaultClipStartTime,
+    double? defaultClipDuration,
   });
 
   Future<List<VideoAction>> getRecentVideoActions({
@@ -18,6 +23,14 @@ abstract class IVideoActionRepository {
     int offset = 0,
     String? actionType,
   });
+
+  Future<List<VideoAction>> searchVideoActions(
+    VideoActionSearchQuery query,
+  );
+
+  Future<int> countVideoActions(
+    VideoActionSearchQuery query,
+  );
 }
 
 class VideoActionRepository implements IVideoActionRepository {
@@ -31,6 +44,8 @@ class VideoActionRepository implements IVideoActionRepository {
     int videoId, {
     String? defaultVideoUrl,
     int? defaultStreamId,
+    double? defaultClipStartTime,
+    double? defaultClipDuration,
   }) async {
     final rows = await _dbService.getVideoActionsForVideo(videoId);
     return rows
@@ -38,6 +53,8 @@ class VideoActionRepository implements IVideoActionRepository {
               row,
               defaultVideoUrl: defaultVideoUrl,
               defaultStreamId: defaultStreamId,
+              defaultClipStartTime: defaultClipStartTime,
+              defaultClipDuration: defaultClipDuration,
             ))
         .toList();
   }
@@ -46,6 +63,8 @@ class VideoActionRepository implements IVideoActionRepository {
   Future<List<VideoAction>> getVideoActionsForStream(
     int streamId, {
     String? defaultVideoUrl,
+    double? defaultClipStartTime,
+    double? defaultClipDuration,
   }) async {
     final rows = await _dbService.getVideoActionsForStream(streamId);
     return rows
@@ -53,6 +72,8 @@ class VideoActionRepository implements IVideoActionRepository {
               row,
               defaultVideoUrl: defaultVideoUrl,
               defaultStreamId: streamId,
+              defaultClipStartTime: defaultClipStartTime,
+              defaultClipDuration: defaultClipDuration,
             ))
         .toList();
   }
@@ -70,4 +91,20 @@ class VideoActionRepository implements IVideoActionRepository {
     );
     return rows.map((row) => VideoAction.fromMap(row)).toList();
   }
+
+  @override
+  Future<List<VideoAction>> searchVideoActions(
+    VideoActionSearchQuery query,
+  ) async {
+    final rows = await _dbService.searchVideoActions(query);
+    return rows.map((row) => VideoAction.fromMap(row)).toList();
+  }
+
+  @override
+  Future<int> countVideoActions(
+    VideoActionSearchQuery query,
+  ) async {
+    return await _dbService.countVideoActions(query);
+  }
 }
+

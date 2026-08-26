@@ -1,0 +1,864 @@
+import 'package:flutter/material.dart';
+import '../models/search_intent.dart';
+import '../models/search_query.dart';
+import '../models/search_results.dart';
+import '../models/video_action.dart';
+import '../services/search_repository.dart';
+import '../widgets/action_player_modal.dart';
+import '../widgets/driver_participation_card.dart';
+import '../widgets/driver_wins_leaderboard.dart';
+import '../widgets/rally_leaderboard.dart';
+import '../widgets/rally_result_card.dart';
+import '../widgets/uploader_leaderboard.dart';
+import '../widgets/video_action_card.dart';
+import '../widgets/video_result_card.dart';
+
+class GeneralSearchScreen extends StatefulWidget {
+  final SearchQuery? initialQuery;
+  final ISearchRepository? repository;
+
+  const GeneralSearchScreen({
+    super.key,
+    this.initialQuery,
+    this.repository,
+  });
+
+  @override
+  State<GeneralSearchScreen> createState() => _GeneralSearchScreenState();
+}
+
+class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
+  late final ISearchRepository _repository;
+
+  // Search input controllers
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _driverController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+
+  SearchIntent _selectedIntent = SearchIntent.searchRallies;
+  String _selectedCountry = 'ALL';
+  String _selectedActionType = 'ALL';
+  int? _selectedYear;
+
+  // Pagination state
+  int _currentPage = 1;
+  final int _pageSize = 20;
+  int _totalCount = 0;
+
+  bool _isLoading = false;
+  String? _errorMessage;
+  SearchResponse<dynamic>? _searchResponse;
+
+  final List<Map<String, dynamic>> _intentOptions = [
+    {
+      'intent': SearchIntent.searchRallies,
+      'label': 'Search Rallies',
+      'icon': Icons.flag_rounded,
+      'hint': 'Search rallies by name, country, city, or year...',
+    },
+    {
+      'intent': SearchIntent.searchDriverRallies,
+      'label': 'Driver Rallies',
+      'icon': Icons.directions_car_rounded,
+      'hint': 'Search rallies a driver participated in...',
+    },
+    {
+      'intent': SearchIntent.searchDriverWins,
+      'label': 'Driver Wins',
+      'icon': Icons.emoji_events_rounded,
+      'hint': 'Search rallies won by a driver...',
+    },
+    {
+      'intent': SearchIntent.getRallyTopFinishers,
+      'label': 'Rally Top Finishers',
+      'icon': Icons.leaderboard_rounded,
+      'hint': 'Rally name (e.g. Moonraker, Donegal)...',
+    },
+    {
+      'intent': SearchIntent.getRallyResults,
+      'label': 'Rally Winner',
+      'icon': Icons.military_tech_rounded,
+      'hint': 'Rally name for 1st place winner...',
+    },
+    {
+      'intent': SearchIntent.searchVideoActions,
+      'label': 'Action Highlights',
+      'icon': Icons.bolt_rounded,
+      'hint': 'Filter jumps, drifts, crashes in rallies...',
+    },
+    {
+      'intent': SearchIntent.searchDriverVideos,
+      'label': 'Driver Videos',
+      'icon': Icons.videocam_rounded,
+      'hint': 'Find videos featuring a specific driver...',
+    },
+    {
+      'intent': SearchIntent.getTopUploaders,
+      'label': 'Top Uploaders',
+      'icon': Icons.cloud_upload_rounded,
+      'hint': 'Filter top uploaders by rally or global...',
+    },
+    {
+      'intent': SearchIntent.getTopDriversByWins,
+      'label': 'Most Wins',
+      'icon': Icons.workspace_premium_rounded,
+      'hint': 'Rank drivers by total career victories...',
+    },
+  ];
+
+  final List<String> _actionOptions = [
+    'ALL',
+    'Jump',
+    'Drift',
+    'Crash',
+    'Spin',
+    'Start Line',
+    'Near Miss',
+    'Mechanical Failure',
+    'Offroad',
+    'Stuck',
+  ];
+
+  final List<Map<String, String>> _countryOptions = [
+    {'label': 'All Countries', 'value': 'ALL'},
+    {'label': 'Ireland (IE)', 'value': 'Ireland'},
+    {'label': 'United Kingdom (UK / GB)', 'value': 'United Kingdom'},
+    {'label': 'Portugal (PT)', 'value': 'Portugal'},
+    {'label': 'Austria (AT)', 'value': 'Austria'},
+    {'label': 'France (FR)', 'value': 'France'},
+    {'label': 'Norway (NO)', 'value': 'Norway'},
+    {'label': 'Poland (PL)', 'value': 'Poland'},
+    {'label': 'Belgium (BE)', 'value': 'Belgium'},
+    {'label': 'Spain (ES)', 'value': 'Spain'},
+    {'label': 'Italy (IT)', 'value': 'Italy'},
+    {'label': 'Latvia (LV)', 'value': 'Latvia'},
+    {'label': 'Czech Republic (CZ)', 'value': 'Czech Republic'},
+    {'label': 'Germany (DE)', 'value': 'Germany'},
+    {'label': 'Kenya (KE)', 'value': 'Kenya'},
+    {'label': 'Croatia (HR)', 'value': 'Croatia'},
+    {'label': 'Netherlands (NL)', 'value': 'Netherlands'},
+    {'label': 'New Zealand (NZ)', 'value': 'New Zealand'},
+    {'label': 'Lithuania (LT)', 'value': 'Lithuania'},
+    {'label': 'Slovakia (SK)', 'value': 'Slovakia'},
+    {'label': 'Qatar (QA)', 'value': 'Qatar'},
+    {'label': 'Pakistan (PK)', 'value': 'Pakistan'},
+    {'label': 'Barbados (BB)', 'value': 'Barbados'},
+  ];
+
+  final List<int?> _yearOptions = [
+    null,
+    2026,
+    2025,
+    2024,
+    2023,
+  ];
+
+  bool _showExtraFilters = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? SearchRepository();
+    if (widget.initialQuery != null) {
+      final q = widget.initialQuery!;
+      _selectedIntent = q.intent;
+      if (q.country != null) _selectedCountry = q.country!;
+      if (q.city != null) _cityController.text = q.city!;
+      if (q.year != null) _selectedYear = q.year;
+      if (q.driverName != null) _driverController.text = q.driverName!;
+      if (q.actionType != null) _selectedActionType = q.actionType!;
+      if (q.targetRallyName != null) _searchController.text = q.targetRallyName!;
+    }
+    _executeSearch(resetPage: true);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _driverController.dispose();
+    _cityController.dispose();
+    super.dispose();
+  }
+
+  SearchQuery _buildCurrentQuery({int page = 1}) {
+    final offset = (page - 1) * _pageSize;
+    final rawSearch = _searchController.text.trim().isEmpty ? null : _searchController.text.trim();
+    final rawDriver = _driverController.text.trim().isEmpty ? null : _driverController.text.trim();
+    final rawCity = _cityController.text.trim().isEmpty ? null : _cityController.text.trim();
+    final rawCountry = _selectedCountry == 'ALL' ? null : _selectedCountry;
+    final rawAction = _selectedActionType == 'ALL' ? null : _selectedActionType.toLowerCase();
+
+    return SearchQuery(
+      intent: _selectedIntent,
+      rallyName: rawSearch,
+      eventName: rawSearch,
+      driverName: rawDriver,
+      city: rawCity,
+      country: rawCountry,
+      actionType: rawAction,
+      year: _selectedYear,
+      limit: _pageSize,
+      offset: offset,
+    );
+  }
+
+  Future<void> _executeSearch({bool resetPage = false}) async {
+    if (resetPage) {
+      _currentPage = 1;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final query = _buildCurrentQuery(page: _currentPage);
+      final response = await _repository.search(query);
+
+      if (mounted) {
+        setState(() {
+          _searchResponse = response;
+          _totalCount = response.totalCount;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Search failed: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _driverController.clear();
+      _cityController.clear();
+      _selectedCountry = 'ALL';
+      _selectedActionType = 'ALL';
+      _selectedYear = null;
+    });
+    _executeSearch(resetPage: true);
+  }
+
+  Map<String, dynamic> get _currentIntentConfig {
+    return _intentOptions.firstWhere(
+      (opt) => opt['intent'] == _selectedIntent,
+      orElse: () => _intentOptions.first,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final totalPages = (_totalCount / _pageSize).ceil();
+    final intentConfig = _currentIntentConfig;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Row(
+          children: [
+            Icon(Icons.search_rounded, color: Color(0xFF1E88E5)),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'AI Rally Search',
+                style: TextStyle(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Clear Filters',
+            icon: const Icon(Icons.filter_alt_off_rounded),
+            onPressed: _clearFilters,
+          ),
+          IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => _executeSearch(),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Filter Panel
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? Colors.white12 : Colors.black12,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Search Intent Selector (Dropdown)
+                DropdownButtonFormField<SearchIntent>(
+                  value: _selectedIntent,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: 'Search Query Intent',
+                    prefixIcon: Icon(intentConfig['icon'] as IconData, size: 20, color: theme.colorScheme.primary),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                    ),
+                  ),
+                  items: _intentOptions.map((opt) {
+                    return DropdownMenuItem<SearchIntent>(
+                      value: opt['intent'] as SearchIntent,
+                      child: Row(
+                        children: [
+                          Icon(opt['icon'] as IconData, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              opt['label'] as String,
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _selectedIntent = val);
+                      _executeSearch(resetPage: true);
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+
+                // Primary Search / Rally input
+                if (_selectedIntent != SearchIntent.getTopDriversByWins)
+                  TextField(
+                    controller: _selectedIntent == SearchIntent.searchDriverRallies ||
+                            _selectedIntent == SearchIntent.searchDriverWins ||
+                            _selectedIntent == SearchIntent.searchDriverVideos
+                        ? _driverController
+                        : _searchController,
+                    decoration: InputDecoration(
+                      hintText: intentConfig['hint'] as String,
+                      prefixIcon: Icon(
+                        _selectedIntent == SearchIntent.searchDriverRallies ||
+                                _selectedIntent == SearchIntent.searchDriverWins ||
+                                _selectedIntent == SearchIntent.searchDriverVideos
+                            ? Icons.person_rounded
+                            : Icons.search_rounded,
+                      ),
+                      suffixIcon: (_selectedIntent == SearchIntent.searchDriverRallies ||
+                                  _selectedIntent == SearchIntent.searchDriverWins ||
+                                  _selectedIntent == SearchIntent.searchDriverVideos
+                              ? _driverController.text.isNotEmpty
+                              : _searchController.text.isNotEmpty)
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              onPressed: () {
+                                if (_selectedIntent == SearchIntent.searchDriverRallies ||
+                                    _selectedIntent == SearchIntent.searchDriverWins ||
+                                    _selectedIntent == SearchIntent.searchDriverVideos) {
+                                  _driverController.clear();
+                                } else {
+                                  _searchController.clear();
+                                }
+                                _executeSearch(resetPage: true);
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                      ),
+                    ),
+                    onSubmitted: (_) => _executeSearch(resetPage: true),
+                  ),
+
+                // Contextual Filter Row (Country, Year, Action Type)
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    // Country filter
+                    Expanded(
+                      flex: 6,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedCountry,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Country',
+                          prefixIcon: const Icon(Icons.public_rounded, size: 18),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                          ),
+                        ),
+                        items: _countryOptions.map((c) {
+                          return DropdownMenuItem(
+                            value: c['value'],
+                            child: Text(
+                              c['label']!,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12.5),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() => _selectedCountry = val);
+                            _executeSearch(resetPage: true);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Year Filter
+                    Expanded(
+                      flex: 4,
+                      child: DropdownButtonFormField<int?>(
+                        value: _selectedYear,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Year',
+                          prefixIcon: const Icon(Icons.calendar_month_rounded, size: 18),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                          ),
+                        ),
+                        items: _yearOptions.map((yr) {
+                          return DropdownMenuItem(
+                            value: yr,
+                            child: Text(
+                              yr == null ? 'All Years' : '$yr',
+                              style: const TextStyle(fontSize: 12.5),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() => _selectedYear = val);
+                          _executeSearch(resetPage: true);
+                        },
+                      ),
+                    ),
+
+                    // Action Type (if Video Actions selected)
+                    if (_selectedIntent == SearchIntent.searchVideoActions) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 5,
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedActionType,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: 'Action',
+                            prefixIcon: const Icon(Icons.bolt_rounded, size: 18),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                            ),
+                          ),
+                          items: _actionOptions.map((act) {
+                            return DropdownMenuItem(
+                              value: act,
+                              child: Text(act, style: const TextStyle(fontSize: 12.5)),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _selectedActionType = val);
+                              _executeSearch(resetPage: true);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+
+                // City filter expander
+                if (_showExtraFilters) ...[
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _cityController,
+                    decoration: InputDecoration(
+                      labelText: 'City (e.g. Letterkenny, Fafe, Newtown)',
+                      prefixIcon: const Icon(Icons.location_city_rounded, size: 18),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                      ),
+                    ),
+                    onSubmitted: (_) => _executeSearch(resetPage: true),
+                  ),
+                ],
+
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: () => setState(() => _showExtraFilters = !_showExtraFilters),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _showExtraFilters ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _showExtraFilters ? 'Fewer Filters' : 'City Filter',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    FilledButton.icon(
+                      onPressed: () => _executeSearch(resetPage: true),
+                      icon: const Icon(Icons.search_rounded, size: 18),
+                      label: const Text('Search'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Count bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: isDark ? const Color(0xFF141414) : Colors.grey.shade100,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Found '),
+                        TextSpan(
+                          text: '$_totalCount',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        TextSpan(text: ' ${_resultTypeLabel(_selectedIntent)}'),
+                      ],
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (_totalCount > 0) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    'Page $_currentPage of ${totalPages == 0 ? 1 : totalPages}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Dynamic Result View Dispatcher
+          Expanded(
+            child: _buildDynamicResultsView(context),
+          ),
+
+          // Pagination Footer
+          if (_totalCount > _pageSize) _buildPaginationFooter(totalPages),
+        ],
+      ),
+    );
+  }
+
+  String _resultTypeLabel(SearchIntent intent) {
+    switch (intent) {
+      case SearchIntent.searchRallies:
+        return 'rallies';
+      case SearchIntent.searchDriverRallies:
+        return 'rally participations';
+      case SearchIntent.searchDriverWins:
+        return 'rally victories';
+      case SearchIntent.getRallyResults:
+      case SearchIntent.getRallyTopFinishers:
+        return 'finisher results';
+      case SearchIntent.searchVideoActions:
+        return 'action moments';
+      case SearchIntent.searchDriverVideos:
+        return 'videos';
+      case SearchIntent.getTopUploaders:
+        return 'uploaders';
+      case SearchIntent.getTopDriversByWins:
+        return 'winning drivers';
+    }
+  }
+
+  Widget _buildDynamicResultsView(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Executing deterministic search...'),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
+              const SizedBox(height: 12),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => _executeSearch(),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_searchResponse == null || _searchResponse!.results.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.withValues(alpha: 0.4)),
+              const SizedBox(height: 16),
+              const Text('No search results found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text(
+                'Try broadening your search query or resetting filters.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                onPressed: _clearFilters,
+                icon: const Icon(Icons.clear_all_rounded),
+                label: const Text('Reset Filters'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final resp = _searchResponse!;
+
+    switch (resp.intent) {
+      case SearchIntent.searchRallies:
+        final rallies = resp.results.cast<RallySearchResult>();
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: rallies.length,
+          itemBuilder: (ctx, idx) => RallyResultCard(
+            rally: rallies[idx],
+            onTap: () {
+              // Drilldown to top finishers
+              setState(() {
+                _selectedIntent = SearchIntent.getRallyTopFinishers;
+                _searchController.text = rallies[idx].eventName;
+              });
+              _executeSearch(resetPage: true);
+            },
+          ),
+        );
+
+      case SearchIntent.searchDriverRallies:
+      case SearchIntent.searchDriverWins:
+        final parts = resp.results.cast<RallyParticipationResult>();
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: parts.length,
+          itemBuilder: (ctx, idx) => DriverParticipationCard(participation: parts[idx]),
+        );
+
+      case SearchIntent.getRallyResults:
+      case SearchIntent.getRallyTopFinishers:
+        final finishers = resp.results.cast<RallyResult>();
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: RallyLeaderboard(
+            results: finishers,
+            rallyName: _searchController.text.trim().isNotEmpty ? _searchController.text.trim() : null,
+          ),
+        );
+
+      case SearchIntent.searchVideoActions:
+        final actions = resp.results.cast<VideoAction>();
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: actions.length,
+          itemBuilder: (ctx, idx) => VideoActionCard(
+            action: actions[idx],
+            onPlay: (act) => ActionPlayerModal.show(ctx, act),
+          ),
+        );
+
+      case SearchIntent.searchDriverVideos:
+        final driverVids = resp.results.cast<VideoSearchResult>();
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: driverVids.length,
+          itemBuilder: (ctx, idx) => VideoResultCard(video: driverVids[idx]),
+        );
+
+      case SearchIntent.getTopUploaders:
+        final uploaders = resp.results.cast<UploaderSearchResult>();
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: UploaderLeaderboard(
+            uploaders: uploaders,
+            rallyName: _searchController.text.trim().isNotEmpty ? _searchController.text.trim() : null,
+          ),
+        );
+
+      case SearchIntent.getTopDriversByWins:
+        final winningDrivers = resp.results.cast<DriverWinResult>();
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: DriverWinsLeaderboard(
+            drivers: winningDrivers,
+            onDriverTap: (d) {
+              // Drilldown to driver's won rallies
+              setState(() {
+                _selectedIntent = SearchIntent.searchDriverWins;
+                _driverController.text = d.driverName;
+              });
+              _executeSearch(resetPage: true);
+            },
+          ),
+        );
+    }
+  }
+
+  Widget _buildPaginationFooter(int totalPages) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white12 : Colors.black12,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: _currentPage > 1 && !_isLoading
+                  ? () {
+                      setState(() => _currentPage--);
+                      _executeSearch();
+                    }
+                  : null,
+              icon: const Icon(Icons.chevron_left_rounded, size: 18),
+              label: const Text('Prev'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                'Page $_currentPage of $totalPages',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: _currentPage < totalPages && !_isLoading
+                  ? () {
+                      setState(() => _currentPage++);
+                      _executeSearch();
+                    }
+                  : null,
+              icon: const Icon(Icons.chevron_right_rounded, size: 18),
+              label: const Text('Next'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

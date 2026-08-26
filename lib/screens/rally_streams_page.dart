@@ -7,6 +7,7 @@ import '../services/video_action_repository.dart';
 import '../widgets/rally_video_player.dart';
 import '../widgets/video_action_card.dart';
 import '../widgets/action_player_modal.dart';
+import 'general_search_screen.dart';
 import 'video_action_search_screen.dart';
 
 class RallyStreamsPage extends StatefulWidget {
@@ -207,6 +208,21 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
           ],
         ),
         actions: [
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const GeneralSearchScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.search_rounded, size: 18),
+            label: const Text('General Search'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+          ),
+          const SizedBox(width: 8),
           FilledButton.tonalIcon(
             onPressed: () {
               Navigator.of(context).push(
@@ -215,8 +231,8 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                 ),
               );
             },
-            icon: const Icon(Icons.manage_search_rounded, size: 18),
-            label: const Text('Action Search'),
+            icon: const Icon(Icons.bolt_rounded, size: 18),
+            label: const Text('Moments'),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             ),

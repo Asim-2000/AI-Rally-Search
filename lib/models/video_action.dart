@@ -14,6 +14,7 @@ class VideoAction {
   final String? stageNumber;
   final String? eventName;
   final String? eventCountry;
+  final String? driverName;
   final double? points;
 
   const VideoAction({
@@ -32,8 +33,10 @@ class VideoAction {
     this.stageNumber,
     this.eventName,
     this.eventCountry,
+    this.driverName,
     this.points,
   });
+
 
   factory VideoAction.fromMap(
     Map<String, dynamic> map, {
@@ -105,8 +108,10 @@ class VideoAction {
       stageNumber: map['stage_number']?.toString(),
       eventName: map['event_name']?.toString(),
       eventCountry: map['event_country']?.toString() ?? map['country']?.toString(),
+      driverName: map['driver_name']?.toString(),
       points: _parseDouble(map['points']),
     );
+
   }
 
   static String _normalizeActionType(String rawName) {

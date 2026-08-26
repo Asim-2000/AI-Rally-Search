@@ -34,6 +34,9 @@ class BenchmarkCase {
   final bool expectedClarification;
   final SearchContext? context;
   final String? description;
+  final String? semanticCaseId;
+  final String? languageCode;
+  final String? locale;
 
   const BenchmarkCase({
     required this.id,
@@ -45,7 +48,11 @@ class BenchmarkCase {
     this.expectedClarification = false,
     this.context,
     this.description,
+    this.semanticCaseId,
+    this.languageCode,
+    this.locale,
   });
+
 
   /// Helper getter returning query as an expected SearchQuery model if intent is present.
   SearchQuery? get expectedQuery {
@@ -477,6 +484,7 @@ class ProviderEvaluationReport {
   final Map<String, SlotExtractionMetric> slotMetrics;
   final Map<String, SubsetMetrics> categoryMetrics;
   final Map<String, SubsetMetrics> difficultyMetrics;
+  final Map<String, SubsetMetrics> languageMetrics;
   final Map<FailureType, int> failureTypeCounts;
   final List<CaseEvaluationRecord> records;
 
@@ -508,6 +516,7 @@ class ProviderEvaluationReport {
     required this.slotMetrics,
     required this.categoryMetrics,
     required this.difficultyMetrics,
+    this.languageMetrics = const {},
     required this.failureTypeCounts,
     required this.records,
   });
@@ -520,6 +529,7 @@ class ProviderEvaluationReport {
         'model': modelName,
         'timestamp': timestamp.toIso8601String(),
         'numberOfCases': numberOfCases,
+        'cases_evaluated': numberOfCases,
         'summary': {
           'successful_parses': successfulParses,
           'failed_parses': failedParses,
@@ -535,21 +545,32 @@ class ProviderEvaluationReport {
           'entity_preservation_rate_pct': entityPreservationRatePct,
           'production_weighted_score_pct': productionWeightedScorePct,
         },
-        'latency': latencyStats.toJson(),
-        'tokens': {
-          'prompt_tokens': totalPromptTokens,
-          'completion_tokens': totalCompletionTokens,
-          'total_tokens': totalTokens,
-        },
-        'cost': {
-          'total_cost_usd': totalCostUsd,
-          'avg_cost_per_query_usd': avgCostPerQueryUsd,
-          'estimated_cost_per_thousand_usd': estimatedCostPerThousandUsd,
-        },
+        'successful_parses': successfulParses,
+        'failed_parses': failedParses,
+        'clarification_triggers': clarificationTriggers,
+        'intent_accuracy_pct': intentAccuracyPct,
+        'filter_precision_pct': filterPrecisionPct,
+        'filter_recall_pct': filterRecallPct,
+        'filter_f1_pct': filterF1Pct,
+        'exact_match_rate_pct': exactMatchRatePct,
+        'compound_accuracy_pct': compoundAccuracyPct,
+        'clarification_accuracy_pct': clarificationAccuracyPct,
+        'hallucination_rate_pct': hallucinationRatePct,
+        'entity_preservation_rate_pct': entityPreservationRatePct,
+        'production_weighted_score_pct': productionWeightedScorePct,
+        'latency_stats': latencyStats.toJson(),
+        'total_prompt_tokens': totalPromptTokens,
+        'total_completion_tokens': totalCompletionTokens,
+        'total_tokens': totalTokens,
+        'total_cost_usd': totalCostUsd,
+        'avg_cost_per_query_usd': avgCostPerQueryUsd,
+        'estimated_cost_per_1000_usd': estimatedCostPerThousandUsd,
         'slot_metrics': slotMetrics.map((k, v) => MapEntry(k, v.toJson())),
         'category_metrics': categoryMetrics.map((k, v) => MapEntry(k, v.toJson())),
         'difficulty_metrics': difficultyMetrics.map((k, v) => MapEntry(k, v.toJson())),
+        'language_metrics': languageMetrics.map((k, v) => MapEntry(k, v.toJson())),
         'failure_counts': failureTypeCounts.map((k, v) => MapEntry(k.name, v)),
         'records': records.map((r) => r.toJson()).toList(),
       };
+
 }

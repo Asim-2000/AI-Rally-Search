@@ -554,13 +554,66 @@ class ProviderEvaluator {
       );
     });
 
-    // Failure Counts
+    // Language Metrics
+    final languageGroups = <String, List<CaseEvaluationRecord>>{};
+    for (final r in records) {
+      if (r.testCase.languageCode != null) {
+        languageGroups.putIfAbsent(r.testCase.languageCode!, () => []).add(r);
+      }
+    }
+
+    final languageMetrics = <String, SubsetMetrics>{};
+    languageGroups.forEach((lang, langRecords) {
+      final lCount = langRecords.length;
+      final lIntents = langRecords.where((r) => r.intentMatch).length;
+      final lExacts = langRecords.where((r) => r.exactMatch).length;
+      final lCompound = langRecords.where((r) => r.compoundComplete).length;
+
+      int lTp = 0, lFp = 0, lFn = 0;
+      int sumLat = 0;
+      double? sumCost;
+
+      for (final lr in langRecords) {
+        lTp += lr.truePositiveSlots;
+        lFp += lr.falsePositiveSlots;
+        lFn += lr.falseNegativeSlots;
+        sumLat += lr.latencyMs;
+        if (lr.costUsd != null) {
+          sumCost = (sumCost ?? 0.0) + lr.costUsd!;
+        }
+      }
+
+      final lP = (lTp + lFp) > 0 ? lTp / (lTp + lFp) : 1.0;
+      final lR = (lTp + lFn) > 0 ? lTp / (lTp + lFn) : 1.0;
+      final lF1 = (lP + lR) > 0 ? (2 * lP * lR) / (lP + lR) * 100.0 : 0.0;
+
+      languageMetrics[lang] = SubsetMetrics(
+        name: lang,
+        count: lCount,
+        intentAccuracyPct: (lIntents / lCount) * 100.0,
+        exactMatchPct: (lExacts / lCount) * 100.0,
+        filterF1Pct: lF1,
+        compoundCompletenessPct: (lCompound / lCount) * 100.0,
+        avgLatencyMs: sumLat / lCount,
+        avgCostUsd: sumCost != null ? sumCost / lCount : null,
+      );
+    });
+
+    // Count Failures by type
     final failureCounts = <FailureType, int>{};
     for (final r in records) {
       for (final f in r.failures) {
         failureCounts[f.type] = (failureCounts[f.type] ?? 0) + 1;
       }
     }
+
+    // Production Weighted Score formula
+    final weightedScore = (exactMatchRatePct * 0.35) +
+        (intentAccuracyPct * 0.25) +
+        (compoundAccuracyPct * 0.15) +
+        (filterF1Pct * 0.15) +
+        (clarificationAccuracyPct * 0.05) +
+        ((100.0 - hallucinationRatePct) * 0.05);
 
     return ProviderEvaluationReport(
       providerName: provider.name,
@@ -579,7 +632,7 @@ class ProviderEvaluator {
       clarificationAccuracyPct: clarificationAccuracyPct,
       hallucinationRatePct: hallucinationRatePct,
       entityPreservationRatePct: entityPreservationRatePct,
-      productionWeightedScorePct: productionWeightedScorePct,
+      productionWeightedScorePct: weightedScore,
       latencyStats: latencyStats,
       totalPromptTokens: totalPromptTokens,
       totalCompletionTokens: totalCompletionTokens,
@@ -590,6 +643,7 @@ class ProviderEvaluator {
       slotMetrics: slotMetrics,
       categoryMetrics: categoryMetrics,
       difficultyMetrics: difficultyMetrics,
+      languageMetrics: languageMetrics,
       failureTypeCounts: failureCounts,
       records: records,
     );

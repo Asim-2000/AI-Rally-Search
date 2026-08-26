@@ -10,6 +10,7 @@ import 'package:ai_rally_search/services/llm/providers/mock_query_parser.dart';
 import 'package:ai_rally_search/services/llm/providers/openai_query_parser.dart';
 import 'eval_models.dart';
 import 'eval_report_formatter.dart';
+import 'multilingual_benchmark_cases.dart';
 import 'provider_evaluator.dart';
 import 'query_benchmark_cases.dart';
 
@@ -30,6 +31,11 @@ void main([List<String> args = const []]) {
 
     // Determine mode and target provider
     bool compareMode = Platform.environment['EVAL_COMPARE'] == 'true' || args.contains('--compare');
+    bool isMultilingual = Platform.environment['EVAL_MULTILINGUAL'] == 'true' ||
+        args.contains('--multilingual') ||
+        args.contains('-m');
+    String? filterLang;
+
     String providerArg = Platform.environment['EVAL_PROVIDER'] ??
         (dotenv.isInitialized ? (dotenv.env['EVAL_PROVIDER'] ?? 'mock') : 'mock');
 
@@ -44,11 +50,30 @@ void main([List<String> args = const []]) {
         providerArg = 'anthropic';
       } else if (arg == '--mock') {
         providerArg = 'mock';
+      } else if (arg == '--multilingual' || arg == '-m') {
+        isMultilingual = true;
+      } else if (arg.startsWith('--lang=')) {
+        filterLang = arg.split('=')[1].trim().toLowerCase();
+        isMultilingual = true;
       }
     }
 
-    final testCases = QueryBenchmarkCases.allCases;
-    print('Loaded ${testCases.length} benchmark test cases across 13 categories.');
+    List<BenchmarkCase> testCases;
+    if (isMultilingual) {
+      if (filterLang != null && filterLang.isNotEmpty) {
+        testCases = MultilingualBenchmarkCases.allCases
+            .where((c) => c.languageCode?.toLowerCase() == filterLang)
+            .toList();
+        print('Loaded ${testCases.length} multilingual test cases for language: "$filterLang".');
+      } else {
+        testCases = MultilingualBenchmarkCases.allCases;
+        print('Loaded ${testCases.length} multilingual test cases across 19 languages.');
+      }
+    } else {
+      testCases = QueryBenchmarkCases.allCases;
+      print('Loaded ${testCases.length} English benchmark test cases across 13 categories.');
+    }
+
 
     final evaluator = const ProviderEvaluator();
     final reportsDir = Directory('test/eval/reports');

@@ -67,6 +67,25 @@ class EvalReportFormatter {
       );
     });
 
+    if (report.languageMetrics.isNotEmpty) {
+      sb.writeln('----------------------------------------------------------------');
+      sb.writeln('PER-LANGUAGE BREAKDOWN');
+      sb.writeln('----------------------------------------------------------------');
+      sb.writeln('Language                  Count  Intent   Exact    F1     Compound  Avg Lat');
+      sb.writeln('------------------------------------------------------------------------');
+      report.languageMetrics.forEach((name, m) {
+        sb.writeln(
+          '${name.toUpperCase().padRight(25)} '
+          '${m.count.toString().padLeft(5)}  '
+          '${_pct(m.intentAccuracyPct).padLeft(7)}  '
+          '${_pct(m.exactMatchPct).padLeft(7)}  '
+          '${_pct(m.filterF1Pct).padLeft(6)}  '
+          '${_pct(m.compoundCompletenessPct).padLeft(8)}  '
+          '${m.avgLatencyMs.toStringAsFixed(0).padLeft(6)}ms',
+        );
+      });
+    }
+
     if (report.failureTypeCounts.isNotEmpty) {
       sb.writeln('----------------------------------------------------------------');
       sb.writeln('FAILURE CLASSIFICATION');
@@ -131,6 +150,16 @@ class EvalReportFormatter {
     sb.writeln('| Total Evaluation Cost | ${_cost(report.totalCostUsd)} |');
     sb.writeln('| Estimated Cost / 1,000 Queries | ${_cost(report.estimatedCostPerThousandUsd)} |');
     sb.writeln('');
+    if (report.languageMetrics.isNotEmpty) {
+      sb.writeln('## Per-Language Performance Breakdown');
+      sb.writeln('');
+      sb.writeln('| Language | Cases | Intent Acc | Exact Match | Filter F1 | Compound Acc | Avg Latency |');
+      sb.writeln('|---|---|---|---|---|---|---|');
+      report.languageMetrics.forEach((lang, m) {
+        sb.writeln('| `${lang.toUpperCase()}` | ${m.count} | ${_pct(m.intentAccuracyPct)} | ${_pct(m.exactMatchPct)} | ${_pct(m.filterF1Pct)} | ${_pct(m.compoundCompletenessPct)} | ${m.avgLatencyMs.toStringAsFixed(0)} ms |');
+      });
+      sb.writeln('');
+    }
     sb.writeln('## Category Performance Breakdown');
     sb.writeln('');
     sb.writeln('| Category | Cases | Intent Acc | Exact Match | Filter F1 | Compound Acc | Avg Latency |');
@@ -147,6 +176,7 @@ class EvalReportFormatter {
       sb.writeln('| `$slot` | ${sm.totalExpected} | ${sm.totalExtracted} | ${sm.correctlyExtracted} | ${_pct(sm.precisionPct)} | ${_pct(sm.recallPct)} | ${_pct(sm.f1Pct)} |');
     });
     sb.writeln('');
+
 
     if (report.failedRecords.isNotEmpty) {
       sb.writeln('## Failure Diagnostic Samples');

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/entity_candidate.dart';
+
 import '../models/search_intent.dart';
 import '../models/search_query.dart';
 import '../models/search_results.dart';
+import '../models/supported_language.dart';
 import '../models/video_action.dart';
 import '../services/llm/entity_resolution/database_entity_resolver.dart';
 import '../services/llm/entity_resolution/entity_lookup_repository.dart';
@@ -10,6 +13,7 @@ import '../services/llm/llm_provider_config.dart';
 import '../services/llm/llm_query_parser.dart';
 import '../services/llm/llm_query_parser_factory.dart';
 import '../services/llm/natural_language_search_service.dart';
+import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
 import '../widgets/action_player_modal.dart';
 import '../widgets/driver_participation_card.dart';
@@ -42,6 +46,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   late final ISearchRepository _repository;
   late final NaturalLanguageSearchService _nlSearchService;
 
+  // Selected application / query language
+  SupportedLanguage _selectedLanguage = SupportedLanguages.defaultLanguage;
+
   // Search input controllers
   final TextEditingController _nlController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
@@ -55,6 +62,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   bool _isNlMode = false;
   String? _lastExecutedNlQuery;
   NaturalLanguageSearchResult? _lastNlResult;
+
 
   SearchIntent _selectedIntent = SearchIntent.searchRallies;
   String _selectedCountry = 'ALL';
@@ -229,7 +237,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     });
 
     try {
-      final result = await _nlSearchService.search(queryText);
+      final searchContext = SearchContext(
+        currentYear: DateTime.now().year,
+        locale: _selectedLanguage.localeCode,
+        languageCode: _selectedLanguage.languageCode,
+      );
+      final result = await _nlSearchService.search(queryText, context: searchContext);
 
       if (mounted) {
         if (result.requiresClarification) {
@@ -275,10 +288,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             : 'ALL';
         _selectedYear = q.year;
 
+        final l10n = AppLocalizations.of(context);
+        final localizedSummary = _buildLocalizedInterpretedSummary(q, l10n);
+
         setState(() {
           _searchResponse = result.searchResponse;
           _totalCount = result.totalCount;
-          _interpretedSummary = result.interpretedSummary;
+          _interpretedSummary = localizedSummary;
           _lastNlResult = result;
           _clarificationQuestion = null;
           _clarificationCandidates = [];
@@ -291,9 +307,84 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         setState(() {
           _errorMessage = 'Natural language search failed: $e';
           _clarificationCandidates = [];
+          _interpretedSummary = null;
           _isLoading = false;
         });
       }
+    }
+  }
+
+  String _buildLocalizedInterpretedSummary(SearchQuery query, AppLocalizations? l10n) {
+    if (l10n == null) {
+      return QueryOutputValidator.generateInterpretedSummary(query);
+    }
+    final parts = <String>[];
+
+    // Localized intent headline
+    switch (query.intent) {
+      case SearchIntent.searchRallies:
+        parts.add(l10n.intentSearchRallies);
+        break;
+      case SearchIntent.searchDriverRallies:
+        parts.add(l10n.intentSearchDriverRallies);
+        break;
+      case SearchIntent.searchDriverWins:
+        parts.add(l10n.intentSearchDriverWins);
+        break;
+      case SearchIntent.getRallyResults:
+        parts.add(l10n.intentGetRallyResults);
+        break;
+      case SearchIntent.getRallyTopFinishers:
+        parts.add(l10n.intentGetRallyTopFinishers);
+        break;
+      case SearchIntent.searchVideoActions:
+        if (query.actionType != null) {
+          final localizedAction = _getLocalizedActionName(query.actionType!, l10n);
+          parts.add('${l10n.intentSearchVideoActions} ($localizedAction)');
+        } else {
+          parts.add(l10n.intentSearchVideoActions);
+        }
+        break;
+      case SearchIntent.searchDriverVideos:
+        parts.add(l10n.intentSearchDriverVideos);
+        break;
+      case SearchIntent.getTopUploaders:
+        parts.add(l10n.intentGetTopUploaders);
+        break;
+      case SearchIntent.getTopDriversByWins:
+        parts.add(l10n.intentGetTopDriversByWins);
+        break;
+    }
+
+    final filters = <String>[];
+    if (query.driverName != null) filters.add('${l10n.filterDriver}: ${query.driverName}');
+    if (query.targetRallyName != null) filters.add('${l10n.filterRally}: ${query.targetRallyName}');
+    if (query.country != null) filters.add('${l10n.filterCountry}: ${query.country}');
+    if (query.city != null) filters.add('${l10n.filterCity}: ${query.city}');
+    if (query.stageName != null) filters.add('${l10n.filterStage}: ${query.stageName}');
+    if (query.year != null) filters.add('${l10n.filterYear}: ${query.year}');
+
+    if (filters.isEmpty) {
+      return parts.join();
+    }
+    return '${parts.join()} | ${filters.join(' | ')}';
+  }
+
+  String _getLocalizedActionName(String actionType, AppLocalizations l10n) {
+    switch (actionType.toLowerCase()) {
+      case 'jump': return l10n.actionJump;
+      case 'drift': return l10n.actionDrift;
+      case 'crash': return l10n.actionCrash;
+      case 'spin': return l10n.actionSpin;
+      case 'donut': return l10n.actionDonut;
+      case 'hairpin': return l10n.actionHairpin;
+      case 'water splash': return l10n.actionWaterSplash;
+      case 'start line': return l10n.actionStartLine;
+      case 'near miss': return l10n.actionNearMiss;
+      case 'mechanical failure': return l10n.actionMechanicalFailure;
+      case 'offroad': return l10n.actionOffroad;
+      case 'stuck': return l10n.actionStuck;
+      default: return actionType;
     }
   }
 
@@ -629,6 +720,48 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           ],
         ),
         actions: [
+          // Language Selector Dropdown
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white10 : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<SupportedLanguage>(
+                value: _selectedLanguage,
+                icon: const Icon(Icons.language_rounded, size: 18),
+                isDense: true,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                dropdownColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                items: SupportedLanguages.all.map((lang) {
+                  return DropdownMenuItem<SupportedLanguage>(
+                    value: lang,
+                    child: Text('${lang.nativeName} (${lang.languageCode.toUpperCase()})'),
+                  );
+                }).toList(),
+                onChanged: (lang) {
+                  if (lang != null) {
+                    setState(() {
+                      _selectedLanguage = lang;
+                      if (_lastNlResult?.query != null) {
+                        _interpretedSummary = _buildLocalizedInterpretedSummary(
+                          _lastNlResult!.query!,
+                          AppLocalizations.of(context),
+                        );
+                      }
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
           IconButton(
             tooltip: 'Clear Filters',
             icon: const Icon(Icons.filter_alt_off_rounded),
@@ -640,6 +773,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             onPressed: () => _executeSearch(),
           ),
         ],
+
       ),
       body: Column(
         children: [

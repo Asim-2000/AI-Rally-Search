@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'screens/rally_streams_page.dart';
 
 Future<void> main() async {
@@ -16,6 +17,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'AI Rally Search',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF1E88E5),
@@ -37,3 +40,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

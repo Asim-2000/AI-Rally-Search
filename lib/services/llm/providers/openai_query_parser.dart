@@ -52,6 +52,10 @@ class OpenAIQueryParser implements LlmQueryParser {
       if (context.activeDriver != null) {
         promptBuffer.writeln('[Context: active driver filter is "${context.activeDriver}"]');
       }
+      if (context.locale != null || context.languageCode != null) {
+        final loc = context.locale ?? context.languageCode;
+        promptBuffer.writeln('[Context: app locale is "$loc"]');
+      }
     }
     promptBuffer.write(userQuery);
 

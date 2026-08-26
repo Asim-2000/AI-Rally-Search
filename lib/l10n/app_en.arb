@@ -1,0 +1,172 @@
+{
+  "@@locale": "en",
+  "appTitle": "AI Rally Search",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "searchHint": "Search rallies, drivers, jumps, crashes, results in natural language...",
+  "@searchHint": {
+    "description": "Placeholder hint in natural language search bar"
+  },
+  "searchButton": "Search",
+  "@searchButton": {
+    "description": "Label on the search button"
+  },
+  "searching": "Searching...",
+  "@searching": {
+    "description": "Label displayed while search is executing"
+  },
+  "listening": "Listening...",
+  "@listening": {
+    "description": "Label displayed during speech listening"
+  },
+  "resultsCount": "{count, plural, =0{No results found} =1{1 result found} other{{count} results found}}",
+  "@resultsCount": {
+    "description": "Number of results found",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "interpretedSummaryPrefix": "Interpreted",
+  "@interpretedSummaryPrefix": {
+    "description": "Prefix for the natural language interpreted summary chip"
+  },
+  "clarificationTitle": "Which one do you mean?",
+  "@clarificationTitle": {
+    "description": "Title shown when entity clarification is needed"
+  },
+  "intentSearchRallies": "Search Rallies",
+  "@intentSearchRallies": {
+    "description": "Label for search rallies intent"
+  },
+  "intentSearchDriverRallies": "Driver Rallies",
+  "@intentSearchDriverRallies": {
+    "description": "Label for driver rallies intent"
+  },
+  "intentSearchDriverWins": "Driver Wins",
+  "@intentSearchDriverWins": {
+    "description": "Label for driver wins intent"
+  },
+  "intentGetRallyResults": "Rally Winner",
+  "@intentGetRallyResults": {
+    "description": "Label for rally winner intent"
+  },
+  "intentGetRallyTopFinishers": "Top Finishers",
+  "@intentGetRallyTopFinishers": {
+    "description": "Label for top finishers intent"
+  },
+  "intentSearchVideoActions": "Action Highlights",
+  "@intentSearchVideoActions": {
+    "description": "Label for video action highlights intent"
+  },
+  "intentSearchDriverVideos": "Driver Videos",
+  "@intentSearchDriverVideos": {
+    "description": "Label for driver videos intent"
+  },
+  "intentGetTopUploaders": "Top Uploaders",
+  "@intentGetTopUploaders": {
+    "description": "Label for top uploaders intent"
+  },
+  "intentGetTopDriversByWins": "Most Wins",
+  "@intentGetTopDriversByWins": {
+    "description": "Label for most career wins leaderboard intent"
+  },
+  "actionAll": "All Actions",
+  "@actionAll": {
+    "description": "Label for all actions filter"
+  },
+  "actionJump": "Jump",
+  "@actionJump": {
+    "description": "Jump action label"
+  },
+  "actionDrift": "Drift",
+  "@actionDrift": {
+    "description": "Drift action label"
+  },
+  "actionCrash": "Crash",
+  "@actionCrash": {
+    "description": "Crash action label"
+  },
+  "actionSpin": "Spin",
+  "@actionSpin": {
+    "description": "Spin action label"
+  },
+  "actionDonut": "Donut",
+  "@actionDonut": {
+    "description": "Donut action label"
+  },
+  "actionHairpin": "Hairpin",
+  "@actionHairpin": {
+    "description": "Hairpin action label"
+  },
+  "actionWaterSplash": "Water Splash",
+  "@actionWaterSplash": {
+    "description": "Water splash action label"
+  },
+  "actionStartLine": "Start Line",
+  "@actionStartLine": {
+    "description": "Start line action label"
+  },
+  "actionNearMiss": "Near Miss",
+  "@actionNearMiss": {
+    "description": "Near miss action label"
+  },
+  "actionMechanicalFailure": "Mechanical Failure",
+  "@actionMechanicalFailure": {
+    "description": "Mechanical failure action label"
+  },
+  "actionOffroad": "Offroad",
+  "@actionOffroad": {
+    "description": "Offroad action label"
+  },
+  "actionStuck": "Stuck",
+  "@actionStuck": {
+    "description": "Stuck action label"
+  },
+  "filterDriver": "Driver",
+  "@filterDriver": {
+    "description": "Driver filter label"
+  },
+  "filterRally": "Rally",
+  "@filterRally": {
+    "description": "Rally filter label"
+  },
+  "filterCountry": "Country",
+  "@filterCountry": {
+    "description": "Country filter label"
+  },
+  "filterCity": "City",
+  "@filterCity": {
+    "description": "City filter label"
+  },
+  "filterStage": "Stage",
+  "@filterStage": {
+    "description": "Stage filter label"
+  },
+  "filterYear": "Year",
+  "@filterYear": {
+    "description": "Year filter label"
+  },
+  "filterAction": "Action",
+  "@filterAction": {
+    "description": "Action filter label"
+  },
+  "labelAllCountries": "All Countries",
+  "@labelAllCountries": {
+    "description": "Label for all countries dropdown"
+  },
+  "labelNoResults": "No results matching your query",
+  "@labelNoResults": {
+    "description": "Label when no results match"
+  },
+  "labelTelemetry": "AI Telemetry",
+  "@labelTelemetry": {
+    "description": "Label for telemetry button"
+  },
+  "languageSelector": "Language",
+  "@languageSelector": {
+    "description": "Label for language switcher"
+  }
+}

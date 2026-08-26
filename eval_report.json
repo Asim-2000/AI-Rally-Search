@@ -1,0 +1,1264 @@
+{
+  "provider": "mock",
+  "model": "mock-parser-v1",
+  "timestamp": "2026-08-26T21:11:14.349801",
+  "summary": {
+    "total_queries": 21,
+    "successful_parses": 21,
+    "failed_parses": 0,
+    "clarification_triggers": 0,
+    "overall_quality_score_pct": 94.28571428571428,
+    "overall_correctness_score_pct": 100.0
+  },
+  "latency": {
+    "parse": {
+      "count": 21,
+      "min_ms": 0,
+      "max_ms": 1,
+      "mean_ms": 0.05,
+      "p50_ms": 0,
+      "p90_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 1
+    },
+    "db": {
+      "count": 21,
+      "min_ms": 0,
+      "max_ms": 0,
+      "mean_ms": 0.0,
+      "p50_ms": 0,
+      "p90_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0
+    },
+    "total": {
+      "count": 21,
+      "min_ms": 0,
+      "max_ms": 1,
+      "mean_ms": 0.05,
+      "p50_ms": 0,
+      "p90_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 1
+    }
+  },
+  "cost": {
+    "total_prompt_tokens": 315,
+    "total_completion_tokens": 525,
+    "total_tokens": 840,
+    "total_cost_usd": 0.0,
+    "formatted_total_cost": "$0.000000",
+    "avg_cost_per_query_usd": 0.0,
+    "estimated_cost_per_1000_queries_usd": 0.0
+  },
+  "accuracy": {
+    "exact_match_accuracy_pct": 85.71428571428571,
+    "intent_accuracy_pct": 95.23809523809523,
+    "slot_accuracy_pct": 92.85714285714286,
+    "clarification_accuracy_pct": 95.23809523809523
+  },
+  "correctness": {
+    "schema_adherence_pct": 100.0,
+    "db_execution_success_pct": 100.0,
+    "overall_correctness_pct": 100.0
+  },
+  "categories": {
+    "Action Highlights": {
+      "count": 7,
+      "exact_match_pct": 85.71428571428571,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.1,
+      "avg_cost_usd": 0.0
+    },
+    "Driver Participation": {
+      "count": 2,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Driver Wins": {
+      "count": 2,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Driver Videos": {
+      "count": 1,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Rally Search": {
+      "count": 3,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Rally Winner": {
+      "count": 1,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Rally Leaderboard": {
+      "count": 1,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Leaderboards": {
+      "count": 2,
+      "exact_match_pct": 100.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Contextual Queries": {
+      "count": 1,
+      "exact_match_pct": 0.0,
+      "intent_accuracy_pct": 100.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    },
+    "Ambiguity & Clarification": {
+      "count": 1,
+      "exact_match_pct": 0.0,
+      "intent_accuracy_pct": 0.0,
+      "avg_latency_ms": 0.0,
+      "avg_cost_usd": 0.0
+    }
+  },
+  "records": [
+    {
+      "query_id": "ACT-01",
+      "input_query": "Show jump highlights from Moonraker.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 1,
+        "db_latency_ms": 0,
+        "total_latency_ms": 1
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Showing jump highlights | Rally: Moonraker Forestry Rally",
+      "execution_error": null
+    },
+    {
+      "query_id": "ACT-02",
+      "input_query": "Show jump highlights featuring Josh Moffett from Moonraker.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Showing jump highlights | Driver: Josh Moffett | Rally: Moonraker Forestry Rally",
+      "execution_error": null
+    },
+    {
+      "query_id": "ACT-03",
+      "input_query": "Show drift highlights from Trackrod Rally on Gale Rigg.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Showing drift highlights | Rally: Trackrod Rally | Stage: Gale Rigg",
+      "execution_error": null
+    },
+    {
+      "query_id": "ACT-04",
+      "input_query": "Show drift highlights featuring Philip Squires from Get Jerky.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Showing drift highlights | Driver: Philip Squires | Rally: Get Jerky Rally North Wales",
+      "execution_error": null
+    },
+    {
+      "query_id": "ACT-05",
+      "input_query": "Show crashes in Ireland in 2025.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Showing crash highlights | Country: Ireland | Year: 2025",
+      "execution_error": null
+    },
+    {
+      "query_id": "ACT-06",
+      "input_query": "Show spins and doughnuts in Killarney.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": false,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": false,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 0.875,
+        "composite_score": 0.95,
+        "mismatch_reason": "Slot mismatch in: targetRallyName"
+      },
+      "interpreted_summary": "Showing spin highlights",
+      "execution_error": null
+    },
+    {
+      "query_id": "ACT-07",
+      "input_query": "Show close calls and saves from Donegal.",
+      "category": "Action Highlights",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Showing near miss highlights | Rally: Donegal International Rally",
+      "execution_error": null
+    },
+    {
+      "query_id": "DRV-01",
+      "input_query": "Which rallies did Josh Moffett participate in in 2025?",
+      "category": "Driver Participation",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching driver participations | Driver: Josh Moffett | Year: 2025",
+      "execution_error": null
+    },
+    {
+      "query_id": "DRV-02",
+      "input_query": "Show rallies in Ireland in 2025 where Josh Moffett participated.",
+      "category": "Driver Participation",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching driver participations | Driver: Josh Moffett | Country: Ireland | Year: 2025",
+      "execution_error": null
+    },
+    {
+      "query_id": "DRV-03",
+      "input_query": "Which rallies did Josh Moffett win?",
+      "category": "Driver Wins",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching driver victories | Driver: Josh Moffett",
+      "execution_error": null
+    },
+    {
+      "query_id": "DRV-04",
+      "input_query": "Which rallies did Josh Moffett win in 2025?",
+      "category": "Driver Wins",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching driver victories | Driver: Josh Moffett | Year: 2025",
+      "execution_error": null
+    },
+    {
+      "query_id": "DRV-05",
+      "input_query": "Show videos featuring Josh Moffett.",
+      "category": "Driver Videos",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching driver videos | Driver: Josh Moffett",
+      "execution_error": null
+    },
+    {
+      "query_id": "RAL-01",
+      "input_query": "Show all rallies in Ireland.",
+      "category": "Rally Search",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching rally events | Country: Ireland",
+      "execution_error": null
+    },
+    {
+      "query_id": "RAL-02",
+      "input_query": "show me rallies in poland",
+      "category": "Rally Search",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching rally events | Country: Poland",
+      "execution_error": null
+    },
+    {
+      "query_id": "RAL-03",
+      "input_query": "Show rallies in Ireland in 2025.",
+      "category": "Rally Search",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Searching rally events | Country: Ireland | Year: 2025",
+      "execution_error": null
+    },
+    {
+      "query_id": "RAL-04",
+      "input_query": "Who finished first in Moonraker?",
+      "category": "Rally Winner",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Getting 1st place rally winner | Rally: Moonraker Forestry Rally",
+      "execution_error": null
+    },
+    {
+      "query_id": "RAL-05",
+      "input_query": "Show the top 10 finishers from Moonraker.",
+      "category": "Rally Leaderboard",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Getting rally leaderboard | Rally: Moonraker Forestry Rally",
+      "execution_error": null
+    },
+    {
+      "query_id": "LEAD-01",
+      "input_query": "Who are the top uploaders for Moonraker?",
+      "category": "Leaderboards",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Getting top uploaders | Rally: Moonraker Forestry Rally",
+      "execution_error": null
+    },
+    {
+      "query_id": "LEAD-02",
+      "input_query": "Show the drivers with the most wins.",
+      "category": "Leaderboards",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": true,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": true,
+          "targetRallyName": true,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": true,
+          "limit": true
+        },
+        "slot_accuracy": 1.0,
+        "composite_score": 1.0,
+        "mismatch_reason": null
+      },
+      "interpreted_summary": "Getting career wins leaderboard",
+      "execution_error": null
+    },
+    {
+      "query_id": "CTX-01",
+      "input_query": "Show jump highlights",
+      "category": "Contextual Queries",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": true,
+        "exact_match": false,
+        "clarification_match": true,
+        "slot_matches": {
+          "driverName": false,
+          "targetRallyName": false,
+          "actionType": true,
+          "country": true,
+          "city": true,
+          "stageName": true,
+          "year": false,
+          "limit": true
+        },
+        "slot_accuracy": 0.625,
+        "composite_score": 0.8500000000000001,
+        "mismatch_reason": "Slot mismatch in: driverName, targetRallyName, year"
+      },
+      "interpreted_summary": "Showing jump highlights",
+      "execution_error": null
+    },
+    {
+      "query_id": "AMB-01",
+      "input_query": "Show results",
+      "category": "Ambiguity & Clarification",
+      "is_success": true,
+      "latency": {
+        "parse_latency_ms": 0,
+        "db_latency_ms": 0,
+        "total_latency_ms": 0
+      },
+      "cost": {
+        "prompt_tokens": 15,
+        "completion_tokens": 25,
+        "total_tokens": 40,
+        "prompt_cost_usd": 0.0,
+        "completion_cost_usd": 0.0,
+        "total_cost_usd": 0.0,
+        "formatted_cost": "$0.000000",
+        "model": "mock-parser-v1",
+        "provider": "mock"
+      },
+      "correctness": {
+        "score": 1.0,
+        "is_fully_correct": true,
+        "is_json_valid": true,
+        "has_valid_intent": true,
+        "has_valid_action_type": true,
+        "has_valid_year": true,
+        "has_valid_pagination": true,
+        "is_clarification_safe": true,
+        "is_db_executable": true,
+        "violations": []
+      },
+      "accuracy": {
+        "intent_match": false,
+        "exact_match": false,
+        "clarification_match": false,
+        "slot_matches": {},
+        "slot_accuracy": 0.0,
+        "composite_score": 0.0,
+        "mismatch_reason": "Expected clarification, but got query execution or error"
+      },
+      "interpreted_summary": "Searching rally events",
+      "execution_error": null
+    }
+  ]
+}

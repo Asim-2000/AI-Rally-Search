@@ -177,4 +177,105 @@ CRITICAL RULES:
       'additionalProperties': false,
     },
   };
+
+  /// Gemini OpenAPI responseSchema definition for structured JSON generation
+  static const Map<String, dynamic> geminiResponseSchema = {
+    'type': 'OBJECT',
+    'properties': {
+      'intent': {
+        'type': 'STRING',
+        'enum': [
+          'SEARCH_RALLIES',
+          'SEARCH_DRIVER_RALLIES',
+          'SEARCH_DRIVER_WINS',
+          'GET_RALLY_RESULTS',
+          'GET_RALLY_TOP_FINISHERS',
+          'SEARCH_VIDEO_ACTIONS',
+          'SEARCH_DRIVER_VIDEOS',
+          'GET_TOP_UPLOADERS',
+          'GET_TOP_DRIVERS_BY_WINS',
+        ],
+        'description': 'The primary search intent of the user query.',
+      },
+      'rallyName': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Name of the rally or championship event.',
+      },
+      'eventName': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Specific event name if distinct from rallyName.',
+      },
+      'country': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Country name (e.g. Ireland, United Kingdom, Poland, Portugal).',
+      },
+      'city': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'City or locality.',
+      },
+      'stageName': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Special stage name.',
+      },
+      'stageNumber': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Stage number.',
+      },
+      'driverName': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Driver or competitor name.',
+      },
+      'actionType': {
+        'type': 'STRING',
+        'nullable': true,
+        'enum': [
+          'jump',
+          'drift',
+          'crash',
+          'spin',
+          'start line',
+          'near miss',
+          'mechanical failure',
+          'offroad',
+          'stuck',
+        ],
+        'description': 'Action highlight category.',
+      },
+      'year': {
+        'type': 'INTEGER',
+        'nullable': true,
+        'description': 'Four-digit year.',
+      },
+      'limit': {
+        'type': 'INTEGER',
+        'nullable': true,
+        'description': 'Number of items to retrieve (default 20).',
+      },
+      'offset': {
+        'type': 'INTEGER',
+        'nullable': true,
+        'description': 'Pagination offset (default 0).',
+      },
+      'requiresClarification': {
+        'type': 'BOOLEAN',
+        'description': 'True if the query cannot be safely resolved without user clarification.',
+      },
+      'clarificationQuestion': {
+        'type': 'STRING',
+        'nullable': true,
+        'description': 'Question if requiresClarification is true.',
+      },
+    },
+    'required': [
+      'intent',
+      'requiresClarification',
+    ],
+  };
 }

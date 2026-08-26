@@ -1,4 +1,5 @@
 import '../../models/search_query.dart';
+import 'eval/llm_cost_calculator.dart';
 import 'llm_provider_config.dart';
 
 /// Provider-independent result model representing the outcome of
@@ -35,6 +36,9 @@ class QueryParseResult {
   final int? completionTokens;
   final int? totalTokens;
 
+  /// Estimated USD cost for this parse operation.
+  final double? estimatedCostUsd;
+
   /// Confidence score between 0.0 and 1.0 (if provided).
   final double? confidence;
 
@@ -56,6 +60,7 @@ class QueryParseResult {
     this.promptTokens,
     this.completionTokens,
     this.totalTokens,
+    this.estimatedCostUsd,
     this.confidence,
     this.rawResponse,
     this.metadata = const {},
@@ -63,6 +68,13 @@ class QueryParseResult {
 
   /// Success indicator: A valid SearchQuery is present without error or clarification.
   bool get isSuccess => query != null && !requiresClarification && error == null;
+
+  /// Human-readable cost formatted as USD string.
+  String get formattedCost =>
+      estimatedCostUsd != null ? LlmCostCalculator.formatCostUsd(estimatedCostUsd!) : '\$0.000000';
+
+  /// Human-readable latency formatted as ms.
+  String get formattedLatency => latencyMs != null ? '${latencyMs}ms' : '0ms';
 
   /// Creates a failed parse result.
   factory QueryParseResult.failure({

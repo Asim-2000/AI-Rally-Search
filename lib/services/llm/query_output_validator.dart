@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../../models/search_intent.dart';
 import '../../models/search_query.dart';
+import 'eval/llm_cost_calculator.dart';
 import 'llm_provider_config.dart';
 import 'query_parse_result.dart';
 import 'query_understanding_spec.dart';
@@ -148,6 +149,17 @@ class QueryOutputValidator {
     // Deterministically generate interpreted summary from structured query
     final summary = generateInterpretedSummary(searchQuery);
 
+    // Compute estimated USD cost
+    double? costUsd;
+    if (promptTokens != null && completionTokens != null) {
+      costUsd = LlmCostCalculator.calculateCost(
+        promptTokens: promptTokens,
+        completionTokens: completionTokens,
+        model: model,
+        provider: provider,
+      );
+    }
+
     return QueryParseResult(
       query: searchQuery,
       requiresClarification: false,
@@ -158,6 +170,7 @@ class QueryOutputValidator {
       promptTokens: promptTokens,
       completionTokens: completionTokens,
       totalTokens: totalTokens,
+      estimatedCostUsd: costUsd,
       rawResponse: rawResponse,
       metadata: metadata ?? {},
     );

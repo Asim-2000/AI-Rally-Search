@@ -50,6 +50,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   String? _clarificationQuestion;
   bool _isNlMode = false;
   String? _lastExecutedNlQuery;
+  NaturalLanguageSearchResult? _lastNlResult;
 
   SearchIntent _selectedIntent = SearchIntent.searchRallies;
   String _selectedCountry = 'ALL';
@@ -268,6 +269,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           _searchResponse = result.searchResponse;
           _totalCount = result.totalCount;
           _interpretedSummary = result.interpretedSummary;
+          _lastNlResult = result;
           _clarificationQuestion = null;
           _errorMessage = null;
           _isLoading = false;
@@ -281,6 +283,160 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         });
       }
     }
+  }
+
+  void _showTelemetryDialog(BuildContext context, NaturalLanguageSearchResult result) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final parseResult = result.parseResult;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.analytics_outlined, color: theme.colorScheme.primary, size: 24),
+            const SizedBox(width: 8),
+            const Text(
+              'AI Query Telemetry & Evaluation',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Provider & Model
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.hub_outlined, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Provider: ${parseResult.provider?.name.toUpperCase() ?? 'UNKNOWN'} (${parseResult.model ?? 'default'})',
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Pillar 1: Cost
+              const Text('💰 Cost & Token Usage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Prompt Tokens:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${parseResult.promptTokens ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Completion Tokens:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${parseResult.completionTokens ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Estimated USD Cost:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text(parseResult.formattedCost, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 12)),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Pillar 2: Latency
+              const Text('⏱️ Latency Breakdown', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('LLM Parse Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${result.parseLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Database Execution Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${result.dbLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Total End-to-End Latency:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${result.totalLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 12)),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Pillar 3: Correctness Checks
+              const Text('🛡️ Structural Correctness', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 4),
+              _buildCorrectnessItem('Schema Valid JSON', true),
+              _buildCorrectnessItem('Intent Enum Valid', result.query != null),
+              _buildCorrectnessItem('Canonical Action Filter', result.query?.actionType == null || result.query!.actionType!.isNotEmpty),
+              _buildCorrectnessItem('Database Execution Safe', result.error == null),
+              const SizedBox(height: 12),
+
+              // Structured SearchQuery
+              if (result.query != null) ...[
+                const Text('🔍 Structured Query JSON', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    result.query!.toMap().toString(),
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCorrectnessItem(String label, bool isValid) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            isValid ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            size: 14,
+            color: isValid ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
   }
 
   SearchQuery _buildCurrentQuery({int page = 1}) {
@@ -784,6 +940,39 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (_lastNlResult != null) ...[
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => _showTelemetryDialog(context, _lastNlResult!),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.analytics_outlined, size: 13, color: theme.colorScheme.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_lastNlResult!.totalLatencyMs > 0 ? "${_lastNlResult!.totalLatencyMs}ms" : _lastNlResult!.parseResult.formattedLatency} · ${_lastNlResult!.parseResult.formattedCost}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 6),
                   InkWell(
                     onTap: () => setState(() => _interpretedSummary = null),
                     borderRadius: BorderRadius.circular(12),

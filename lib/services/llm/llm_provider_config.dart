@@ -79,9 +79,10 @@ class LlmConfig {
       case LlmProvider.gemini:
         return LlmConfig(
           provider: LlmProvider.gemini,
-          model: dotenv.env['GEMINI_MODEL'] ?? 'gemini-1.5-flash',
+          model: dotenv.env['GEMINI_MODEL'] ?? 'gemini-3.6-flash',
           apiKey: dotenv.env['GEMINI_API_KEY'],
           baseUrl: dotenv.env['GEMINI_BASE_URL'] ?? 'https://generativelanguage.googleapis.com/v1beta',
+          timeout: const Duration(seconds: 30),
         );
 
       case LlmProvider.mock:

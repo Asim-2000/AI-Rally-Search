@@ -107,9 +107,11 @@ class OpenAIQueryParser implements LlmQueryParser {
         final latencyMs = stopwatch.elapsedMilliseconds;
 
         if (response.statusCode != 200) {
+          final respBody = utf8.decode(response.bodyBytes);
+          print('OPENAI HTTP ERROR: ${response.statusCode} | $respBody');
           String errorDetail = 'HTTP ${response.statusCode}';
           try {
-            final errJson = jsonDecode(response.body);
+            final errJson = jsonDecode(respBody);
             if (errJson is Map && errJson.containsKey('error')) {
               errorDetail = errJson['error']['message']?.toString() ?? errorDetail;
             }
@@ -120,7 +122,7 @@ class OpenAIQueryParser implements LlmQueryParser {
             provider: LlmProvider.openai,
             model: config.model,
             latencyMs: latencyMs,
-            rawResponse: response.body,
+            rawResponse: respBody,
           );
         }
 

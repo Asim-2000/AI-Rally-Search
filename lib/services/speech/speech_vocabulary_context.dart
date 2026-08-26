@@ -1,4 +1,5 @@
 import '../../models/supported_language.dart';
+import 'multilingual_domain_lexicon.dart';
 
 /// Contract for providing dynamic rally domain vocabulary context to STT prompts/models.
 abstract class SpeechVocabularyContext {
@@ -29,65 +30,65 @@ class DefaultSpeechVocabularyContext implements SpeechVocabularyContext {
     'drift',
     'crash',
     'spin',
-    'donut',
-    'hairpin',
     'water splash',
-    'start line',
+    'donut',
+    'highlights',
+    'hairpin',
     'near miss',
     'mechanical failure',
     'offroad',
-    'stuck',
-    'stage',
     'results',
     'winner',
     'top finishers',
-    'highlights',
   ];
 
   static const List<String> _defaultDrivers = [
     'Josh Moffett',
     'Sam Moffett',
-    'Craig Breen',
+    'Philip Squires',
+    'Kris Meeke',
     'Keith Cronin',
     'Callum Devine',
+    'Craig Breen',
     'Alastair Fisher',
     'Desi Henry',
     'Cathan McCourt',
     'Garry Jennings',
     'Declan Boyle',
-    'Roy White',
-    'Donagh Kelly',
     'Sébastien Ogier',
     'Kalle Rovanperä',
     'Thierry Neuville',
     'Elfyn Evans',
-    'Ott Tänak',
   ];
 
   static const List<String> _defaultRallies = [
-    'Donegal International Rally',
-    'Galway International Rally',
+    'Moonraker',
+    'Donegal',
+    'Trackrod',
+    'Gale Rigg',
+    'Woodpecker',
+    'Tarenig',
     'West Cork Rally',
-    'Killarney Rally of the Lakes',
-    'Jim Clark Rally',
-    'Ulster Rally',
-    'Cork 20 International Rally',
-    'Moonraker Forestry Rally',
-    'Rallye Monte-Carlo',
-    'Rally Sweden',
-    'Safari Rally Kenya',
-    'Rally Portugal',
-    'Rally Finland',
-    'Acropolis Rally Greece',
-    'Rally Japan',
+    'Cork 20',
+    'Killarney Historic Rally',
+    'Rally of the Lakes',
+    'Circuit of Ireland',
+    'Mayo Stages',
+    'Monaghan Stages',
+    'Clare Stages',
+    'Sligo Stages',
+    'Mid Ulster Stages',
+    'Limerick Forest Rally',
   ];
 
   static const List<String> _defaultStages = [
-    'Atlantic Drive',
-    'Knockalla',
-    'Fanad Head',
+    'Ring Stage',
+    'Ardfield Stage',
     'Molls Gap',
     'Healy Pass',
+    'Atlantic Drive',
+    'Fanad Head',
+    'Knockalla',
     'SS1',
     'SS2',
     'Power Stage',
@@ -117,22 +118,60 @@ class DefaultSpeechVocabularyContext implements SpeechVocabularyContext {
   String buildVocabularyPrompt({SupportedLanguage? language, int maxTerms = 30}) {
     final terms = <String>[];
 
-    // Priority 1: Generic Rally context
-    terms.add('Rally motorsport search');
+    // Priority 1: High-value proper nouns (Drivers & Rallies)
+    terms.add('Josh Moffett');
+    terms.add('Moonraker');
+    terms.add('Donegal');
+    terms.add('Trackrod');
+    terms.add('Gale Rigg');
+    terms.add('Woodpecker');
+    terms.add('Tarenig');
 
-    // Priority 2: Key driver names
-    for (final driver in _customDrivers.take(10)) {
-      terms.add(driver);
+    // Priority 2: Localized country and action terminology from MultilingualDomainLexicon
+    if (language != null) {
+      final langCode = language.languageCode;
+      // Add localized country terms
+      for (final countryEntry in MultilingualDomainLexicon.countries.values) {
+        final localizedList = countryEntry[langCode];
+        if (localizedList != null) {
+          for (final term in localizedList) {
+            if (term.length >= 3 && !terms.contains(term)) {
+              terms.add(term);
+            }
+          }
+        }
+      }
+      // Add localized action terms
+      for (final actionEntry in MultilingualDomainLexicon.actions.values) {
+        final localizedList = actionEntry[langCode];
+        if (localizedList != null) {
+          for (final term in localizedList) {
+            if (term.length >= 3 && !terms.contains(term)) {
+              terms.add(term);
+            }
+          }
+        }
+      }
     }
 
-    // Priority 3: Key rally names
-    for (final rally in _customRallies.take(10)) {
-      terms.add(rally);
-    }
+    // Priority 3: English Action Terms
+    terms.add('jump');
+    terms.add('drift');
+    terms.add('crash');
+    terms.add('water splash');
+    terms.add('highlights');
 
-    // Priority 4: Action terms
-    for (final action in _defaultRallyActions.take(8)) {
-      terms.add(action);
+    // Priority 4: Supported Years
+    terms.add('2025');
+    terms.add('2024');
+    terms.add('2026');
+
+    // Priority 5: Additional custom drivers & rallies
+    for (final driver in _customDrivers) {
+      if (!terms.contains(driver)) terms.add(driver);
+    }
+    for (final rally in _customRallies) {
+      if (!terms.contains(rally)) terms.add(rally);
     }
 
     return terms.take(maxTerms).join(', ');

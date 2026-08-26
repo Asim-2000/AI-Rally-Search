@@ -17,7 +17,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   final SpeechConfig config;
   final SpeechVocabularyContext vocabularyContext;
   final http.Client _httpClient;
-  final AudioRecorder _recorder;
+  AudioRecorder? _recorder;
 
   VoiceState _currentState = VoiceState.idle;
   final StreamController<VoiceState> _stateController = StreamController<VoiceState>.broadcast();
@@ -35,7 +35,9 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     AudioRecorder? recorder,
   })  : vocabularyContext = vocabularyContext ?? DefaultSpeechVocabularyContext(),
         _httpClient = httpClient ?? http.Client(),
-        _recorder = recorder ?? AudioRecorder();
+        _recorder = recorder;
+
+  AudioRecorder get _activeRecorder => _recorder ??= AudioRecorder();
 
   @override
   VoiceState get currentState => _currentState;
@@ -57,7 +59,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   @override
   Future<bool> hasPermission() async {
     try {
-      return await _recorder.hasPermission();
+      return await _activeRecorder.hasPermission();
     } catch (_) {
       return false;
     }
@@ -67,7 +69,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   Future<bool> requestPermission() async {
     try {
       _setState(VoiceState.requestingPermission);
-      final hasPerm = await _recorder.hasPermission();
+      final hasPerm = await _activeRecorder.hasPermission();
       _setState(VoiceState.idle);
       return hasPerm;
     } catch (e) {
@@ -90,7 +92,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
 
     try {
       _setState(VoiceState.requestingPermission);
-      final hasPerm = await _recorder.hasPermission();
+      final hasPerm = await _activeRecorder.hasPermission();
       if (!hasPerm) {
         _setState(VoiceState.error);
         onError(
@@ -114,12 +116,12 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
 
       // Start recording into temporary storage or buffer
       if (kIsWeb) {
-        await _recorder.start(recordConfig, path: '');
+        await _activeRecorder.start(recordConfig, path: '');
       } else {
         final tempDir = Directory.systemTemp;
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final filePath = '${tempDir.path}/voice_query_$timestamp.m4a';
-        await _recorder.start(recordConfig, path: filePath);
+        await _activeRecorder.start(recordConfig, path: filePath);
       }
 
       // Guard with max recording duration
@@ -151,7 +153,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     _setState(VoiceState.processing);
 
     try {
-      final recordedPath = await _recorder.stop();
+      final recordedPath = await _activeRecorder.stop();
       if (recordedPath == null || recordedPath.isEmpty) {
         _setState(VoiceState.error);
         _onError?.call(
@@ -229,6 +231,39 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     }
   }
 
+  @override
+  Future<String?> transcribeAudioBytes(
+    List<int> bytes, {
+    required SupportedLanguage language,
+    String filename = 'audio.m4a',
+  }) async {
+    return _transcribeAudioBytes(
+      audioBytes: bytes,
+      filename: filename,
+      language: language,
+    );
+  }
+
+  @override
+  Future<String?> transcribeAudioFile(
+    dynamic file, {
+    required SupportedLanguage language,
+  }) async {
+    List<int> bytes;
+    String filename = 'audio.m4a';
+    if (file is File) {
+      bytes = await file.readAsBytes();
+      filename = file.uri.pathSegments.isNotEmpty ? file.uri.pathSegments.last : 'audio.m4a';
+    } else if (file is String) {
+      final f = File(file);
+      bytes = await f.readAsBytes();
+      filename = f.uri.pathSegments.isNotEmpty ? f.uri.pathSegments.last : 'audio.m4a';
+    } else {
+      throw ArgumentError('file must be File or String path');
+    }
+    return transcribeAudioBytes(bytes, language: language, filename: filename);
+  }
+
   /// Sends audio payload to configured proxy / STT endpoint.
   Future<String?> _transcribeAudioBytes({
     required List<int> audioBytes,
@@ -246,7 +281,10 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
 
     // Form fields
     request.fields['model'] = config.model;
-    request.fields['language'] = _mapToWhisperLanguage(language.languageCode);
+    final whisperLang = _mapToWhisperLanguage(language.languageCode);
+    if (whisperLang != null) {
+      request.fields['language'] = whisperLang;
+    }
     request.fields['response_format'] = 'json';
 
     // Domain vocabulary prompt context
@@ -275,26 +313,35 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     }
   }
 
-  /// Maps ISO language codes to Whisper supported codes.
-  String _mapToWhisperLanguage(String code) {
-    switch (code.toLowerCase()) {
-      case 'nb':
-      case 'nn':
-        return 'no'; // Norwegian
-      case 'ga':
-        return 'ga'; // Irish
-      case 'cy':
-        return 'cy'; // Welsh
-      default:
-        return code.toLowerCase();
+  /// Official OpenAI Whisper supported language codes.
+  static const Set<String> _whisperSupportedLanguageWhitelist = {
+    'af', 'am', 'ar', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bo', 'br', 'bs', 'ca', 'cs', 'cy',
+    'da', 'de', 'el', 'en', 'es', 'et', 'eu', 'fa', 'fi', 'fo', 'fr', 'gl', 'gu', 'ha', 'haw',
+    'he', 'hi', 'hr', 'ht', 'hu', 'hy', 'id', 'is', 'it', 'ja', 'jw', 'ka', 'kk', 'km', 'kn',
+    'ko', 'la', 'lb', 'ln', 'lo', 'lt', 'lv', 'mg', 'mi', 'mk', 'ml', 'mn', 'mr', 'ms', 'mt',
+    'my', 'ne', 'nl', 'nn', 'no', 'oc', 'pa', 'pl', 'ps', 'pt', 'ro', 'ru', 'sa', 'sd', 'si',
+    'sk', 'sl', 'sn', 'so', 'sq', 'sr', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'tk', 'tl',
+    'tr', 'tt', 'uk', 'ur', 'uz', 'vi', 'yi', 'yo', 'zh'
+  };
+
+  /// Maps ISO language codes to Whisper supported codes, returning null for auto-detection if unsupported.
+  String? _mapToWhisperLanguage(String code) {
+    final cleanCode = code.toLowerCase().trim();
+    if (cleanCode == 'nb' || cleanCode == 'nn') {
+      return 'no'; // Norwegian
     }
+    if (_whisperSupportedLanguageWhitelist.contains(cleanCode)) {
+      return cleanCode;
+    }
+    // Unsupported explicit language code (e.g. 'ga' for Irish) -> Fallback to automatic language detection
+    return null;
   }
 
   @override
   Future<void> cancelListening() async {
     _maxDurationTimer?.cancel();
     try {
-      await _recorder.cancel();
+      await _recorder?.cancel();
     } catch (_) {}
     _setState(VoiceState.idle);
   }
@@ -302,7 +349,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   @override
   void dispose() {
     _maxDurationTimer?.cancel();
-    _recorder.dispose();
+    _recorder?.dispose();
     _stateController.close();
   }
 }

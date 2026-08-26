@@ -2,6 +2,7 @@ import '../../models/entity_candidate.dart';
 import '../../models/search_query.dart';
 import '../../models/search_results.dart';
 import '../search_repository.dart';
+import '../speech/voice_entity_recovery_service.dart';
 import 'entity_resolution/entity_resolver.dart';
 import 'llm_query_parser.dart';
 import 'query_output_validator.dart';
@@ -19,6 +20,9 @@ class NaturalLanguageSearchResult {
 
   /// The canonical resolved query produced by the EntityResolver.
   final SearchQuery? resolvedQuery;
+
+  /// Voice entity recovery details (if voice search or normalization applied).
+  final VoiceEntityRecoveryResult? voiceRecovery;
 
   /// The executable query (resolvedQuery if available, otherwise parsedQuery).
   SearchQuery? get query => resolvedQuery ?? parsedQuery;
@@ -57,6 +61,7 @@ class NaturalLanguageSearchResult {
     required this.parseResult,
     this.parsedQuery,
     this.resolvedQuery,
+    this.voiceRecovery,
     this.searchResponse,
     this.requiresClarification = false,
     this.clarificationQuestion,
@@ -88,6 +93,7 @@ class NaturalLanguageSearchResult {
   factory NaturalLanguageSearchResult.clarification({
     required QueryParseResult parseResult,
     SearchQuery? parsedQuery,
+    VoiceEntityRecoveryResult? voiceRecovery,
     required String clarificationQuestion,
     List<EntityCandidate> candidates = const [],
     Map<String, EntityResolution> resolutions = const {},
@@ -97,6 +103,7 @@ class NaturalLanguageSearchResult {
     return NaturalLanguageSearchResult(
       parseResult: parseResult,
       parsedQuery: parsedQuery,
+      voiceRecovery: voiceRecovery,
       requiresClarification: true,
       clarificationQuestion: clarificationQuestion,
       candidates: candidates,
@@ -110,6 +117,7 @@ class NaturalLanguageSearchResult {
   factory NaturalLanguageSearchResult.failure({
     required QueryParseResult parseResult,
     SearchQuery? parsedQuery,
+    VoiceEntityRecoveryResult? voiceRecovery,
     required String error,
     int entityResolutionLatencyMs = 0,
     int totalLatencyMs = 0,
@@ -117,6 +125,7 @@ class NaturalLanguageSearchResult {
     return NaturalLanguageSearchResult(
       parseResult: parseResult,
       parsedQuery: parsedQuery,
+      voiceRecovery: voiceRecovery,
       error: error,
       interpretedSummary: parseResult.interpretedSummary,
       entityResolutionLatencyMs: entityResolutionLatencyMs,
@@ -127,22 +136,26 @@ class NaturalLanguageSearchResult {
 
 /// Orchestrates Natural Language Search:
 /// 1. Takes user natural-language string.
-/// 2. Passes it through an [LlmQueryParser] to produce an extracted [SearchQuery].
-/// 3. Validates against clarification or parsing errors.
-/// 4. Resolves entity phrases deterministically via injected [EntityResolver].
-/// 5. If ambiguous or clarification required, returns candidates to UI.
-/// 6. Executes deterministic search via existing [ISearchRepository].
-/// 7. Captures granular latency (parse, entity resolution, DB) and cost telemetry.
+/// 2. Performs Voice Entity Recovery / Normalization if applicable.
+/// 3. Passes it through an [LlmQueryParser] to produce an extracted [SearchQuery].
+/// 4. Validates against clarification or parsing errors.
+/// 5. Resolves entity phrases deterministically via injected [EntityResolver].
+/// 6. If ambiguous or clarification required, returns candidates to UI.
+/// 7. Executes deterministic search via existing [ISearchRepository].
+/// 8. Captures granular latency (parse, entity resolution, DB) and cost telemetry.
 class NaturalLanguageSearchService {
   final LlmQueryParser parser;
   final EntityResolver entityResolver;
   final ISearchRepository repository;
+  final VoiceEntityRecoveryService voiceRecoveryService;
 
   NaturalLanguageSearchService({
     required this.parser,
     required this.entityResolver,
     ISearchRepository? repository,
-  }) : repository = repository ?? SearchRepository();
+    VoiceEntityRecoveryService? voiceRecoveryService,
+  })  : repository = repository ?? SearchRepository(),
+        voiceRecoveryService = voiceRecoveryService ?? const VoiceEntityRecoveryService();
 
   /// Executes natural language search end-to-end.
   Future<NaturalLanguageSearchResult> search(
@@ -162,14 +175,22 @@ class NaturalLanguageSearchService {
     }
 
     try {
+      // Step 0: Voice Entity Recovery / Text Normalization
+      final recovery = voiceRecoveryService.recover(
+        clean,
+        languageCode: context?.languageCode ?? context?.locale,
+      );
+      final queryToParse = recovery.normalizedTranscript;
+
       // Step 1: Parse natural language into structured SearchQuery (entity extraction)
-      final parseResult = await parser.parse(clean, context: context);
+      final parseResult = await parser.parse(queryToParse, context: context);
 
       // Step 2: Handle parser-level clarification
       if (parseResult.requiresClarification) {
         overallStopwatch.stop();
         return NaturalLanguageSearchResult.clarification(
           parseResult: parseResult,
+          voiceRecovery: recovery,
           clarificationQuestion: parseResult.clarificationQuestion ?? 'Please provide more details.',
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
@@ -180,6 +201,7 @@ class NaturalLanguageSearchService {
         overallStopwatch.stop();
         return NaturalLanguageSearchResult.failure(
           parseResult: parseResult,
+          voiceRecovery: recovery,
           error: parseResult.error ?? 'Unable to understand search query',
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
@@ -197,6 +219,7 @@ class NaturalLanguageSearchService {
         return NaturalLanguageSearchResult.clarification(
           parseResult: parseResult,
           parsedQuery: parsedQuery,
+          voiceRecovery: recovery,
           clarificationQuestion: resolutionResult.clarificationQuestion ?? 'Please clarify the entity.',
           candidates: resolutionResult.candidates,
           resolutions: resolutionResult.resolutions,
@@ -210,6 +233,7 @@ class NaturalLanguageSearchService {
         return NaturalLanguageSearchResult.failure(
           parseResult: parseResult,
           parsedQuery: parsedQuery,
+          voiceRecovery: recovery,
           error: resolutionResult.error!,
           entityResolutionLatencyMs: erStopwatch.elapsedMilliseconds,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
@@ -231,6 +255,7 @@ class NaturalLanguageSearchService {
         parseResult: parseResult,
         parsedQuery: parsedQuery,
         resolvedQuery: resolvedQuery,
+        voiceRecovery: recovery,
         searchResponse: searchResponse,
         resolutions: resolutionResult.resolutions,
         interpretedSummary: summary,

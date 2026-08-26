@@ -128,6 +128,27 @@ class MockSpeechToTextService implements ISpeechToTextService {
   }
 
   @override
+  Future<String?> transcribeAudioBytes(
+    List<int> bytes, {
+    required SupportedLanguage language,
+    String filename = 'audio.m4a',
+  }) async {
+    if (shouldFailTranscription || simulatedError != null) {
+      return null;
+    }
+    final langCode = language.languageCode.toLowerCase();
+    return _languageTranscripts[langCode] ?? defaultTranscript ?? 'Show rallies in 2025';
+  }
+
+  @override
+  Future<String?> transcribeAudioFile(
+    dynamic file, {
+    required SupportedLanguage language,
+  }) async {
+    return transcribeAudioBytes([], language: language);
+  }
+
+  @override
   void dispose() {
     _stateController.close();
   }

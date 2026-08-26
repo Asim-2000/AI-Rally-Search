@@ -32,6 +32,19 @@ abstract class ISpeechToTextService {
   /// Cancels active recording without executing transcription.
   Future<void> cancelListening();
 
+  /// Directly transcribes in-memory audio bytes using the configured STT provider.
+  Future<String?> transcribeAudioBytes(
+    List<int> bytes, {
+    required SupportedLanguage language,
+    String filename = 'audio.m4a',
+  });
+
+  /// Directly transcribes a local audio file using the configured STT provider.
+  Future<String?> transcribeAudioFile(
+    dynamic file, {
+    required SupportedLanguage language,
+  });
+
   /// Disposes underlying audio recorders and stream controllers.
   void dispose();
 }

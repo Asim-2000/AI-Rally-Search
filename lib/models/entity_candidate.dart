@@ -27,6 +27,24 @@ class EntityCandidate {
     this.metadata,
   });
 
+  EntityCandidate copyWith({
+    String? id,
+    EntityType? type,
+    String? canonicalName,
+    String? subtitle,
+    double? score,
+    Map<String, dynamic>? metadata,
+  }) {
+    return EntityCandidate(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      canonicalName: canonicalName ?? this.canonicalName,
+      subtitle: subtitle ?? this.subtitle,
+      score: score ?? this.score,
+      metadata: metadata ?? this.metadata,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -56,7 +74,7 @@ class EntityCandidate {
   String toString() => 'EntityCandidate($canonicalName [$id], type: ${type.name}, score: $score)';
 }
 
-/// Metadata and resolution trail for a single entity phrase in a query.
+/// Strategy and status of a resolved entity phrase.
 class EntityResolution {
   final EntityType type;
   final String rawPhrase;
@@ -70,72 +88,43 @@ class EntityResolution {
     required this.type,
     required this.rawPhrase,
     this.resolvedCandidate,
-    this.confidence = 1.0,
-    this.strategy = 'exact',
+    required this.confidence,
+    required this.strategy,
     this.isAmbiguous = false,
     this.candidateOptions = const [],
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'type': type.name,
-      'rawPhrase': rawPhrase,
-      'resolvedCandidate': resolvedCandidate?.toMap(),
-      'confidence': confidence,
-      'strategy': strategy,
-      'isAmbiguous': isAmbiguous,
-      'candidateOptions': candidateOptions.map((c) => c.toMap()).toList(),
-    };
-  }
+  bool get isResolved => resolvedCandidate != null && !isAmbiguous;
+
+  Map<String, dynamic> toJson() => {
+        'type': type.name,
+        'rawPhrase': rawPhrase,
+        'resolvedCandidate': resolvedCandidate?.canonicalName,
+        'resolvedId': resolvedCandidate?.id,
+        'confidence': confidence,
+        'strategy': strategy,
+        'isAmbiguous': isAmbiguous,
+        'candidateOptionsCount': candidateOptions.length,
+      };
 }
 
-/// Encapsulates the overall result of deterministic entity resolution on a SearchQuery.
+/// Comprehensive outcome of the multi-stage entity resolution pipeline.
 class EntityResolutionResult {
-  /// The original unmodified SearchQuery parsed by LLM/validator.
-  final SearchQuery? parsedQuery;
-
-  /// The normalized and resolved SearchQuery ready for SearchRepository.
   final SearchQuery? resolvedQuery;
-
-  /// True if multiple candidates exist or confidence is below required threshold.
   final bool requiresClarification;
-
-  /// User-facing clarification question.
   final String? clarificationQuestion;
-
-  /// Disambiguation candidate options if clarification is required.
   final List<EntityCandidate> candidates;
-
-  /// Error message if lookup failed.
+  final Map<String, EntityResolution> resolutions;
   final String? error;
 
-  /// Detailed per-entity resolution mapping (e.g. 'driver' -> EntityResolution).
-  final Map<String, EntityResolution> resolutions;
-
   const EntityResolutionResult({
-    this.parsedQuery,
     this.resolvedQuery,
     this.requiresClarification = false,
     this.clarificationQuestion,
     this.candidates = const [],
-    this.error,
     this.resolutions = const {},
+    this.error,
   });
-
-  bool get isSuccess => resolvedQuery != null && !requiresClarification && error == null;
-
-  factory EntityResolutionResult.success({
-    required SearchQuery parsedQuery,
-    required SearchQuery resolvedQuery,
-    Map<String, EntityResolution> resolutions = const {},
-  }) {
-    return EntityResolutionResult(
-      parsedQuery: parsedQuery,
-      resolvedQuery: resolvedQuery,
-      requiresClarification: false,
-      resolutions: resolutions,
-    );
-  }
 
   factory EntityResolutionResult.clarification({
     required SearchQuery parsedQuery,
@@ -144,7 +133,7 @@ class EntityResolutionResult {
     Map<String, EntityResolution> resolutions = const {},
   }) {
     return EntityResolutionResult(
-      parsedQuery: parsedQuery,
+      resolvedQuery: parsedQuery,
       requiresClarification: true,
       clarificationQuestion: clarificationQuestion,
       candidates: candidates,
@@ -152,12 +141,8 @@ class EntityResolutionResult {
     );
   }
 
-  factory EntityResolutionResult.failure({
-    SearchQuery? parsedQuery,
-    required String error,
-  }) {
+  factory EntityResolutionResult.failure(String error) {
     return EntityResolutionResult(
-      parsedQuery: parsedQuery,
       error: error,
     );
   }

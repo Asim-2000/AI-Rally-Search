@@ -1,5 +1,7 @@
 import '../../../models/entity_candidate.dart';
 import '../../database_service.dart';
+import 'phonetic_matching_helper.dart';
+import 'transliteration_helper.dart';
 
 /// Abstract contract for database-backed entity candidate lookups.
 abstract class IEntityLookupRepository {
@@ -8,7 +10,7 @@ abstract class IEntityLookupRepository {
     int? year,
     String? country,
     String? city,
-    int limit = 10,
+    int limit = 25,
   });
 
   Future<List<EntityCandidate>> lookupDrivers(
@@ -16,25 +18,25 @@ abstract class IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
-    int limit = 10,
+    int limit = 25,
   });
 
   Future<List<EntityCandidate>> lookupStages(
     String phrase, {
     String? eventId,
     String? eventName,
-    int limit = 10,
+    int limit = 25,
   });
 
   Future<List<EntityCandidate>> lookupCities(
     String phrase, {
     String? country,
-    int limit = 10,
+    int limit = 25,
   });
 
   Future<List<EntityCandidate>> lookupUploaders(
     String phrase, {
-    int limit = 10,
+    int limit = 25,
   });
 }
 
@@ -45,20 +47,70 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
   DatabaseEntityLookupRepository({DatabaseService? dbService})
       : _dbService = dbService ?? DatabaseService();
 
+  /// Generates a robust SQL candidate matching clause incorporating exact,
+  /// space-collapsed, transliterated, and token-level patterns.
+  List<String> _buildCandidatePatterns(String phrase) {
+    final clean = phrase.trim().replaceAll("'", "''");
+    if (clean.isEmpty) return [];
+
+    final patterns = <String>{};
+    final normalized = PhoneticMatchingHelper.normalize(clean);
+    if (normalized.isNotEmpty) patterns.add(normalized);
+
+    final collapsed = PhoneticMatchingHelper.collapseSpaces(clean);
+    if (collapsed.isNotEmpty) patterns.add(collapsed);
+
+    // Cross-script transliterations
+    if (TransliterationHelper.isArabicOrUrdu(clean)) {
+      final translits = TransliterationHelper.transliterateToLatin(clean);
+      for (final t in translits) {
+        final tNorm = PhoneticMatchingHelper.normalize(t);
+        if (tNorm.isNotEmpty) patterns.add(tNorm);
+        final tCollapsed = PhoneticMatchingHelper.collapseSpaces(t);
+        if (tCollapsed.isNotEmpty) patterns.add(tCollapsed);
+      }
+    }
+
+    // Significant token and prefix patterns (length >= 3)
+    final tokens = normalized.split(' ').where((t) => t.length >= 3).toList();
+    for (final token in tokens) {
+      patterns.add(token);
+      if (token.length >= 4) {
+        patterns.add('${token.substring(0, 4)}%');
+      }
+    }
+
+    return patterns.toList();
+  }
+
   @override
   Future<List<EntityCandidate>> lookupRallies(
     String phrase, {
     int? year,
     String? country,
     String? city,
-    int limit = 10,
+    int limit = 25,
   }) async {
     final clean = phrase.trim().replaceAll("'", "''");
     if (clean.isEmpty) return [];
 
-    final whereClauses = <String>[
-      "(LOWER(ev.event_name) LIKE '%${clean.toLowerCase()}%' OR ev.event_id = '$clean')"
-    ];
+    final patterns = _buildCandidatePatterns(phrase);
+    final patternClauses = <String>[];
+    for (final p in patterns) {
+      final pEscaped = p.replaceAll("'", "''").toLowerCase();
+      if (pEscaped.endsWith('%')) {
+        patternClauses.add("LOWER(ev.event_name) LIKE '$pEscaped'");
+      } else {
+        patternClauses.add("LOWER(ev.event_name) LIKE '%$pEscaped%'");
+      }
+      if (pEscaped.length >= 4 && !pEscaped.contains(' ') && !pEscaped.endsWith('%')) {
+        patternClauses.add("REPLACE(LOWER(ev.event_name), ' ', '') LIKE '%$pEscaped%'");
+      }
+    }
+
+    patternClauses.add("ev.event_id = '$clean'");
+
+    final whereClauses = <String>['(${patternClauses.join(' OR ')})'];
 
     if (year != null && year > 0) {
       whereClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
@@ -128,18 +180,32 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
-    int limit = 10,
+    int limit = 25,
   }) async {
     final clean = phrase.trim().replaceAll("'", "''");
     if (clean.isEmpty) return [];
 
-    final cleanLower = clean.toLowerCase();
+    final patterns = _buildCandidatePatterns(phrase);
+    final patternClauses = <String>[];
+    for (final p in patterns) {
+      final pEscaped = p.replaceAll("'", "''").toLowerCase();
+      if (pEscaped.endsWith('%')) {
+        patternClauses.add("LOWER(dp.full_name) LIKE '$pEscaped'");
+      } else {
+        patternClauses.add("LOWER(dp.full_name) LIKE '%$pEscaped%'");
+      }
+      if (pEscaped.length >= 4 && !pEscaped.contains(' ') && !pEscaped.endsWith('%')) {
+        patternClauses.add("REPLACE(LOWER(dp.full_name), ' ', '') LIKE '%$pEscaped%'");
+      }
+    }
+
+    patternClauses.add("LOWER(dp.nick_name) LIKE '%${clean.toLowerCase()}%'");
+
+    final nameMatchSql = '(${patternClauses.join(' OR ')})';
 
     // If context (event or year) is provided, prioritize participants
     if (eventId != null || eventName != null || (year != null && year > 0)) {
-      final contextClauses = <String>[
-        "(LOWER(dp.full_name) LIKE '%$cleanLower%' OR LOWER(dp.nick_name) LIKE '%$cleanLower%' OR LOWER(rr.crew) LIKE '%$cleanLower%')"
-      ];
+      final contextClauses = <String>[nameMatchSql];
       if (eventId != null && eventId.isNotEmpty) {
         contextClauses.add("ev.event_id = '${eventId.replaceAll("'", "''")}'");
       } else if (eventName != null && eventName.isNotEmpty) {
@@ -161,7 +227,7 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
         FROM user_driver_profile dp
         INNER JOIN rally_entry_list el ON el.user_driver_id = dp.driver_id
         LEFT JOIN rally_results rr ON rr.entry_list_id = el.id
-        LEFT JOIN rally_events ev ON (rr.rally_id = ev.event_id OR el.event_id = ev.event_id)
+        LEFT JOIN rally_events ev ON rr.rally_id = ev.event_id
         WHERE ${contextClauses.join(' AND ')}
         GROUP BY dp.driver_id, dp.full_name, dp.nick_name, dp.country
         LIMIT $limit;
@@ -189,6 +255,7 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
             metadata: {
               'country': country,
               'inContext': true,
+              'year': int.tryParse(yr ?? ''),
             },
           );
         }).toList();
@@ -203,12 +270,11 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
         dp.nick_name,
         dp.country
       FROM user_driver_profile dp
-      WHERE LOWER(dp.full_name) LIKE '%$cleanLower%' 
-         OR LOWER(dp.nick_name) LIKE '%$cleanLower%'
+      WHERE $nameMatchSql
       ORDER BY 
         CASE 
-          WHEN LOWER(dp.full_name) = '$cleanLower' THEN 1
-          WHEN LOWER(dp.full_name) LIKE '$cleanLower%' THEN 2
+          WHEN LOWER(dp.full_name) = '${clean.toLowerCase()}' THEN 1
+          WHEN LOWER(dp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
           ELSE 3
         END
       LIMIT $limit;
@@ -238,7 +304,7 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     String phrase, {
     String? eventId,
     String? eventName,
-    int limit = 10,
+    int limit = 25,
   }) async {
     final clean = phrase.trim().replaceAll("'", "''");
     if (clean.isEmpty) return [];
@@ -246,9 +312,22 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     final cleanLower = clean.toLowerCase();
     final cleanNum = cleanLower.replaceAll('ss', '').replaceAll('stage', '').trim();
 
-    final whereClauses = <String>[
-      "(LOWER(stg.stage_name) LIKE '%$cleanLower%' OR stg.stage_number = '$clean' OR stg.stage_number = '$cleanNum')"
-    ];
+    final patterns = _buildCandidatePatterns(phrase);
+    final patternClauses = <String>[];
+    for (final p in patterns) {
+      final pEscaped = p.replaceAll("'", "''").toLowerCase();
+      patternClauses.add("LOWER(stg.stage_name) LIKE '%$pEscaped%'");
+      if (pEscaped.length >= 4 && !pEscaped.contains(' ') && !pEscaped.endsWith('%')) {
+        patternClauses.add("REPLACE(LOWER(stg.stage_name), ' ', '') LIKE '%$pEscaped%'");
+      }
+    }
+
+    patternClauses.add("stg.stage_number = '$clean'");
+    if (cleanNum.isNotEmpty) {
+      patternClauses.add("stg.stage_number = '$cleanNum'");
+    }
+
+    final whereClauses = <String>['(${patternClauses.join(' OR ')})'];
 
     if (eventId != null && eventId.isNotEmpty) {
       whereClauses.add("stg.event_id = '${eventId.replaceAll("'", "''")}'");
@@ -307,18 +386,20 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
   Future<List<EntityCandidate>> lookupCities(
     String phrase, {
     String? country,
-    int limit = 10,
+    int limit = 25,
   }) async {
     final clean = phrase.trim().replaceAll("'", "''");
     if (clean.isEmpty) return [];
 
     final cleanLower = clean.toLowerCase();
     final whereClauses = <String>[
-      "ev.city IS NOT NULL AND ev.city != '' AND LOWER(ev.city) LIKE '%$cleanLower%'"
+      "LOWER(ev.city) LIKE '%$cleanLower%'",
+      "ev.city IS NOT NULL",
+      "TRIM(ev.city) != ''",
     ];
 
-    if (country != null && country.isNotEmpty && country.toUpperCase() != 'ALL') {
-      final sanitizedCountry = country.replaceAll("'", "''").toLowerCase();
+    if (country != null && country.trim().isNotEmpty && country.toUpperCase() != 'ALL') {
+      final sanitizedCountry = country.trim().replaceAll("'", "''").toLowerCase();
       whereClauses.add("LOWER(ev.country) LIKE '%$sanitizedCountry%'");
     }
 
@@ -335,15 +416,15 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     final rows = await _dbService.query(sql);
     return rows.map((r) {
       final city = r['city']?.toString() ?? '';
-      final ctry = r['country']?.toString();
+      final cCountry = r['country']?.toString();
 
       return EntityCandidate(
-        id: city,
+        id: 'city_${city.toLowerCase().replaceAll(' ', '_')}',
         type: EntityType.city,
         canonicalName: city,
-        subtitle: ctry,
+        subtitle: cCountry != null && cCountry.isNotEmpty ? cCountry.toUpperCase() : null,
         metadata: {
-          'country': ctry,
+          'country': cCountry,
         },
       );
     }).toList();
@@ -352,36 +433,38 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
   @override
   Future<List<EntityCandidate>> lookupUploaders(
     String phrase, {
-    int limit = 10,
+    int limit = 25,
   }) async {
     final clean = phrase.trim().replaceAll("'", "''");
     if (clean.isEmpty) return [];
 
     final cleanLower = clean.toLowerCase();
     final sql = '''
-      SELECT DISTINCT 
-        ua.id AS user_id,
-        COALESCE(ua.user_name, ua.email) AS uploader_name,
-        COUNT(rv.id) AS video_count
-      FROM user_account ua
-      INNER JOIN rally_videos rv ON rv.uploader_user_id = ua.id
-      WHERE LOWER(ua.user_name) LIKE '%$cleanLower%' OR LOWER(ua.email) LIKE '%$cleanLower%'
-      GROUP BY ua.id, ua.user_name, ua.email
-      ORDER BY video_count DESC
+      SELECT 
+        u.id,
+        u.username,
+        u.display_name,
+        u.avatar_url
+      FROM users u
+      WHERE LOWER(u.username) LIKE '%$cleanLower%' 
+         OR LOWER(u.display_name) LIKE '%$cleanLower%'
       LIMIT $limit;
     ''';
 
     final rows = await _dbService.query(sql);
     return rows.map((r) {
-      final id = r['user_id']?.toString() ?? '';
-      final name = r['uploader_name']?.toString() ?? '';
-      final count = r['video_count']?.toString();
+      final id = r['id']?.toString() ?? '';
+      final username = r['username']?.toString() ?? '';
+      final displayName = r['display_name']?.toString();
 
       return EntityCandidate(
         id: id,
         type: EntityType.uploader,
-        canonicalName: name,
-        subtitle: count != null ? '$count videos' : null,
+        canonicalName: displayName != null && displayName.isNotEmpty ? displayName : username,
+        subtitle: '@$username',
+        metadata: {
+          'username': username,
+        },
       );
     }).toList();
   }

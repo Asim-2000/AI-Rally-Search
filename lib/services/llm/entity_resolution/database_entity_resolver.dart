@@ -1,25 +1,22 @@
 import '../../../models/entity_candidate.dart';
+import '../../../models/search_intent.dart';
 import '../../../models/search_query.dart';
 import '../llm_query_parser.dart';
 import 'entity_lookup_repository.dart';
 import 'entity_resolver.dart';
+import 'phonetic_matching_helper.dart';
 
-/// Database-backed deterministic entity resolution engine.
+/// Database-backed deterministic Entity Resolution Service.
 ///
-/// Implements staged matching, confidence thresholds, score gap analysis,
-/// context-aware sequential resolution, and ambiguity protection.
+/// Converts raw/corrupted LLM extracted entity phrases into canonical database UUIDs
+/// using candidate retrieval and phonetic ranking.
 class DatabaseEntityResolver implements EntityResolver {
   final IEntityLookupRepository _repository;
-
-  /// Minimum confidence score required to auto-resolve an entity (0.0 to 1.0)
   final double minConfidenceThreshold;
-
-  /// Minimum score difference required between top match and runner-up
   final double minScoreGap;
 
-  /// In-memory resolution cache
-  final Map<String, _CachedResolution> _cache = {};
-  static const int _maxCacheEntries = 200;
+  // In-memory query-level resolution cache
+  final Map<String, EntityResolution> _resolutionCache = {};
 
   DatabaseEntityResolver({
     required IEntityLookupRepository repository,
@@ -27,38 +24,54 @@ class DatabaseEntityResolver implements EntityResolver {
     this.minScoreGap = 0.15,
   }) : _repository = repository;
 
+  /// Clears the resolution cache.
+  void clearCache() {
+    _resolutionCache.clear();
+  }
+
+  /// Resolves all open-set entity mentions inside [query] deterministically.
   @override
   Future<EntityResolutionResult> resolve(
     SearchQuery query, {
     SearchContext? context,
   }) async {
-    final resolutions = <String, EntityResolution>{};
     SearchQuery workingQuery = query;
+    final resolutions = <String, EntityResolution>{};
 
-    // Track if any entity required clarification
     EntityCandidate? resolvedRallyCandidate;
 
     // =========================================================================
-    // STEP 1: RESOLVE RALLY / EVENT NAME
+    // STEP 1: RESOLVE RALLY / EVENT
     // =========================================================================
     final rawRally = query.targetRallyName;
     if (rawRally != null && rawRally.trim().isNotEmpty) {
+      final isVideoSearch = query.intent == SearchIntent.searchVideoActions || query.intent == SearchIntent.searchDriverVideos;
       final rallyRes = await _resolveRally(
         rawRally.trim(),
         year: query.year,
         country: query.country,
         city: query.city,
+        isVideoSearch: isVideoSearch,
       );
 
       resolutions['rally'] = rallyRes;
 
       if (rallyRes.isAmbiguous) {
-        return EntityResolutionResult.clarification(
-          parsedQuery: query,
-          clarificationQuestion: 'Which rally event do you mean?',
-          candidates: rallyRes.candidateOptions,
-          resolutions: resolutions,
-        );
+        // Deterministic Policy: Distinguish REQUIRED vs OPTIONAL / low-confidence hallucinated entities
+        // If intent is SEARCH_RALLIES (which searches rallies by country/year/city) and a strongly valid country exists,
+        // and an unrecognized noisy rally phrase has low confidence (< 0.40), do NOT block the search with clarification.
+        final hasStrongCountry = query.country != null && query.country!.trim().isNotEmpty && query.country!.toUpperCase() != 'ALL';
+        final isBroadRalliesIntent = query.intent == SearchIntent.searchRallies;
+        final isLowConfidenceNoise = rallyRes.confidence < 0.40;
+
+        if (!(isBroadRalliesIntent && hasStrongCountry && isLowConfidenceNoise)) {
+          return EntityResolutionResult.clarification(
+            parsedQuery: query,
+            clarificationQuestion: 'Which rally event do you mean?',
+            candidates: rallyRes.candidateOptions,
+            resolutions: resolutions,
+          );
+        }
       }
 
       if (rallyRes.resolvedCandidate != null) {
@@ -139,7 +152,6 @@ class DatabaseEntityResolver implements EntityResolver {
       final cityRes = await _resolveCity(
         rawCity.trim(),
         country: query.country,
-        targetRallyName: rawRally,
       );
 
       resolutions['city'] = cityRes;
@@ -147,7 +159,7 @@ class DatabaseEntityResolver implements EntityResolver {
       if (cityRes.isAmbiguous) {
         return EntityResolutionResult.clarification(
           parsedQuery: query,
-          clarificationQuestion: 'Do you mean rallies located in ${rawCity.trim()}, or a specific rally event?',
+          clarificationQuestion: 'Which location named "${rawCity.trim()}" do you mean?',
           candidates: cityRes.candidateOptions,
           resolutions: resolutions,
         );
@@ -160,9 +172,9 @@ class DatabaseEntityResolver implements EntityResolver {
       }
     }
 
-    return EntityResolutionResult.success(
-      parsedQuery: query,
+    return EntityResolutionResult(
       resolvedQuery: workingQuery,
+      requiresClarification: false,
       resolutions: resolutions,
     );
   }
@@ -175,8 +187,9 @@ class DatabaseEntityResolver implements EntityResolver {
     int? year,
     String? country,
     String? city,
+    bool isVideoSearch = false,
   }) async {
-    final cacheKey = 'rally:${phrase.toLowerCase()}:${year ?? ''}:${country ?? ''}:${city ?? ''}';
+    final cacheKey = 'rally:${phrase.toLowerCase()}:${year ?? ''}:${country ?? ''}:${city ?? ''}:$isVideoSearch';
     final cached = _getFromCache(cacheKey);
     if (cached != null) return cached;
 
@@ -204,7 +217,8 @@ class DatabaseEntityResolver implements EntityResolver {
 
     // Check for multi-edition ambiguity:
     // If user provided no year and multiple editions of the same rally exist (e.g. 2025, 2026),
-    // trigger clarification rather than guessing.
+    // trigger clarification for general rally queries, but allow video action highlights to resolve
+    // to the most recent active edition.
     if (year == null && scored.length > 1) {
       final topName = _normalizeName(scored[0].canonicalName);
       final secondName = _normalizeName(scored[1].canonicalName);
@@ -214,16 +228,18 @@ class DatabaseEntityResolver implements EntityResolver {
       final baseSecond = _stripYear(secondName);
 
       if (baseTop.isNotEmpty && baseTop == baseSecond) {
-        final res = EntityResolution(
-          type: EntityType.rally,
-          rawPhrase: phrase,
-          confidence: 0.5,
-          strategy: 'multi_year_ambiguity',
-          isAmbiguous: true,
-          candidateOptions: scored,
-        );
-        _putInCache(cacheKey, res);
-        return res;
+        if (!isVideoSearch) {
+          final res = EntityResolution(
+            type: EntityType.rally,
+            rawPhrase: phrase,
+            confidence: 0.5,
+            strategy: 'multi_year_ambiguity',
+            isAmbiguous: true,
+            candidateOptions: scored,
+          );
+          _putInCache(cacheKey, res);
+          return res;
+        }
       }
     }
 
@@ -265,30 +281,14 @@ class DatabaseEntityResolver implements EntityResolver {
       return res;
     }
 
-    // Score and rank candidates
-    final scored = _scoreCandidates(phrase, candidates);
+    // Score and rank candidates with context awareness
+    final scored = _scoreCandidates(phrase, candidates, year: year);
 
-    // Rule: Surnames ("Moffett", "Smith") or first names ("Josh") must never resolve globally if > 1 match
+    // Check for Ambiguous Driver Names (e.g., single surname or single first name)
     final cleanLower = phrase.trim().toLowerCase();
     final isPartialName = !cleanLower.contains(' ');
 
     if (isPartialName && scored.length > 1) {
-      // Check if context reduced candidate set to exactly 1 inContext match
-      final inContextMatches = scored.where((c) => c.metadata?['inContext'] == true).toList();
-      if (inContextMatches.length == 1) {
-        final single = inContextMatches.first;
-        final res = EntityResolution(
-          type: EntityType.driver,
-          rawPhrase: phrase,
-          resolvedCandidate: single,
-          confidence: 0.95,
-          strategy: 'context_disambiguated',
-        );
-        _putInCache(cacheKey, res);
-        return res;
-      }
-
-      // Ambiguous partial name across multiple drivers
       final res = EntityResolution(
         type: EntityType.driver,
         rawPhrase: phrase,
@@ -343,42 +343,22 @@ class DatabaseEntityResolver implements EntityResolver {
   }
 
   // ===========================================================================
-  // CITY / LOCATION RESOLUTION
+  // CITY RESOLUTION
   // ===========================================================================
   Future<EntityResolution> _resolveCity(
     String phrase, {
     String? country,
-    String? targetRallyName,
   }) async {
     final cacheKey = 'city:${phrase.toLowerCase()}:${country ?? ''}';
     final cached = _getFromCache(cacheKey);
     if (cached != null) return cached;
 
-    // Check if phrase also matches a prominent rally name (e.g. "Donegal")
-    if (targetRallyName == null) {
-      final rallyMatches = await _repository.lookupRallies(phrase, limit: 5);
-      final cityMatches = await _repository.lookupCities(phrase, country: country, limit: 5);
+    final candidates = await _repository.lookupCities(
+      phrase,
+      country: country,
+      limit: 10,
+    );
 
-      if (rallyMatches.isNotEmpty && cityMatches.isNotEmpty) {
-        // Both city and rally interpretations exist
-        final combinedCandidates = <EntityCandidate>[
-          ...cityMatches,
-          ...rallyMatches,
-        ];
-        final res = EntityResolution(
-          type: EntityType.city,
-          rawPhrase: phrase,
-          confidence: 0.5,
-          strategy: 'location_vs_event_ambiguity',
-          isAmbiguous: true,
-          candidateOptions: combinedCandidates,
-        );
-        _putInCache(cacheKey, res);
-        return res;
-      }
-    }
-
-    final candidates = await _repository.lookupCities(phrase, country: country, limit: 5);
     if (candidates.isEmpty) {
       final res = EntityResolution(
         type: EntityType.city,
@@ -397,82 +377,48 @@ class DatabaseEntityResolver implements EntityResolver {
   }
 
   // ===========================================================================
-  // SCORING & POLICY ENGINE
+  // CANDIDATE SCORING & AMBIGUITY POLICY EVALUATION
   // ===========================================================================
-
-  /// Scores each candidate deterministically from 0.0 to 1.0
   List<EntityCandidate> _scoreCandidates(
     String phrase,
     List<EntityCandidate> candidates, {
     int? year,
   }) {
-    final pNorm = _normalizeName(phrase);
-
     final scored = <EntityCandidate>[];
+
     for (final c in candidates) {
-      final cNorm = _normalizeName(c.canonicalName);
-      double score = 0.0;
+      final candidateYear = c.metadata?['year'] as int?;
+      final inContext = c.metadata?['inContext'] as bool? ?? false;
 
-      // 1. Exact match
-      if (cNorm == pNorm || c.canonicalName.toLowerCase() == phrase.toLowerCase()) {
-        score = 1.0;
-      }
-      // 2. Exact match on base name ignoring year (e.g. "Moonraker Forestry Rally" == "Moonraker Forestry Rally 2025")
-      else if (_stripYear(cNorm) == _stripYear(pNorm)) {
-        score = 0.95;
-      }
-      // 3. Prefix match
-      else if (cNorm.startsWith(pNorm) || pNorm.startsWith(cNorm)) {
-        score = 0.88;
-      }
-      // 4. Substring / contains
-      else if (cNorm.contains(pNorm)) {
-        // Boost shorter canonical names that tightly enclose the query
-        final lengthRatio = pNorm.length / cNorm.length.clamp(1, 100);
-        score = 0.70 + (0.15 * lengthRatio);
-      }
-      // 5. Word boundary match
-      else {
-        final pWords = pNorm.split(' ').where((w) => w.isNotEmpty).toSet();
-        final cWords = cNorm.split(' ').where((w) => w.isNotEmpty).toSet();
-        final intersection = pWords.intersection(cWords);
-        if (intersection.isNotEmpty) {
-          score = 0.50 + (0.30 * (intersection.length / pWords.length));
-        } else {
-          score = 0.30;
-        }
-      }
+      final baseScore = PhoneticMatchingHelper.computeCompositeScore(
+        queryPhrase: phrase,
+        candidateName: c.canonicalName,
+      );
 
-      // Contextual year boost
-      if (year != null && c.metadata?['year'] == year) {
-        score = (score + 0.10).clamp(0.0, 1.0);
-      }
+      final score = PhoneticMatchingHelper.computeCompositeScore(
+        queryPhrase: phrase,
+        candidateName: c.canonicalName,
+        queryYear: year,
+        candidateYear: candidateYear,
+        inContext: inContext,
+      );
 
-      // Contextual participation boost
-      if (c.metadata?['inContext'] == true) {
-        score = (score + 0.15).clamp(0.0, 1.0);
-      }
+      final updatedMetadata = Map<String, dynamic>.from(c.metadata ?? {});
+      updatedMetadata['baseScore'] = baseScore;
 
-      scored.add(EntityCandidate(
-        id: c.id,
-        type: c.type,
-        canonicalName: c.canonicalName,
-        subtitle: c.subtitle,
-        score: double.parse(score.toStringAsFixed(3)),
-        metadata: c.metadata,
-      ));
+      scored.add(c.copyWith(score: score, metadata: updatedMetadata));
     }
 
-    scored.sort((a, b) => b.score.compareTo(a.score));
+    // Sort descending by similarity score
+    scored.sort((a, b) => (b.score ?? 0.0).compareTo(a.score ?? 0.0));
     return scored;
   }
 
-  /// Evaluates scored candidates against confidence threshold and score gap policy
   EntityResolution _evaluateCandidateSelection(
     String phrase,
-    List<EntityCandidate> scored,
+    List<EntityCandidate> scoredCandidates,
   ) {
-    if (scored.isEmpty) {
+    if (scoredCandidates.isEmpty) {
       return EntityResolution(
         type: EntityType.rally,
         rawPhrase: phrase,
@@ -481,89 +427,69 @@ class DatabaseEntityResolver implements EntityResolver {
       );
     }
 
-    final top = scored.first;
+    final top = scoredCandidates.first;
+    final topScore = top.score ?? 0.0;
 
-    // Single candidate
-    if (scored.length == 1) {
-      if (top.score >= minConfidenceThreshold) {
-        return EntityResolution(
-          type: top.type,
-          rawPhrase: phrase,
-          resolvedCandidate: top,
-          confidence: top.score,
-          strategy: 'unique_match',
-        );
-      } else {
-        return EntityResolution(
-          type: top.type,
-          rawPhrase: phrase,
-          confidence: top.score,
-          strategy: 'low_confidence',
-          isAmbiguous: true,
-          candidateOptions: scored,
-        );
-      }
+    // Check if top candidate meets confidence threshold
+    if (topScore < minConfidenceThreshold) {
+      return EntityResolution(
+        type: top.type,
+        rawPhrase: phrase,
+        confidence: topScore,
+        strategy: 'below_threshold',
+        candidateOptions: scoredCandidates,
+      );
     }
 
-    final runnerUp = scored[1];
-    final scoreGap = top.score - runnerUp.score;
-
-    // Check if top candidate clearly exceeds threshold AND satisfies minimum score gap
-    if (top.score >= minConfidenceThreshold && scoreGap >= minScoreGap) {
+    // If only one candidate meets threshold, unique resolution
+    if (scoredCandidates.length == 1) {
       return EntityResolution(
         type: top.type,
         rawPhrase: phrase,
         resolvedCandidate: top,
-        confidence: top.score,
-        strategy: 'high_confidence_gap',
+        confidence: topScore,
+        strategy: 'unique_match',
       );
     }
 
-    // Ambiguous: top candidates are too close in score or confidence is insufficient
+    // Multi-candidate evaluation: Check Score Gap
+    final runnerUp = scoredCandidates[1];
+    final runnerUpScore = runnerUp.score ?? 0.0;
+    final gap = topScore - runnerUpScore;
+
+    // Check base similarity gap if both received context boosts
+    final baseTop = (top.metadata?['baseScore'] as double?) ?? topScore;
+    final baseRunnerUp = (runnerUp.metadata?['baseScore'] as double?) ?? runnerUpScore;
+    final baseGap = baseTop - baseRunnerUp;
+
+    if (gap >= minScoreGap || (topScore >= minConfidenceThreshold && baseGap >= minScoreGap)) {
+      return EntityResolution(
+        type: top.type,
+        rawPhrase: phrase,
+        resolvedCandidate: top,
+        confidence: topScore,
+        strategy: 'clear_winner',
+      );
+    }
+
+    // Gap is insufficient -> Mark ambiguous and require clarification
     return EntityResolution(
       type: top.type,
       rawPhrase: phrase,
-      confidence: top.score,
+      confidence: topScore,
       strategy: 'insufficient_gap',
       isAmbiguous: true,
-      candidateOptions: scored,
+      candidateOptions: scoredCandidates.where((c) => (c.score ?? 0.0) >= minConfidenceThreshold - 0.10).toList(),
     );
   }
 
-  // ===========================================================================
-  // HELPERS & CACHE
-  // ===========================================================================
-  static String _normalizeName(String s) {
-    return s
-        .toLowerCase()
-        .replaceAll(RegExp(r"[^\w\s]"), '') // strip punctuation
-        .replaceAll(RegExp(r'\s+'), ' ') // collapse whitespace
-        .trim();
+  String _normalizeName(String input) => PhoneticMatchingHelper.normalize(input);
+
+  String _stripYear(String input) => PhoneticMatchingHelper.stripYear(input);
+
+  EntityResolution? _getFromCache(String key) => _resolutionCache[key];
+
+  void _putInCache(String key, EntityResolution value) {
+    _resolutionCache[key] = value;
   }
-
-  static String _stripYear(String s) {
-    return s.replaceAll(RegExp(r'\b(19|20)\d{2}\b'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
-  }
-
-  EntityResolution? _getFromCache(String key) {
-    final entry = _cache[key];
-    if (entry != null) {
-      return entry.resolution;
-    }
-    return null;
-  }
-
-  void _putInCache(String key, EntityResolution res) {
-    if (_cache.length >= _maxCacheEntries) {
-      _cache.remove(_cache.keys.first);
-    }
-    _cache[key] = _CachedResolution(res);
-  }
-}
-
-class _CachedResolution {
-  final EntityResolution resolution;
-  final DateTime timestamp;
-
-  _CachedResolution(this.resolution) : timestamp = DateTime.now();
 }

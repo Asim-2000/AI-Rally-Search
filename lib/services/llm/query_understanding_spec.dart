@@ -69,7 +69,7 @@ CRITICAL RULES:
    - GET_TOP_UPLOADERS: Get ranked contributors/uploaders by upload count (for a rally or globally).
    - GET_TOP_DRIVERS_BY_WINS: Get career leaderboard of drivers with the most overall wins across all rallies.
 
-8. Compound Filtering:
+8. Compound Filtering & Action Highlights:
    Extract all mentioned constraints simultaneously:
    - rallyName / eventName: raw rally or event mention as stated by user (e.g. "Moonraker", "Donegal Rally", "Trackrod", "Get Jerky", "Woodpecker", "Killarney").
      * When an event or rally name is mentioned in an action/video query (e.g. "drifts in Trackrod", "spins in Killarney", "splashes in Woodpecker"), extract it into `rallyName`. Do NOT guess `city` unless explicitly phrased as a geographic/city discovery search.
@@ -80,53 +80,62 @@ CRITICAL RULES:
    - stageNumber: e.g. "SS1", "Stage 2"
    - actionType: MUST be one of ["jump", "drift", "crash", "spin", "donut", "hairpin", "water splash", "start line", "near miss", "mechanical failure", "offroad", "stuck"] (or null if not an action search).
      * When multiple actions or synonyms are joined by 'and' or 'or' (e.g. "spins and doughnuts in Killarney", "hairpins and handbrake turns"), pick the primary action ("spin", "hairpin") and execute without triggering clarification.
+     * When words like "highlights", "moments", "clips", "best of", "Sprunghighlights", "momentos destacados", "meilleurs sauts", "najciekawsze skoki", "labākie lēcieni", "nejlepší skoky", "najbolji skokovi", "geriausi šuoliai", "najlepšie skoky", "ہائی لائٹس", "لقطات مميزة", "matukio makuu", "uchwbwyntiau", "buaicphointí" appear alongside an action (jump, drift, crash, spin, etc.), extract the action into `actionType` and DO NOT trigger clarification.
    - year: integer (e.g. 2026, 2025, 2024, 2023)
    - limit: integer (default 20, or as requested, e.g. "top 10" -> limit 10)
 
 9. Clarification:
-   Set `requiresClarification: true` and provide a helpful `clarificationQuestion` when:
+   Set `requiresClarification: true` and provide a helpful `clarificationQuestion` ONLY when:
    - The query specifies ONLY a broad result category without ANY usable filter, entity, action, driver, or context (e.g. "Find clips", "Uploaders", "Show results", "Who won?", "Videos anzeigen", "Montre les résultats").
    - The query is completely ambiguous, contradictory, or lacks necessary information to execute safely.
-   Do NOT trigger clarification for valid queries with meaningful filters or global intents (e.g. "Zeig mir Sprünge" -> {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "requiresClarification": false}, "Show spins and doughnuts in Killarney" -> {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "spin", "rallyName": "Killarney", "requiresClarification": false}).
+   Do NOT trigger clarification for valid queries with meaningful filters or explicit actions. Specifically, queries like "Show jump highlights featuring Josh Moffett from Moonraker in 2025" or "Zeige Sprunghighlights mit Josh Moffett..." have clear filters and MUST execute directly with `requiresClarification: false`.
 
 10. Examples:
+   - English: "Show jump highlights featuring Josh Moffett from Moonraker in 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
    - English: "Show jump highlights featuring Moffett from Moonraker" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Moffett", "rallyName": "Moonraker", "requiresClarification": false}
    - English (Geographic Discovery): "Rallies in Donegal" ->
      {"intent": "SEARCH_RALLIES", "city": "Donegal", "requiresClarification": false}
+   - German: "Zeige Sprunghighlights mit Josh Moffett von der Moonraker im Jahr 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
    - German: "Zeig mir Sprünge von Josh Moffett bei Moonraker im Jahr 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
    - German Code-switching: "Zeig mir jumps von Josh Moffett bei Moonraker" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "requiresClarification": false}
-   - French: "Montre les sauts de Josh Moffett au rallye Moonraker en 2025" ->
+   - French: "Montrez les meilleurs sauts de Josh Moffett au Moonraker en 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - French (Geographic Discovery): "Rallyes à Donegal" ->
-     {"intent": "SEARCH_RALLIES", "city": "Donegal", "requiresClarification": false}
-   - French: "Qui a gagné le rallye Moonraker ?" ->
-     {"intent": "GET_RALLY_RESULTS", "rallyName": "Moonraker", "requiresClarification": false}
-   - Spanish: "Mostrar derrapes de Josh Moffett en Moonraker en 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "drift", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Spanish: "¿Quién ganó el rally Moonraker?" ->
-     {"intent": "GET_RALLY_RESULTS", "rallyName": "Moonraker", "requiresClarification": false}
-   - Italian: "Mostra i salti di Josh Moffett al Moonraker nel 2025" ->
+   - Spanish: "Mostrar momentos destacados de saltos con Josh Moffett de Moonraker en 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Portuguese: "Mostrar saltos de Josh Moffett no Moonraker em 2025" ->
+   - Italian: "Mostra i salti migliori di Josh Moffett al Moonraker nel 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Dutch: "Toon sprongen van Josh Moffett bij Moonraker in 2025" ->
+   - Portuguese: "Mostrar destaques de saltos com Josh Moffett no Moonraker em 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Polish (Inflection Recovery): "Pokaż skoki Josha Moffetta z Moonraker w 2025 roku" ->
+   - Dutch: "Toon spronghoogtepunten met Josh Moffett van Moonraker in 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Polish: "Znajdź filmy z Philipem Squires" ->
-     {"intent": "SEARCH_DRIVER_VIDEOS", "driverName": "Philip Squires", "requiresClarification": false}
-   - Norwegian: "Vis hopp med Josh Moffett fra Moonraker i 2025" ->
+   - Polish (Inflection Recovery): "Pokaż najciekawsze skoki z udziałem Josha Moffetta z Moonraker w 2025 roku" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Arabic: "أظهر قفزات Josh Moffett في رالي Moonraker عام 2025" ->
+   - Norwegian: "Vis hopphøydepunkter med Josh Moffett fra Moonraker i 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Urdu: "2025 میں Moonraker سے Josh Moffett کے جمپس دکھائیں" ->
+   - Latvian: "Rādīt labākos lēcienus ar Josh Moffett no Moonraker 2025. gadā" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Welsh: "Dangos neidiau Josh Moffett o Moonraker yn 2025" ->
+   - Czech: "Ukaž nejlepší skoky s Joshem Moffettem z Moonraker v roce 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Irish: "Taispeáin léimeanna Josh Moffett ó Moonraker in 2025" ->
+   - Croatian: "Prikaži najbolje skokove s Joshem Moffettom s Moonrakera 2025. godine" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Lithuanian: "Rodyti geriausius šuolius su Josh Moffett iš Moonraker 2025 metais" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Slovak: "Ukáž najlepšie skoky s Joshom Moffettom z Moonraker v roku 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Urdu: "2025 میں Moonraker سے Josh Moffett کی جمپس کے ہائی لائٹس دکھائیں" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Arabic: "أظهر لقطات القفزات المميزة لـ Josh Moffett من Moonraker في عام 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Swahili: "Onyesha matukio makuu ya miruko ya Josh Moffett kutoka Moonraker mwaka wa 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Welsh: "Dangos uchafbwyntiau neidiau gyda Josh Moffett o Moonraker yn 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
+   - Irish: "Taispeáin buaicphointí léime le Josh Moffett ó Moonraker in 2025" ->
      {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
    - Broad query requiring clarification: "Clips anzeigen" ->
      {"requiresClarification": true, "clarificationQuestion": "What kind of clips or rally moments would you like to see?"}

@@ -78,7 +78,16 @@ class QueryOutputValidator {
     final String? clarificationQuestion =
         jsonMap['clarificationQuestion']?.toString() ?? jsonMap['clarification_question']?.toString();
 
-    if (requiresClarification && clarificationQuestion != null && clarificationQuestion.trim().isNotEmpty) {
+    // Guard against unnecessary clarification when explicit action, driver, rally, or geographic filters exist
+    final rawAction = jsonMap['actionType']?.toString() ?? jsonMap['action_type']?.toString();
+    final hasAction = rawAction != null && rawAction.trim().isNotEmpty && rawAction != 'null';
+    final hasDriver = jsonMap['driverName'] != null && jsonMap['driverName'].toString().trim().isNotEmpty && jsonMap['driverName'].toString() != 'null';
+    final hasRally = jsonMap['rallyName'] != null && jsonMap['rallyName'].toString().trim().isNotEmpty && jsonMap['rallyName'].toString() != 'null';
+    final hasCountry = jsonMap['country'] != null && jsonMap['country'].toString().trim().isNotEmpty && jsonMap['country'].toString() != 'null';
+    final hasCity = jsonMap['city'] != null && jsonMap['city'].toString().trim().isNotEmpty && jsonMap['city'].toString() != 'null';
+    final hasSpecificFilters = hasAction || hasDriver || hasRally || hasCountry || hasCity;
+
+    if (requiresClarification && clarificationQuestion != null && clarificationQuestion.trim().isNotEmpty && !hasSpecificFilters) {
       return QueryParseResult.clarification(
         clarificationQuestion: clarificationQuestion.trim(),
         provider: provider,
@@ -105,7 +114,6 @@ class QueryOutputValidator {
     final SearchIntent parsedIntent = _parseAndValidateIntent(rawIntent);
 
     // 3. Action type validation (must be in canonical list or null)
-    final rawAction = jsonMap['actionType']?.toString() ?? jsonMap['action_type']?.toString();
     final String? validatedAction = normalizeActionType(rawAction);
 
     // 4. Year validation (must be a realistic rally motorsport year, e.g. 1950 - 2050)

@@ -61,28 +61,37 @@ class LlmConfig {
 
     switch (provider) {
       case LlmProvider.openai:
+        final rawTemp = dotenv.env['OPENAI_TEMPERATURE'] ?? dotenv.env['LLM_TEMPERATURE'];
+        final temp = rawTemp != null ? double.tryParse(rawTemp) : null;
         return LlmConfig(
           provider: LlmProvider.openai,
           model: dotenv.env['OPENAI_MODEL'] ?? 'gpt-4o-mini',
           apiKey: dotenv.env['OPENAI_API_KEY'],
           baseUrl: dotenv.env['OPENAI_BASE_URL'] ?? 'https://api.openai.com/v1',
+          temperature: temp ?? 0.0,
         );
 
       case LlmProvider.anthropic:
+        final rawTemp = dotenv.env['ANTHROPIC_TEMPERATURE'] ?? dotenv.env['LLM_TEMPERATURE'];
+        final temp = rawTemp != null ? double.tryParse(rawTemp) : null;
         return LlmConfig(
           provider: LlmProvider.anthropic,
           model: dotenv.env['ANTHROPIC_MODEL'] ?? 'claude-3-5-sonnet-20241022',
           apiKey: dotenv.env['ANTHROPIC_API_KEY'],
           baseUrl: dotenv.env['ANTHROPIC_BASE_URL'] ?? 'https://api.anthropic.com/v1',
+          temperature: temp ?? 0.0,
         );
 
       case LlmProvider.gemini:
+        final rawTemp = dotenv.env['GEMINI_TEMPERATURE'] ?? dotenv.env['LLM_TEMPERATURE'];
+        final temp = rawTemp != null ? double.tryParse(rawTemp) : null;
         return LlmConfig(
           provider: LlmProvider.gemini,
           model: dotenv.env['GEMINI_MODEL'] ?? 'gemini-3.6-flash',
           apiKey: dotenv.env['GEMINI_API_KEY'],
           baseUrl: dotenv.env['GEMINI_BASE_URL'] ?? 'https://generativelanguage.googleapis.com/v1beta',
           timeout: const Duration(seconds: 30),
+          temperature: temp ?? 0.0,
         );
 
       case LlmProvider.mock:

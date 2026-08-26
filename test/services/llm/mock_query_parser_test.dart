@@ -32,7 +32,7 @@ void main() {
       expect(res.query!.intent, SearchIntent.searchVideoActions);
       expect(res.query!.actionType, 'jump');
       expect(res.query!.driverName, 'Josh Moffett');
-      expect(res.query!.targetRallyName, 'Moonraker Forestry Rally');
+      expect(res.query!.targetRallyName, 'Moonraker');
     });
 
     test('Supports simulated failure', () async {

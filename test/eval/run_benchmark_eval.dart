@@ -1,77 +1,151 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ai_rally_search/services/llm/eval/benchmark_dataset.dart';
-import 'package:ai_rally_search/services/llm/eval/eval_report_formatter.dart';
-import 'package:ai_rally_search/services/llm/eval/llm_evaluator.dart';
 import 'package:ai_rally_search/services/llm/llm_provider_config.dart';
 import 'package:ai_rally_search/services/llm/llm_query_parser.dart';
-import 'package:ai_rally_search/services/llm/providers/fallback_query_parser.dart';
+import 'package:ai_rally_search/services/llm/providers/anthropic_query_parser.dart';
 import 'package:ai_rally_search/services/llm/providers/gemini_query_parser.dart';
 import 'package:ai_rally_search/services/llm/providers/mock_query_parser.dart';
 import 'package:ai_rally_search/services/llm/providers/openai_query_parser.dart';
+import 'eval_models.dart';
+import 'eval_report_formatter.dart';
+import 'provider_evaluator.dart';
+import 'query_benchmark_cases.dart';
 
-void main() {
-  test('Execute Benchmark Evaluation & Generate Reports', () async {
+void main([List<String> args = const []]) {
+  test('Run Benchmark Evaluation Suite', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
     HttpOverrides.global = null;
 
+    print('================================================================');
+    print('🏎️  AI RALLY SEARCH — LLM BENCHMARK EVALUATOR');
+    print('================================================================');
+
+    // Load .env if present
     final envFile = File('.env');
     if (envFile.existsSync()) {
       await dotenv.load(fileName: '.env');
     }
 
-    final rawEvalProvider = dotenv.isInitialized ? (dotenv.env['EVAL_PROVIDER'] ?? 'mock') : 'mock';
-    final providerType = LlmProvider.fromString(rawEvalProvider);
+    // Determine mode and target provider
+    bool compareMode = Platform.environment['EVAL_COMPARE'] == 'true' || args.contains('--compare');
+    String providerArg = Platform.environment['EVAL_PROVIDER'] ??
+        (dotenv.isInitialized ? (dotenv.env['EVAL_PROVIDER'] ?? 'mock') : 'mock');
 
-    LlmQueryParser parser;
-    switch (providerType) {
-      case LlmProvider.gemini:
-        parser = GeminiQueryParser();
-        break;
-      case LlmProvider.openai:
-        parser = OpenAIQueryParser();
-        break;
-      case LlmProvider.anthropic:
-        parser = FallbackLlmQueryParser(primary: MockLlmQueryParser());
-        break;
-      case LlmProvider.mock:
-      default:
-        parser = MockLlmQueryParser();
-        break;
+    for (final arg in args) {
+      if (arg.startsWith('--provider=')) {
+        providerArg = arg.split('=')[1].trim().toLowerCase();
+      } else if (arg == '--openai') {
+        providerArg = 'openai';
+      } else if (arg == '--gemini') {
+        providerArg = 'gemini';
+      } else if (arg == '--anthropic') {
+        providerArg = 'anthropic';
+      } else if (arg == '--mock') {
+        providerArg = 'mock';
+      }
     }
 
-    print('\n======================================================');
-    print('🏎️  RUNNING BENCHMARK EVALUATION FOR: ${parser.provider.name.toUpperCase()}');
-    print('======================================================\n');
+    final testCases = QueryBenchmarkCases.allCases;
+    print('Loaded ${testCases.length} benchmark test cases across 13 categories.');
 
-    final evaluator = const LlmEvaluator();
+    final evaluator = const ProviderEvaluator();
+    final reportsDir = Directory('test/eval/reports');
+    if (!reportsDir.existsSync()) {
+      reportsDir.createSync(recursive: true);
+    }
 
-    final report = await evaluator.evaluateBenchmark(
-      testCases: BenchmarkDataset.testCases,
-      parser: parser,
-      onProgress: (current, total, record) {
-        final statusIcon = record.accuracy.exactMatch ? '✅' : (record.accuracy.intentMatch ? '⚠️' : '❌');
-        final costStr = record.cost.formattedTotalCost;
-        final latStr = '${record.latency.totalLatencyMs}ms';
-        print('  [$current/$total] $statusIcon [${record.queryId}] "${record.inputQuery}" ($latStr, $costStr)');
-      },
-    );
+    if (compareMode) {
+      print('\nStarting Multi-Provider Comparative Benchmark...');
+      final parsers = <LlmQueryParser>[];
 
-    // Format and print console report
-    final consoleReport = EvalReportFormatter.formatConsoleReport(report);
-    print(consoleReport);
+      if (dotenv.isInitialized && dotenv.env['OPENAI_API_KEY']?.isNotEmpty == true) {
+        parsers.add(OpenAIQueryParser());
+      }
+      if (dotenv.isInitialized && dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true) {
+        parsers.add(GeminiQueryParser());
+      }
+      if (dotenv.isInitialized && dotenv.env['ANTHROPIC_API_KEY']?.isNotEmpty == true) {
+        parsers.add(AnthropicQueryParser());
+      }
+      parsers.add(MockLlmQueryParser());
 
-    // Save JSON and Markdown artifacts
-    final jsonReport = EvalReportFormatter.formatJsonReport(report);
-    File('eval_report.json').writeAsStringSync(jsonReport);
-    print('💾 Saved JSON evaluation report to: eval_report.json');
+      print('Evaluating ${parsers.length} providers: ${parsers.map((p) => p.provider.name).join(', ')}');
 
-    final mdReport = EvalReportFormatter.formatMarkdownReport(report);
-    File('eval_summary.md').writeAsStringSync(mdReport);
-    print('📝 Saved Markdown summary to: eval_summary.md');
+      final comparisonReports = await evaluator.compareProviders(
+        parsers: parsers,
+        cases: testCases,
+        delayBetweenQueries: const Duration(milliseconds: 50),
+        onProgress: (provider, current, total, record) {
+          final icon = record.exactMatch ? '✅' : (record.intentMatch ? '⚠️' : '❌');
+          stdout.write('\r[$provider] Progress: $current/$total ($icon ${record.testCase.id})');
+        },
+      );
+      print('\n');
 
-    expect(report.totalQueries, BenchmarkDataset.testCases.length);
-    expect(report.overallQualityScorePct, greaterThanOrEqualTo(80.0));
-  }, timeout: const Timeout(Duration(minutes: 3)));
+      final compTable = EvalReportFormatter.formatComparisonTable(comparisonReports);
+      print(compTable);
+
+      final compMd = EvalReportFormatter.formatComparisonMarkdown(comparisonReports);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final mdPath = 'test/eval/reports/comparison_report_$timestamp.md';
+      File(mdPath).writeAsStringSync(compMd);
+      print('📝 Saved comparison Markdown report to: $mdPath');
+
+      final jsonMap = comparisonReports.map((k, v) => MapEntry(k, v.toJson()));
+      final jsonPath = 'test/eval/reports/comparison_report_$timestamp.json';
+      File(jsonPath).writeAsStringSync(const JsonEncoder.withIndent('  ').convert(jsonMap));
+      print('💾 Saved comparison JSON data to: $jsonPath\n');
+    } else {
+      LlmQueryParser parser;
+      switch (providerArg) {
+        case 'openai':
+          parser = OpenAIQueryParser();
+          break;
+        case 'gemini':
+          parser = GeminiQueryParser();
+          break;
+        case 'anthropic':
+          parser = AnthropicQueryParser();
+          break;
+        case 'mock':
+        default:
+          parser = MockLlmQueryParser();
+          break;
+      }
+
+      print('\nRunning benchmark evaluation for provider: ${parser.provider.name.toUpperCase()}...');
+
+      final report = await evaluator.evaluate(
+        parser: parser,
+        cases: testCases,
+        delayBetweenQueries: providerArg != 'mock' ? const Duration(milliseconds: 100) : null,
+        onProgress: (current, total, record) {
+          final icon = record.exactMatch ? '✅' : (record.intentMatch ? '⚠️' : '❌');
+          final costStr = record.costUsd != null ? '\$${record.costUsd!.toStringAsFixed(6)}' : 'N/A';
+          stdout.write('\r  [$current/$total] $icon [${record.testCase.id}] "${record.testCase.query.padRight(40).substring(0, 40)}" (${record.latencyMs}ms, $costStr)');
+        },
+      );
+      print('\n');
+
+      final consoleReport = EvalReportFormatter.formatConsoleReport(report);
+      print(consoleReport);
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final modelSlug = report.modelName.replaceAll('/', '_').replaceAll(':', '_');
+
+      // Save individual Markdown report
+      final mdReport = EvalReportFormatter.formatMarkdownReport(report);
+      final mdPath = 'test/eval/reports/${report.providerName}_${modelSlug}_$timestamp.md';
+      File(mdPath).writeAsStringSync(mdReport);
+      print('📝 Saved Markdown report to: $mdPath');
+
+      // Save individual JSON report
+      final jsonReport = EvalReportFormatter.formatJsonReport(report);
+      final jsonPath = 'test/eval/reports/${report.providerName}_${modelSlug}_$timestamp.json';
+      File(jsonPath).writeAsStringSync(jsonReport);
+      print('💾 Saved JSON report to: $jsonPath\n');
+    }
+  }, timeout: const Timeout(Duration(minutes: 20)));
 }

@@ -78,88 +78,115 @@ class GeminiQueryParser implements LlmQueryParser {
       },
     };
 
-    try {
-      final response = await _client
-          .post(
-            url,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode(requestBody),
-          )
-          .timeout(config.timeout);
+    int attempts = 0;
+    final int maxAttempts = config.maxRetries + 1;
 
-      stopwatch.stop();
-      final latencyMs = stopwatch.elapsedMilliseconds;
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        final response = await _client
+            .post(
+              url,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: jsonEncode(requestBody),
+            )
+            .timeout(config.timeout);
 
-      if (response.statusCode != 200) {
-        String errorDetail = 'HTTP ${response.statusCode}';
-        try {
-          final errJson = jsonDecode(response.body);
-          if (errJson is Map && errJson.containsKey('error')) {
-            errorDetail = errJson['error']['message']?.toString() ?? errorDetail;
+        if (response.statusCode >= 500 || response.statusCode == 429) {
+          if (attempts < maxAttempts) {
+            final backoffMs = 500 * (1 << (attempts - 1));
+            await Future.delayed(Duration(milliseconds: backoffMs));
+            continue;
           }
-        } catch (_) {}
+        }
 
-        return QueryParseResult.failure(
-          error: 'Gemini API request failed ($errorDetail)',
+        stopwatch.stop();
+        final latencyMs = stopwatch.elapsedMilliseconds;
+
+        if (response.statusCode != 200) {
+          String errorDetail = 'HTTP ${response.statusCode}';
+          try {
+            final errJson = jsonDecode(response.body);
+            if (errJson is Map && errJson.containsKey('error')) {
+              errorDetail = errJson['error']['message']?.toString() ?? errorDetail;
+            }
+          } catch (_) {}
+
+          return QueryParseResult.failure(
+            error: 'Gemini API request failed ($errorDetail)',
+            provider: LlmProvider.gemini,
+            model: config.model,
+            latencyMs: latencyMs,
+            rawResponse: response.body,
+          );
+        }
+
+        final Map<String, dynamic> responseJson = jsonDecode(utf8.decode(response.bodyBytes));
+        final candidates = responseJson['candidates'] as List<dynamic>?;
+        if (candidates == null || candidates.isEmpty) {
+          return QueryParseResult.failure(
+            error: 'Gemini response contained no candidates',
+            provider: LlmProvider.gemini,
+            model: config.model,
+            latencyMs: latencyMs,
+            rawResponse: response.body,
+          );
+        }
+
+        final candidate = candidates.first as Map<String, dynamic>;
+        final content = candidate['content'] as Map<String, dynamic>?;
+        final parts = content?['parts'] as List<dynamic>?;
+        final textContent = (parts != null && parts.isNotEmpty) ? parts.first['text']?.toString() ?? '' : '';
+
+        final usageMetadata = responseJson['usageMetadata'] as Map<String, dynamic>?;
+        final promptTokens = usageMetadata?['promptTokenCount'] as int?;
+        final completionTokens = usageMetadata?['candidatesTokenCount'] as int?;
+        final totalTokens = usageMetadata?['totalTokenCount'] as int?;
+
+        return QueryOutputValidator.validateAndParse(
+          rawContent: textContent,
           provider: LlmProvider.gemini,
           model: config.model,
           latencyMs: latencyMs,
-          rawResponse: response.body,
+          promptTokens: promptTokens,
+          completionTokens: completionTokens,
+          totalTokens: totalTokens,
+          metadata: {
+            'finish_reason': candidate['finishReason'],
+          },
         );
-      }
-
-      final Map<String, dynamic> responseJson = jsonDecode(utf8.decode(response.bodyBytes));
-      final candidates = responseJson['candidates'] as List<dynamic>?;
-      if (candidates == null || candidates.isEmpty) {
+      } on TimeoutException {
+        if (attempts < maxAttempts) {
+          final backoffMs = 500 * (1 << (attempts - 1));
+          await Future.delayed(Duration(milliseconds: backoffMs));
+          continue;
+        }
+        stopwatch.stop();
         return QueryParseResult.failure(
-          error: 'Gemini response contained no candidates',
+          error: 'Gemini API request timed out after ${config.timeout.inSeconds}s',
           provider: LlmProvider.gemini,
           model: config.model,
-          latencyMs: latencyMs,
-          rawResponse: response.body,
+          latencyMs: stopwatch.elapsedMilliseconds,
+        );
+      } catch (e) {
+        stopwatch.stop();
+        return QueryParseResult.failure(
+          error: 'Gemini connection error: $e',
+          provider: LlmProvider.gemini,
+          model: config.model,
+          latencyMs: stopwatch.elapsedMilliseconds,
         );
       }
-
-      final candidate = candidates.first as Map<String, dynamic>;
-      final content = candidate['content'] as Map<String, dynamic>?;
-      final parts = content?['parts'] as List<dynamic>?;
-      final textContent = (parts != null && parts.isNotEmpty) ? parts.first['text']?.toString() ?? '' : '';
-
-      final usageMetadata = responseJson['usageMetadata'] as Map<String, dynamic>?;
-      final promptTokens = usageMetadata?['promptTokenCount'] as int?;
-      final completionTokens = usageMetadata?['candidatesTokenCount'] as int?;
-      final totalTokens = usageMetadata?['totalTokenCount'] as int?;
-
-      return QueryOutputValidator.validateAndParse(
-        rawContent: textContent,
-        provider: LlmProvider.gemini,
-        model: config.model,
-        latencyMs: latencyMs,
-        promptTokens: promptTokens,
-        completionTokens: completionTokens,
-        totalTokens: totalTokens,
-        metadata: {
-          'finish_reason': candidate['finishReason'],
-        },
-      );
-    } on TimeoutException {
-      stopwatch.stop();
-      return QueryParseResult.failure(
-        error: 'Gemini API request timed out after ${config.timeout.inSeconds}s',
-        provider: LlmProvider.gemini,
-        model: config.model,
-        latencyMs: stopwatch.elapsedMilliseconds,
-      );
-    } catch (e) {
-      stopwatch.stop();
-      return QueryParseResult.failure(
-        error: 'Gemini connection error: $e',
-        provider: LlmProvider.gemini,
-        model: config.model,
-        latencyMs: stopwatch.elapsedMilliseconds,
-      );
     }
+
+    stopwatch.stop();
+    return QueryParseResult.failure(
+      error: 'Gemini retries exhausted',
+      provider: LlmProvider.gemini,
+      model: config.model,
+      latencyMs: stopwatch.elapsedMilliseconds,
+    );
   }
 }

@@ -1,5 +1,4 @@
 import '../../models/search_query.dart';
-import 'eval/llm_cost_calculator.dart';
 import 'llm_provider_config.dart';
 
 /// Provider-independent result model representing the outcome of
@@ -71,7 +70,7 @@ class QueryParseResult {
 
   /// Human-readable cost formatted as USD string.
   String get formattedCost =>
-      estimatedCostUsd != null ? LlmCostCalculator.formatCostUsd(estimatedCostUsd!) : '\$0.000000';
+      estimatedCostUsd != null ? '\$${estimatedCostUsd!.toStringAsFixed(estimatedCostUsd! < 0.01 ? 6 : 4)}' : '\$0.000000';
 
   /// Human-readable latency formatted as ms.
   String get formattedLatency => latencyMs != null ? '${latencyMs}ms' : '0ms';

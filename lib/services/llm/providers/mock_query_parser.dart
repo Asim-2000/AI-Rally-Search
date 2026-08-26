@@ -7,6 +7,9 @@ import '../query_parse_result.dart';
 
 /// Offline deterministic query parser implementing LlmQueryParser.
 /// Maps canonical patterns, compound filters, and supports failure/clarification simulation for tests.
+///
+/// In Phase 3.5+, extracts verbatim entity mentions (e.g. "Moonraker", "Moffett", "Get Jerky")
+/// without inventing canonical database titles or driver IDs.
 class MockLlmQueryParser implements LlmQueryParser {
   @override
   LlmProvider get provider => LlmProvider.mock;
@@ -107,18 +110,24 @@ class MockLlmQueryParser implements LlmQueryParser {
       year = int.tryParse(yearMatch.group(1)!);
     }
 
-    // 2. Extract Driver Name
+    // 2. Extract Driver Name (verbatim phrase extraction)
     String? driverName;
-    if (lower.contains('josh moffett') || lower.contains('josh')) {
+    if (lower.contains('josh moffett')) {
       driverName = 'Josh Moffett';
-    } else if (lower.contains('philip squires') || lower.contains('squires')) {
+    } else if (lower.contains('philip squires')) {
       driverName = 'Philip Squires';
-    } else if (lower.contains('kris meeke') || lower.contains('meeke')) {
+    } else if (lower.contains('kris meeke')) {
       driverName = 'Kris Meeke';
-    } else if (lower.contains('craig breen') || lower.contains('breen')) {
+    } else if (lower.contains('craig breen')) {
       driverName = 'Craig Breen';
     } else if (lower.contains('moffett')) {
-      driverName = 'Josh Moffett';
+      driverName = 'Moffett';
+    } else if (lower.contains('squires')) {
+      driverName = 'Squires';
+    } else if (lower.contains('smith')) {
+      driverName = 'Smith';
+    } else if (lower.contains('josh')) {
+      driverName = 'Josh';
     }
 
     // 3. Extract Country
@@ -175,29 +184,37 @@ class MockLlmQueryParser implements LlmQueryParser {
       country = 'Estonia';
     }
 
-    // 4. Extract Rally / Event Name
+    // 4. Extract Rally / Event Name (verbatim phrase extraction)
     String? rallyName;
-    if (lower.contains('moonraker')) {
+    if (lower.contains('moonraker forestry rally')) {
       rallyName = 'Moonraker Forestry Rally';
-    } else if (lower.contains('donegal')) {
+    } else if (lower.contains('moonraker')) {
+      rallyName = 'Moonraker';
+    } else if (lower.contains('donegal international rally')) {
       rallyName = 'Donegal International Rally';
-    } else if (lower.contains('trackrod')) {
+    } else if (lower.contains('donegal')) {
+      rallyName = 'Donegal';
+    } else if (lower.contains('trackrod rally')) {
       rallyName = 'Trackrod Rally';
-    } else if (lower.contains('get jerky')) {
+    } else if (lower.contains('trackrod')) {
+      rallyName = 'Trackrod';
+    } else if (lower.contains('get jerky rally north wales')) {
       rallyName = 'Get Jerky Rally North Wales';
+    } else if (lower.contains('get jerky')) {
+      rallyName = 'Get Jerky';
     } else if (lower.contains('woodpecker')) {
-      rallyName = 'Woodpecker Rally';
+      rallyName = 'Woodpecker';
     } else if (lower.contains('plains')) {
-      rallyName = 'Plains Rally';
+      rallyName = 'Plains';
     }
 
     // 5. Extract City
     String? city;
-    if (lower.contains('letterkenny')) {
+    if (lower.contains('in letterkenny') || lower.contains('letterkenny')) {
       city = 'Letterkenny';
-    } else if (lower.contains('fafe')) {
+    } else if (lower.contains('in fafe') || lower.contains('fafe')) {
       city = 'Fafe';
-    } else if (lower.contains('newtown')) {
+    } else if (lower.contains('in newtown') || lower.contains('newtown')) {
       city = 'Newtown';
     }
 

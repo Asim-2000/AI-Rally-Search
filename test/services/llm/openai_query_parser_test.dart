@@ -138,5 +138,111 @@ void main() {
       expect(result.isSuccess, isFalse);
       expect(result.error, contains('OpenAI API key is missing or empty'));
     });
+
+    test('Includes temperature parameter for supported models (e.g. gpt-4o-mini)', () async {
+      bool tempChecked = false;
+      final mockClient = MockHttpClient((request) async {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        expect(body.containsKey('temperature'), isTrue);
+        expect(body['temperature'], 0.0);
+        tempChecked = true;
+
+        return http.Response(
+          '{"choices":[{"message":{"content":"{\\"intent\\":\\"SEARCH_RALLIES\\"}"}}]}',
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final parser = OpenAIQueryParser(
+        config: const LlmConfig(
+          provider: LlmProvider.openai,
+          model: 'gpt-4o-mini',
+          apiKey: 'test-key',
+          temperature: 0.0,
+        ),
+        client: mockClient,
+      );
+
+      final result = await parser.parse('Find rallies');
+      expect(result.isSuccess, isTrue);
+      expect(tempChecked, isTrue);
+    });
+
+    test('Omits temperature parameter entirely for unsupported models (e.g. gpt-5.6-luna, o1, o3-mini)', () async {
+      final unsupportedModels = [
+        'gpt-5.6-luna',
+        'gpt-5',
+        'gpt-5-preview',
+        'o1',
+        'o1-mini',
+        'o1-preview',
+        'o3-mini',
+        'o4-mini',
+        'chatgpt-5',
+        'custom-reasoning-model',
+      ];
+
+      for (final model in unsupportedModels) {
+        bool tempOmitted = false;
+        final mockClient = MockHttpClient((request) async {
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(body['model'], model);
+          expect(
+            body.containsKey('temperature'),
+            isFalse,
+            reason: 'Model $model must NOT include temperature in payload',
+          );
+          tempOmitted = true;
+
+          return http.Response(
+            '{"choices":[{"message":{"content":"{\\"intent\\":\\"SEARCH_RALLIES\\"}"}}]}',
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        });
+
+        final parser = OpenAIQueryParser(
+          config: LlmConfig(
+            provider: LlmProvider.openai,
+            model: model,
+            apiKey: 'test-key',
+            temperature: 0.0,
+          ),
+          client: mockClient,
+        );
+
+        final result = await parser.parse('Find rallies');
+        expect(result.isSuccess, isTrue);
+        expect(tempOmitted, isTrue);
+      }
+    });
+
+    test('OpenAIQueryParser.modelSupportsTemperature identifies supported vs unsupported models accurately', () {
+      // Supported models
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-4o-mini'), isTrue);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-4o'), isTrue);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-4-turbo'), isTrue);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-4.5-preview'), isTrue);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-3.5-turbo'), isTrue);
+      expect(OpenAIQueryParser.modelSupportsTemperature('models/gpt-4o'), isTrue);
+
+      // Unsupported models (reasoning / gpt-5)
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-5.6-luna'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-5'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-5-turbo'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('gpt-5-preview'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o1'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o1-mini'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o1-preview'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o1-2024-12-17'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o3'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o3-mini'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('o4-mini'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('chatgpt-5-latest'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('openai/o1-mini'), isFalse);
+      expect(OpenAIQueryParser.modelSupportsTemperature('reasoning-model-v1'), isFalse);
+    });
   });
 }
+

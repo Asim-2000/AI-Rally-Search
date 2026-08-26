@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'llm_provider_config.dart';
 import 'llm_query_parser.dart';
+import 'providers/anthropic_query_parser.dart';
 import 'providers/gemini_query_parser.dart';
 import 'providers/mock_query_parser.dart';
 import 'providers/openai_query_parser.dart';
@@ -31,9 +32,9 @@ class LlmQueryParserFactory {
         );
 
       case LlmProvider.anthropic:
-        throw UnsupportedError(
-          'AnthropicQueryParser is scheduled for a future update. '
-          'Please configure LlmProvider.gemini, LlmProvider.openai, or LlmProvider.mock in .env.',
+        return AnthropicQueryParser(
+          config: effectiveConfig,
+          client: client,
         );
 
       case LlmProvider.mock:

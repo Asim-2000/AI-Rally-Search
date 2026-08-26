@@ -163,81 +163,123 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompact = screenWidth < 768;
+
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF7F9FC),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 40) {
+              return Icon(
                 Icons.play_circle_filled_rounded,
                 color: theme.colorScheme.primary,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                size: 20,
+              );
+            }
+            return FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Rally Streams',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    _totalCount > 0
-                        ? '$_totalCount playable streams in database'
-                        : 'Database Video Player Registry',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    child: Icon(
+                      Icons.play_circle_filled_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Rally Streams',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                      if (constraints.maxWidth > 180)
+                        Text(
+                          _totalCount > 0
+                              ? '$_totalCount playable streams in database'
+                              : 'Database Video Player Registry',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
-            ),
-          ],
+            );
+          },
         ),
         actions: [
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const GeneralSearchScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.search_rounded, size: 18),
-            label: const Text('General Search'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          if (isCompact) ...[
+            IconButton(
+              tooltip: 'General Search',
+              icon: const Icon(Icons.search_rounded),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const GeneralSearchScreen(),
+                  ),
+                );
+              },
             ),
-          ),
-          const SizedBox(width: 8),
-          FilledButton.tonalIcon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const VideoActionSearchScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.bolt_rounded, size: 18),
-            label: const Text('Moments'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            IconButton(
+              tooltip: 'Moments Search',
+              icon: const Icon(Icons.bolt_rounded),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const VideoActionSearchScreen(),
+                  ),
+                );
+              },
             ),
-          ),
-          const SizedBox(width: 8),
+          ] else ...[
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const GeneralSearchScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.search_rounded, size: 18),
+              label: const Text('General Search'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.tonalIcon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const VideoActionSearchScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.bolt_rounded, size: 18),
+              label: const Text('Moments'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              ),
+            ),
+          ],
+          const SizedBox(width: 4),
           IconButton(
             tooltip: 'Refresh',
             icon: _isLoading

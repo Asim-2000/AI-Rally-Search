@@ -7,19 +7,20 @@ import '../query_output_validator.dart';
 import '../query_parse_result.dart';
 import '../query_understanding_spec.dart';
 
-/// OpenAI implementation of LlmQueryParser using Chat Completions Structured Outputs.
-class OpenAIQueryParser implements LlmQueryParser {
+/// Anthropic implementation of LlmQueryParser using the Messages API and Tool Use
+/// for guaranteed structured schema output.
+class AnthropicQueryParser implements LlmQueryParser {
   final LlmConfig config;
   final http.Client _client;
 
-  OpenAIQueryParser({
+  AnthropicQueryParser({
     LlmConfig? config,
     http.Client? client,
-  })  : config = config ?? LlmConfig.fromEnvironment(defaultProvider: LlmProvider.openai),
+  })  : config = config ?? LlmConfig.fromEnvironment(defaultProvider: LlmProvider.anthropic),
         _client = client ?? http.Client();
 
   @override
-  LlmProvider get provider => LlmProvider.openai;
+  LlmProvider get provider => LlmProvider.anthropic;
 
   @override
   Future<QueryParseResult> parse(
@@ -29,14 +30,14 @@ class OpenAIQueryParser implements LlmQueryParser {
     final apiKey = config.apiKey;
     if (apiKey == null || apiKey.trim().isEmpty) {
       return QueryParseResult.failure(
-        error: 'OpenAI API key is missing or empty. Please check your .env configuration (OPENAI_API_KEY).',
-        provider: LlmProvider.openai,
+        error: 'Anthropic API key is missing or empty. Please check your .env configuration (ANTHROPIC_API_KEY).',
+        provider: LlmProvider.anthropic,
         model: config.model,
       );
     }
 
-    final baseUrl = config.baseUrl ?? 'https://api.openai.com/v1';
-    final url = Uri.parse('$baseUrl/chat/completions');
+    final baseUrl = config.baseUrl ?? 'https://api.anthropic.com/v1';
+    final url = Uri.parse('$baseUrl/messages');
 
     final stopwatch = Stopwatch()..start();
 
@@ -55,25 +56,31 @@ class OpenAIQueryParser implements LlmQueryParser {
     }
     promptBuffer.write(userQuery);
 
-    final Map<String, dynamic> requestBody = {
+    final requestBody = {
       'model': config.model,
+      'max_tokens': 1024,
+      'system': QueryUnderstandingSpec.systemPrompt,
       'messages': [
-        {
-          'role': 'system',
-          'content': QueryUnderstandingSpec.systemPrompt,
-        },
         {
           'role': 'user',
           'content': promptBuffer.toString(),
-        },
+        }
       ],
-      if (modelSupportsTemperature(config.model)) 'temperature': config.temperature,
-      'response_format': {
-        'type': 'json_schema',
-        'json_schema': QueryUnderstandingSpec.jsonSchema,
+      'temperature': config.temperature,
+      'tools': [
+        {
+          'name': 'rally_search_query',
+          'description': 'Extract structured rally search query parameters according to the specification.',
+          'input_schema': QueryUnderstandingSpec.jsonSchema['schema'],
+        }
+      ],
+      'tool_choice': {
+        'type': 'tool',
+        'name': 'rally_search_query',
       },
     };
 
+    // Retry loop for transient failures (HTTP 429, 5xx, timeout)
     int attempts = 0;
     final int maxAttempts = config.maxRetries + 1;
 
@@ -85,7 +92,8 @@ class OpenAIQueryParser implements LlmQueryParser {
               url,
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer $apiKey',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
               },
               body: jsonEncode(requestBody),
             )
@@ -112,8 +120,8 @@ class OpenAIQueryParser implements LlmQueryParser {
           } catch (_) {}
 
           return QueryParseResult.failure(
-            error: 'OpenAI API request failed ($errorDetail)',
-            provider: LlmProvider.openai,
+            error: 'Anthropic API request failed ($errorDetail)',
+            provider: LlmProvider.anthropic,
             model: config.model,
             latencyMs: latencyMs,
             rawResponse: response.body,
@@ -121,36 +129,58 @@ class OpenAIQueryParser implements LlmQueryParser {
         }
 
         final Map<String, dynamic> responseJson = jsonDecode(utf8.decode(response.bodyBytes));
-        final choices = responseJson['choices'] as List<dynamic>?;
-        if (choices == null || choices.isEmpty) {
+        final contentList = responseJson['content'] as List<dynamic>?;
+        if (contentList == null || contentList.isEmpty) {
           return QueryParseResult.failure(
-            error: 'OpenAI response contained no choices',
-            provider: LlmProvider.openai,
+            error: 'Anthropic response contained no content blocks',
+            provider: LlmProvider.anthropic,
             model: config.model,
             latencyMs: latencyMs,
             rawResponse: response.body,
           );
         }
 
-        final message = choices.first['message'];
-        final content = message?['content']?.toString() ?? '';
+        // Find tool_use block
+        Map<String, dynamic>? toolInput;
+        for (final block in contentList) {
+          if (block is Map<String, dynamic> && block['type'] == 'tool_use') {
+            final input = block['input'];
+            if (input is Map<String, dynamic>) {
+              toolInput = input;
+              break;
+            }
+          }
+        }
+
+        if (toolInput == null) {
+          // Fallback to text content if no tool_use block
+          final textBlock = contentList.firstWhere(
+            (b) => b is Map && b['type'] == 'text',
+            orElse: () => null,
+          );
+          final rawText = textBlock?['text']?.toString() ?? '';
+          return QueryOutputValidator.validateAndParse(
+            rawContent: rawText,
+            provider: LlmProvider.anthropic,
+            model: config.model,
+            latencyMs: latencyMs,
+          );
+        }
 
         final usage = responseJson['usage'] as Map<String, dynamic>?;
-        final promptTokens = usage?['prompt_tokens'] as int?;
-        final completionTokens = usage?['completion_tokens'] as int?;
-        final totalTokens = usage?['total_tokens'] as int?;
+        final promptTokens = usage?['input_tokens'] as int?;
+        final completionTokens = usage?['output_tokens'] as int?;
 
         return QueryOutputValidator.validateAndParse(
-          rawContent: content,
-          provider: LlmProvider.openai,
+          rawContent: jsonEncode(toolInput),
+          provider: LlmProvider.anthropic,
           model: config.model,
           latencyMs: latencyMs,
           promptTokens: promptTokens,
           completionTokens: completionTokens,
-          totalTokens: totalTokens,
+          totalTokens: (promptTokens ?? 0) + (completionTokens ?? 0),
           metadata: {
-            'finish_reason': choices.first['finish_reason'],
-            'system_fingerprint': responseJson['system_fingerprint'],
+            'stop_reason': responseJson['stop_reason'],
           },
         );
       } on TimeoutException {
@@ -161,16 +191,16 @@ class OpenAIQueryParser implements LlmQueryParser {
         }
         stopwatch.stop();
         return QueryParseResult.failure(
-          error: 'OpenAI API request timed out after ${config.timeout.inSeconds}s',
-          provider: LlmProvider.openai,
+          error: 'Anthropic API request timed out after ${config.timeout.inSeconds}s',
+          provider: LlmProvider.anthropic,
           model: config.model,
           latencyMs: stopwatch.elapsedMilliseconds,
         );
       } catch (e) {
         stopwatch.stop();
         return QueryParseResult.failure(
-          error: 'OpenAI connection error: $e',
-          provider: LlmProvider.openai,
+          error: 'Anthropic connection error: $e',
+          provider: LlmProvider.anthropic,
           model: config.model,
           latencyMs: stopwatch.elapsedMilliseconds,
         );
@@ -179,31 +209,10 @@ class OpenAIQueryParser implements LlmQueryParser {
 
     stopwatch.stop();
     return QueryParseResult.failure(
-      error: 'OpenAI retries exhausted',
-      provider: LlmProvider.openai,
+      error: 'Anthropic retries exhausted',
+      provider: LlmProvider.anthropic,
       model: config.model,
       latencyMs: stopwatch.elapsedMilliseconds,
     );
   }
-
-  /// Returns whether the specified OpenAI model supports a custom temperature parameter.
-  ///
-  /// OpenAI reasoning models (e.g. o1, o3, o4 series) and next-generation models like
-  /// gpt-5 (e.g. gpt-5.6-luna) only support the default temperature and reject requests
-  /// containing an explicit temperature parameter with an HTTP 400 error.
-  static bool modelSupportsTemperature(String model) {
-    final cleanModel = model.toLowerCase().replaceAll('models/', '').trim();
-    final baseModel = cleanModel.contains('/') ? cleanModel.split('/').last : cleanModel;
-
-    if (baseModel.startsWith('o1') ||
-        baseModel.startsWith('o3') ||
-        baseModel.startsWith('o4') ||
-        baseModel.startsWith('gpt-5') ||
-        baseModel.startsWith('chatgpt-5') ||
-        baseModel.contains('reasoning')) {
-      return false;
-    }
-    return true;
-  }
 }
-

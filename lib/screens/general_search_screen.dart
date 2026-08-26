@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../models/entity_candidate.dart';
 import '../models/search_intent.dart';
 import '../models/search_query.dart';
 import '../models/search_results.dart';
 import '../models/video_action.dart';
+import '../services/llm/entity_resolution/database_entity_resolver.dart';
+import '../services/llm/entity_resolution/entity_lookup_repository.dart';
 import '../services/llm/llm_provider_config.dart';
 import '../services/llm/llm_query_parser.dart';
 import '../services/llm/llm_query_parser_factory.dart';
@@ -48,6 +51,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   // Natural language state
   String? _interpretedSummary;
   String? _clarificationQuestion;
+  List<EntityCandidate> _clarificationCandidates = [];
   bool _isNlMode = false;
   String? _lastExecutedNlQuery;
   NaturalLanguageSearchResult? _lastNlResult;
@@ -177,9 +181,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     super.initState();
     _repository = widget.repository ?? SearchRepository();
     final parser = widget.llmParser ?? LlmQueryParserFactory.create();
+    final lookupRepo = DatabaseEntityLookupRepository();
+    final resolver = DatabaseEntityResolver(repository: lookupRepo);
     _nlSearchService = widget.nlSearchService ??
         NaturalLanguageSearchService(
           parser: parser,
+          entityResolver: resolver,
           repository: _repository,
         );
 
@@ -217,6 +224,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _isLoading = true;
       _errorMessage = null;
       _clarificationQuestion = null;
+      _clarificationCandidates = [];
       _currentPage = 1;
     });
 
@@ -228,6 +236,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           setState(() {
             _isLoading = false;
             _clarificationQuestion = result.clarificationQuestion;
+            _clarificationCandidates = result.candidates;
             _interpretedSummary = null;
           });
           return;
@@ -237,6 +246,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           setState(() {
             _isLoading = false;
             _errorMessage = result.error ?? 'Query parsing failed';
+            _clarificationCandidates = [];
             _interpretedSummary = null;
           });
           return;
@@ -271,6 +281,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           _interpretedSummary = result.interpretedSummary;
           _lastNlResult = result;
           _clarificationQuestion = null;
+          _clarificationCandidates = [];
           _errorMessage = null;
           _isLoading = false;
         });
@@ -279,10 +290,39 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       if (mounted) {
         setState(() {
           _errorMessage = 'Natural language search failed: $e';
+          _clarificationCandidates = [];
           _isLoading = false;
         });
       }
     }
+  }
+
+  void _onSelectCandidate(EntityCandidate candidate) {
+    setState(() {
+      _clarificationQuestion = null;
+      _clarificationCandidates = [];
+
+      switch (candidate.type) {
+        case EntityType.rally:
+          _searchController.text = candidate.canonicalName;
+          final year = candidate.metadata?['year'] as int?;
+          if (year != null) _selectedYear = year;
+          break;
+        case EntityType.driver:
+          _driverController.text = candidate.canonicalName;
+          break;
+        case EntityType.stage:
+          // Stage resolved
+          break;
+        case EntityType.city:
+          _cityController.text = candidate.canonicalName;
+          break;
+        case EntityType.uploader:
+          _searchController.text = candidate.canonicalName;
+          break;
+      }
+    });
+    _executeSearch(resetPage: true);
   }
 
   void _showTelemetryDialog(BuildContext context, NaturalLanguageSearchResult result) {
@@ -370,6 +410,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Text('Entity Resolution Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${result.entityResolutionLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                   Text('Database Execution Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                   Text('${result.dbLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 ],
@@ -383,6 +430,50 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ),
               const SizedBox(height: 12),
 
+              // Entity Resolution Comparison (Parsed vs Resolved)
+              if (result.parsedQuery != null || result.resolvedQuery != null) ...[
+                const Text('🏷️ Entity Resolution (Parsed vs Resolved)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (result.parsedQuery?.targetRallyName != null || result.resolvedQuery?.targetRallyName != null) ...[
+                        Text(
+                          'Rally: "${result.parsedQuery?.targetRallyName ?? ''}" → "${result.resolvedQuery?.targetRallyName ?? ''}"',
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                        ),
+                      ],
+                      if (result.parsedQuery?.driverName != null || result.resolvedQuery?.driverName != null) ...[
+                        Text(
+                          'Driver: "${result.parsedQuery?.driverName ?? ''}" → "${result.resolvedQuery?.driverName ?? ''}" (ID: ${result.resolvedQuery?.driverId ?? 'none'})',
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                        ),
+                      ],
+                      if (result.parsedQuery?.stageName != null || result.resolvedQuery?.stageName != null) ...[
+                        Text(
+                          'Stage: "${result.parsedQuery?.stageName ?? ''}" → "${result.resolvedQuery?.stageName ?? ''}"',
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                        ),
+                      ],
+                      if (result.parsedQuery?.city != null || result.resolvedQuery?.city != null) ...[
+                        Text(
+                          'City: "${result.parsedQuery?.city ?? ''}" → "${result.resolvedQuery?.city ?? ''}"',
+                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
               // Pillar 3: Correctness Checks
               const Text('🛡️ Structural Correctness', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
@@ -394,7 +485,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
               // Structured SearchQuery
               if (result.query != null) ...[
-                const Text('🔍 Structured Query JSON', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text('🔍 Structured Query JSON (Resolved)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 4),
                 Container(
                   width: double.infinity,
@@ -880,35 +971,75 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             ),
           ),
 
-          // Clarification Question Banner
+          // Clarification Question Banner & Candidate Selection
           if (_clarificationQuestion != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               color: Colors.amber.withValues(alpha: 0.15),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.help_outline_rounded, color: Colors.amber, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Clarification Needed',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.help_outline_rounded, color: Colors.amber, size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Clarification Needed',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _clarificationQuestion!,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _clarificationQuestion!,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        onPressed: () => setState(() {
+                          _clarificationQuestion = null;
+                          _clarificationCandidates = [];
+                        }),
+                      ),
+                    ],
+                  ),
+                  if (_clarificationCandidates.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Suggested options:',
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.amber),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 18),
-                    onPressed: () => setState(() => _clarificationQuestion = null),
-                  ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _clarificationCandidates.map((candidate) {
+                        final typeIcon = candidate.type == EntityType.driver
+                            ? Icons.person_rounded
+                            : (candidate.type == EntityType.rally
+                                ? Icons.flag_rounded
+                                : (candidate.type == EntityType.stage
+                                    ? Icons.alt_route_rounded
+                                    : Icons.location_city_rounded));
+                        return ActionChip(
+                          avatar: Icon(typeIcon, size: 16, color: theme.colorScheme.primary),
+                          label: Text(
+                            candidate.subtitle != null
+                                ? '${candidate.canonicalName} (${candidate.subtitle})'
+                                : candidate.canonicalName,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          onPressed: () => _onSelectCandidate(candidate),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ],
               ),
             ),

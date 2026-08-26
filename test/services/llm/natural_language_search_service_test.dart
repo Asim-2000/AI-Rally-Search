@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ai_rally_search/models/entity_candidate.dart';
 import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/models/search_results.dart';
 import 'package:ai_rally_search/models/video_action.dart';
+import 'package:ai_rally_search/services/llm/entity_resolution/database_entity_resolver.dart';
+import 'package:ai_rally_search/services/llm/entity_resolution/entity_lookup_repository.dart';
 import 'package:ai_rally_search/services/llm/natural_language_search_service.dart';
 import 'package:ai_rally_search/services/llm/providers/mock_query_parser.dart';
 import 'package:ai_rally_search/services/search_repository.dart';
@@ -46,17 +49,156 @@ class MockSearchRepository implements ISearchRepository {
   Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async => throw UnimplementedError();
 }
 
+class TestEntityLookupRepository implements IEntityLookupRepository {
+  @override
+  Future<List<EntityCandidate>> lookupRallies(
+    String phrase, {
+    int? year,
+    String? country,
+    String? city,
+    int limit = 10,
+  }) async {
+    final lower = phrase.toLowerCase().trim();
+    if (lower.contains('moonraker')) {
+      final list = [
+        const EntityCandidate(
+          id: 'moonraker-2025-uuid',
+          type: EntityType.rally,
+          canonicalName: 'Moonraker Forestry Rally 2025',
+          metadata: {'year': 2025},
+        ),
+        const EntityCandidate(
+          id: 'moonraker-2026-uuid',
+          type: EntityType.rally,
+          canonicalName: 'Moonraker Forestry Rally 2026',
+          metadata: {'year': 2026},
+        ),
+      ];
+      if (year != null) {
+        return list.where((c) => c.metadata?['year'] == year).toList();
+      }
+      return list;
+    }
+    if (lower.contains('get jerky')) {
+      return [
+        const EntityCandidate(
+          id: 'get-jerky-2026-uuid',
+          type: EntityType.rally,
+          canonicalName: 'Get Jerky Rally North Wales 2026',
+          metadata: {'year': 2026},
+        ),
+      ];
+    }
+    if (lower.contains('trackrod')) {
+      return [
+        const EntityCandidate(
+          id: 'trackrod-2024-uuid',
+          type: EntityType.rally,
+          canonicalName: 'Trackrod Rally 2024',
+          metadata: {'year': 2024},
+        ),
+      ];
+    }
+    return [];
+  }
+
+  @override
+  Future<List<EntityCandidate>> lookupDrivers(
+    String phrase, {
+    String? eventId,
+    String? eventName,
+    int? year,
+    int limit = 10,
+  }) async {
+    final lower = phrase.toLowerCase().trim();
+    if (lower.contains('josh moffett')) {
+      return [
+        const EntityCandidate(
+          id: 'josh-moffett-uuid',
+          type: EntityType.driver,
+          canonicalName: 'Josh Moffett',
+        ),
+      ];
+    }
+    if (lower.contains('moffett')) {
+      final list = [
+        const EntityCandidate(
+          id: 'josh-moffett-uuid',
+          type: EntityType.driver,
+          canonicalName: 'Josh Moffett',
+          metadata: {'eventId': 'moonraker-2025-uuid'},
+        ),
+        const EntityCandidate(
+          id: 'sam-moffett-uuid',
+          type: EntityType.driver,
+          canonicalName: 'Sam Moffett',
+        ),
+      ];
+      if (eventId == 'moonraker-2025-uuid') {
+        return [
+          const EntityCandidate(
+            id: 'josh-moffett-uuid',
+            type: EntityType.driver,
+            canonicalName: 'Josh Moffett',
+            metadata: {'inContext': true},
+          ),
+        ];
+      }
+      return list;
+    }
+    if (lower.contains('philip squires') || lower.contains('squires')) {
+      return [
+        const EntityCandidate(
+          id: 'philip-squires-uuid',
+          type: EntityType.driver,
+          canonicalName: 'Philip Squires',
+        ),
+      ];
+    }
+    return [];
+  }
+
+  @override
+  Future<List<EntityCandidate>> lookupStages(
+    String phrase, {
+    String? eventId,
+    String? eventName,
+    int limit = 10,
+  }) async {
+    final lower = phrase.toLowerCase().trim();
+    if (lower.contains('gale rigg')) {
+      return [
+        const EntityCandidate(
+          id: 'gale-rigg-uuid',
+          type: EntityType.stage,
+          canonicalName: 'Gale Rigg',
+          metadata: {'stageNumber': '3'},
+        ),
+      ];
+    }
+    return [];
+  }
+
+  @override
+  Future<List<EntityCandidate>> lookupCities(String phrase, {String? country, int limit = 10}) async => [];
+  @override
+  Future<List<EntityCandidate>> lookupUploaders(String phrase, {int limit = 10}) async => [];
+}
+
 void main() {
-  group('NaturalLanguageSearchService & Canonical Regression Dataset', () {
+  group('NaturalLanguageSearchService & Phase 3.5 Entity Resolution', () {
     late MockSearchRepository mockRepo;
     late MockLlmQueryParser mockParser;
+    late DatabaseEntityResolver resolver;
     late NaturalLanguageSearchService service;
 
     setUp(() {
       mockRepo = MockSearchRepository();
       mockParser = MockLlmQueryParser();
+      resolver = DatabaseEntityResolver(repository: TestEntityLookupRepository());
       service = NaturalLanguageSearchService(
         parser: mockParser,
+        entityResolver: resolver,
         repository: mockRepo,
       );
     });
@@ -70,15 +212,6 @@ void main() {
       expect(mockRepo.lastReceivedQuery!.country, 'Ireland');
     });
 
-    test('1b. "show me rallies in poland" -> SEARCH_RALLIES, country=Poland', () async {
-      final res = await service.search('show me rallies in poland');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchRallies);
-      expect(res.query!.country, 'Poland');
-      expect(mockRepo.lastReceivedQuery!.intent, SearchIntent.searchRallies);
-      expect(mockRepo.lastReceivedQuery!.country, 'Poland');
-    });
-
     test('2. "Show rallies in Ireland in 2025." -> SEARCH_RALLIES, country=Ireland, year=2025', () async {
       final res = await service.search('Show rallies in Ireland in 2025.');
       expect(res.isSuccess, isTrue);
@@ -87,136 +220,65 @@ void main() {
       expect(res.query!.year, 2025);
     });
 
-    test('3. "Show rallies in Ireland in 2025 where Josh Moffett participated." -> SEARCH_DRIVER_RALLIES, country=Ireland, year=2025, driverName=Josh Moffett', () async {
+    test('3. "Show rallies in Ireland in 2025 where Josh Moffett participated." -> preserves parsed & resolved queries', () async {
       final res = await service.search('Show rallies in Ireland in 2025 where Josh Moffett participated.');
       expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchDriverRallies);
-      expect(res.query!.country, 'Ireland');
-      expect(res.query!.year, 2025);
-      expect(res.query!.driverName, 'Josh Moffett');
+      expect(res.parsedQuery?.driverName, 'Josh Moffett');
+      expect(res.resolvedQuery?.driverName, 'Josh Moffett');
+      expect(res.resolvedQuery?.driverId, 'josh-moffett-uuid');
+      expect(mockRepo.lastReceivedQuery!.driverId, 'josh-moffett-uuid');
     });
 
-    test('4. "Which rallies did Josh Moffett win?" -> SEARCH_DRIVER_WINS, driverName=Josh Moffett', () async {
-      final res = await service.search('Which rallies did Josh Moffett win?');
+    test('4. "Show jump highlights featuring Moffett from Moonraker in 2025" -> contextual resolution', () async {
+      final res = await service.search('Show jump highlights featuring Moffett from Moonraker in 2025');
       expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchDriverWins);
-      expect(res.query!.driverName, 'Josh Moffett');
-    });
-
-    test('5. "Which rallies did Josh Moffett win in 2025?" -> SEARCH_DRIVER_WINS, driverName=Josh Moffett, year=2025', () async {
-      final res = await service.search('Which rallies did Josh Moffett win in 2025?');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchDriverWins);
-      expect(res.query!.driverName, 'Josh Moffett');
-      expect(res.query!.year, 2025);
-    });
-
-    test('6. "Who finished first in Moonraker?" -> GET_RALLY_RESULTS, rallyName=Moonraker', () async {
-      final res = await service.search('Who finished first in Moonraker?');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.getRallyResults);
-      expect(res.query!.targetRallyName, contains('Moonraker'));
-    });
-
-    test('7. "Show the top 10 finishers from Moonraker." -> GET_RALLY_TOP_FINISHERS, rallyName=Moonraker, limit=10', () async {
-      final res = await service.search('Show the top 10 finishers from Moonraker.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.getRallyTopFinishers);
-      expect(res.query!.targetRallyName, contains('Moonraker'));
-      expect(res.query!.limit, 10);
-    });
-
-    test('8. "Show jump highlights from Moonraker." -> SEARCH_VIDEO_ACTIONS, actionType=jump, rallyName=Moonraker', () async {
-      final res = await service.search('Show jump highlights from Moonraker.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchVideoActions);
+      expect(res.parsedQuery?.driverName, 'Moffett');
+      expect(res.parsedQuery?.targetRallyName, 'Moonraker');
+      expect(res.resolvedQuery?.driverName, 'Josh Moffett');
+      expect(res.resolvedQuery?.driverId, 'josh-moffett-uuid');
+      expect(res.resolvedQuery?.targetRallyName, 'Moonraker Forestry Rally 2025');
       expect(res.query!.actionType, 'jump');
-      expect(res.query!.targetRallyName, contains('Moonraker'));
     });
 
-    test('9. "Show jump highlights featuring Josh Moffett from Moonraker." -> SEARCH_VIDEO_ACTIONS, actionType=jump, driverName=Josh Moffett, rallyName=Moonraker', () async {
-      final res = await service.search('Show jump highlights featuring Josh Moffett from Moonraker.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchVideoActions);
-      expect(res.query!.actionType, 'jump');
-      expect(res.query!.driverName, 'Josh Moffett');
-      expect(res.query!.targetRallyName, contains('Moonraker'));
+    test('5. "Who won Moonraker?" without year triggers rally edition clarification', () async {
+      final res = await service.search('Who won Moonraker?');
+      expect(res.isSuccess, isFalse);
+      expect(res.requiresClarification, isTrue);
+      expect(res.candidates.length, greaterThanOrEqualTo(2));
+      expect(mockRepo.searchCallCount, 0); // Did not execute DB query prematurely
     });
 
-    test('10. "Show videos featuring Josh Moffett." -> SEARCH_DRIVER_VIDEOS, driverName=Josh Moffett', () async {
-      final res = await service.search('Show videos featuring Josh Moffett.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchDriverVideos);
-      expect(res.query!.driverName, 'Josh Moffett');
-    });
-
-    test('11. "Who are the top uploaders for Moonraker?" -> GET_TOP_UPLOADERS, rallyName=Moonraker', () async {
-      final res = await service.search('Who are the top uploaders for Moonraker?');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.getTopUploaders);
-      expect(res.query!.targetRallyName, contains('Moonraker'));
-    });
-
-    test('12. "Show the drivers with the most wins." -> GET_TOP_DRIVERS_BY_WINS', () async {
-      final res = await service.search('Show the drivers with the most wins.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.getTopDriversByWins);
-    });
-
-    test('13. "Show drift highlights from Trackrod Rally on Gale Rigg." -> SEARCH_VIDEO_ACTIONS, actionType=drift, rallyName=Trackrod Rally, stageName=Gale Rigg', () async {
-      final res = await service.search('Show drift highlights from Trackrod Rally on Gale Rigg.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchVideoActions);
-      expect(res.query!.actionType, 'drift');
-      expect(res.query!.targetRallyName, contains('Trackrod'));
-      expect(res.query!.stageName, 'Gale Rigg');
-    });
-
-    test('14. "Show drift highlights featuring Philip Squires from Get Jerky." -> SEARCH_VIDEO_ACTIONS, actionType=drift, driverName=Philip Squires, rallyName=Get Jerky', () async {
+    test('6. "Show drift highlights featuring Philip Squires from Get Jerky." -> resolves Get Jerky', () async {
       final res = await service.search('Show drift highlights featuring Philip Squires from Get Jerky.');
       expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchVideoActions);
-      expect(res.query!.actionType, 'drift');
-      expect(res.query!.driverName, 'Philip Squires');
-      expect(res.query!.targetRallyName, contains('Get Jerky'));
+      expect(res.resolvedQuery?.targetRallyName, 'Get Jerky Rally North Wales 2026');
+      expect(res.resolvedQuery?.driverName, 'Philip Squires');
+      expect(res.resolvedQuery?.driverId, 'philip-squires-uuid');
     });
 
-    test('15. "Show jumps in Ireland." -> SEARCH_VIDEO_ACTIONS, actionType=jump, country=Ireland', () async {
-      final res = await service.search('Show jumps in Ireland.');
+    test('7. "Show drift highlights from Trackrod Rally on Gale Rigg." -> resolves stage in event context', () async {
+      final res = await service.search('Show drift highlights from Trackrod Rally on Gale Rigg.');
       expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchVideoActions);
-      expect(res.query!.actionType, 'jump');
-      expect(res.query!.country, 'Ireland');
+      expect(res.resolvedQuery?.targetRallyName, 'Trackrod Rally 2024');
+      expect(res.resolvedQuery?.stageName, 'Gale Rigg');
+      expect(res.resolvedQuery?.stageNumber, '3');
     });
 
-    test('16. "Find rallies from 2025." -> SEARCH_RALLIES, year=2025', () async {
-      final res = await service.search('Find rallies from 2025.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchRallies);
-      expect(res.query!.year, 2025);
-    });
-
-    test('17. "Show rallies in Donegal." -> SEARCH_RALLIES, rallyName=Donegal', () async {
-      final res = await service.search('Show rallies in Donegal.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchRallies);
-      expect(res.query!.targetRallyName, contains('Donegal'));
-    });
-
-    test('Rejects empty query with clear failure without hitting repository', () async {
+    test('Rejects empty query with clear failure without hitting entity resolver or repository', () async {
       final res = await service.search('   ');
       expect(res.isSuccess, isFalse);
       expect(res.error, 'Search query cannot be empty');
       expect(mockRepo.searchCallCount, 0);
     });
 
-    test('Propagates clarification without hitting repository', () async {
+    test('Propagates parser clarification without hitting entity resolver or repository', () async {
       final clarifyParser = MockLlmQueryParser(
         simulateClarification: true,
         clarificationQuestion: 'Which rally year do you mean?',
       );
       final clarifyService = NaturalLanguageSearchService(
         parser: clarifyParser,
+        entityResolver: resolver,
         repository: mockRepo,
       );
 

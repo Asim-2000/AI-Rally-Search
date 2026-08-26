@@ -1,7 +1,6 @@
 import 'dart:convert';
 import '../../models/search_intent.dart';
 import '../../models/search_query.dart';
-import 'eval/llm_cost_calculator.dart';
 import 'llm_provider_config.dart';
 import 'query_parse_result.dart';
 import 'query_understanding_spec.dart';
@@ -107,7 +106,7 @@ class QueryOutputValidator {
 
     // 3. Action type validation (must be in canonical list or null)
     final rawAction = jsonMap['actionType']?.toString() ?? jsonMap['action_type']?.toString();
-    final String? validatedAction = _validateActionType(rawAction);
+    final String? validatedAction = normalizeActionType(rawAction);
 
     // 4. Year validation (must be a realistic rally motorsport year, e.g. 1950 - 2050)
     final rawYear = jsonMap['year'];
@@ -124,7 +123,7 @@ class QueryOutputValidator {
     final rallyName = _sanitizeString(jsonMap['rallyName'] ?? jsonMap['rally_name']);
     final eventName = _sanitizeString(jsonMap['eventName'] ?? jsonMap['event_name']);
     final rawCountry = _sanitizeString(jsonMap['country']);
-    final country = _normalizeCountry(rawCountry);
+    final country = normalizeCountry(rawCountry);
     final city = _sanitizeString(jsonMap['city']);
     final stageName = _sanitizeString(jsonMap['stageName'] ?? jsonMap['stage_name']);
     final stageNumber = _sanitizeString(jsonMap['stageNumber'] ?? jsonMap['stage_number']);
@@ -149,17 +148,6 @@ class QueryOutputValidator {
     // Deterministically generate interpreted summary from structured query
     final summary = generateInterpretedSummary(searchQuery);
 
-    // Compute estimated USD cost
-    double? costUsd;
-    if (promptTokens != null && completionTokens != null) {
-      costUsd = LlmCostCalculator.calculateCost(
-        promptTokens: promptTokens,
-        completionTokens: completionTokens,
-        model: model,
-        provider: provider,
-      );
-    }
-
     return QueryParseResult(
       query: searchQuery,
       requiresClarification: false,
@@ -170,7 +158,6 @@ class QueryOutputValidator {
       promptTokens: promptTokens,
       completionTokens: completionTokens,
       totalTokens: totalTokens,
-      estimatedCostUsd: costUsd,
       rawResponse: rawResponse,
       metadata: metadata ?? {},
     );
@@ -209,7 +196,7 @@ class QueryOutputValidator {
   }
 
   /// Validates and normalizes action type
-  static String? _validateActionType(String? raw) {
+  static String? normalizeActionType(String? raw) {
     if (raw == null) return null;
     final trimmed = raw.trim().toLowerCase();
     if (trimmed.isEmpty || trimmed == 'null' || trimmed == 'all' || trimmed == 'none') {
@@ -235,6 +222,7 @@ class QueryOutputValidator {
       'air': 'jump',
       'airborne': 'jump',
       'big air': 'jump',
+      'jumsp': 'jump',
       'drifts': 'drift',
       'drifting': 'drift',
       'slide': 'drift',
@@ -250,10 +238,24 @@ class QueryOutputValidator {
       'rollover': 'crash',
       'spins': 'spin',
       'spinning': 'spin',
-      'donut': 'spin',
-      'donuts': 'spin',
-      'doughnut': 'spin',
-      'doughnuts': 'spin',
+      'donut': 'donut',
+      'donuts': 'donut',
+      'doughnut': 'donut',
+      'doughnuts': 'donut',
+      'hairpin': 'hairpin',
+      'hairpins': 'hairpin',
+      'handbrake turn': 'hairpin',
+      'handbrake turns': 'hairpin',
+      'handbrake': 'hairpin',
+      'water splash': 'water splash',
+      'water splashes': 'water splash',
+      'water crossing': 'water splash',
+      'water crossings': 'water splash',
+      'splash': 'water splash',
+      'splashes': 'water splash',
+      'watr splash': 'water splash',
+      'watr splashes': 'water splash',
+      'watr crossing': 'water splash',
       'launch': 'start line',
       'start': 'start line',
       'starts': 'start line',
@@ -350,13 +352,14 @@ class QueryOutputValidator {
   }
 
   /// Normalizes country name or code into canonical title case matching DB values
-  static String? _normalizeCountry(String? raw) {
+  static String? normalizeCountry(String? raw) {
     if (raw == null) return null;
     final clean = raw.trim().toLowerCase();
     if (clean.isEmpty || clean == 'all' || clean == 'null' || clean == 'none') return null;
 
     const Map<String, String> countryLookup = {
       'ireland': 'Ireland',
+      'irelnd': 'Ireland',
       'ie': 'Ireland',
       'irl': 'Ireland',
       'republic of ireland': 'Ireland',
@@ -365,35 +368,45 @@ class QueryOutputValidator {
       'gb': 'United Kingdom',
       'gbr': 'United Kingdom',
       'great britain': 'United Kingdom',
+      'great britan': 'United Kingdom',
+      'britain': 'United Kingdom',
+      'britan': 'United Kingdom',
       'england': 'United Kingdom',
       'scotland': 'United Kingdom',
       'wales': 'United Kingdom',
       'portugal': 'Portugal',
+      'portugl': 'Portugal',
       'pt': 'Portugal',
       'prt': 'Portugal',
       'france': 'France',
       'fr': 'France',
       'fra': 'France',
       'austria': 'Austria',
+      'austra': 'Austria',
       'at': 'Austria',
       'aut': 'Austria',
       'norway': 'Norway',
       'no': 'Norway',
       'nor': 'Norway',
       'poland': 'Poland',
+      'polnd': 'Poland',
       'pl': 'Poland',
       'pol': 'Poland',
       'polish': 'Poland',
       'belgium': 'Belgium',
+      'belgm': 'Belgium',
       'be': 'Belgium',
       'bel': 'Belgium',
       'spain': 'Spain',
+      'spn': 'Spain',
       'es': 'Spain',
       'esp': 'Spain',
       'italy': 'Italy',
+      'itly': 'Italy',
       'it': 'Italy',
       'ita': 'Italy',
       'latvia': 'Latvia',
+      'latva': 'Latvia',
       'lv': 'Latvia',
       'lva': 'Latvia',
       'czech republic': 'Czech Republic',
@@ -401,6 +414,7 @@ class QueryOutputValidator {
       'cz': 'Czech Republic',
       'cze': 'Czech Republic',
       'germany': 'Germany',
+      'germny': 'Germany',
       'de': 'Germany',
       'deu': 'Germany',
       'kenya': 'Kenya',
@@ -432,10 +446,13 @@ class QueryOutputValidator {
       'bb': 'Barbados',
       'brb': 'Barbados',
       'sweden': 'Sweden',
+      'swedn': 'Sweden',
       'se': 'Sweden',
       'finland': 'Finland',
+      'finlnd': 'Finland',
       'fi': 'Finland',
       'estonia': 'Estonia',
+      'estona': 'Estonia',
       'ee': 'Estonia',
     };
 

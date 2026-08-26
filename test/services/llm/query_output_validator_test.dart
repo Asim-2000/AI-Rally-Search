@@ -122,15 +122,32 @@ void main() {
       expect(result.error, contains('Failed to extract valid JSON'));
     });
 
-    test('Deterministic interpreted summary generated without secondary LLM call', () {
-      const q = SearchQuery(
-        intent: SearchIntent.searchDriverWins,
-        driverName: 'Josh Moffett',
-        year: 2026,
-      );
+    test('Normalizes action aliases (water splash, donut, hairpin, watr splash)', () {
+      expect(QueryOutputValidator.normalizeActionType('water splash'), 'water splash');
+      expect(QueryOutputValidator.normalizeActionType('water splashes'), 'water splash');
+      expect(QueryOutputValidator.normalizeActionType('water crossing'), 'water splash');
+      expect(QueryOutputValidator.normalizeActionType('watr splash'), 'water splash');
+      expect(QueryOutputValidator.normalizeActionType('splashes'), 'water splash');
+      expect(QueryOutputValidator.normalizeActionType('donut'), 'donut');
+      expect(QueryOutputValidator.normalizeActionType('donuts'), 'donut');
+      expect(QueryOutputValidator.normalizeActionType('doughnut'), 'donut');
+      expect(QueryOutputValidator.normalizeActionType('doughnuts'), 'donut');
+      expect(QueryOutputValidator.normalizeActionType('hairpin'), 'hairpin');
+      expect(QueryOutputValidator.normalizeActionType('hairpins'), 'hairpin');
+      expect(QueryOutputValidator.normalizeActionType('handbrake turn'), 'hairpin');
+      expect(QueryOutputValidator.normalizeActionType('jumsp'), 'jump');
+    });
 
-      final summary = QueryOutputValidator.generateInterpretedSummary(q);
-      expect(summary, 'Searching driver victories | Driver: Josh Moffett | Year: 2026');
+    test('Normalizes country typos deterministically', () {
+      expect(QueryOutputValidator.normalizeCountry('Irelnd'), 'Ireland');
+      expect(QueryOutputValidator.normalizeCountry('irelnd'), 'Ireland');
+      expect(QueryOutputValidator.normalizeCountry('great britan'), 'United Kingdom');
+      expect(QueryOutputValidator.normalizeCountry('germny'), 'Germany');
+      expect(QueryOutputValidator.normalizeCountry('portugl'), 'Portugal');
+      expect(QueryOutputValidator.normalizeCountry('polnd'), 'Poland');
+      expect(QueryOutputValidator.normalizeCountry('spn'), 'Spain');
+      expect(QueryOutputValidator.normalizeCountry('latva'), 'Latvia');
     });
   });
 }
+

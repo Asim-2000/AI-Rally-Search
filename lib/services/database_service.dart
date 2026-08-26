@@ -170,6 +170,114 @@ class DatabaseService {
     return 0;
   }
 
+  /// Fetches actions / moments for a specific source video ID
+  Future<List<Map<String, dynamic>>> getVideoActionsForVideo(int videoId) async {
+    final sql = '''
+      SELECT 
+        vm.id AS id,
+        vm.video_id AS video_id,
+        rs.id AS stream_id,
+        rs.on_demand_url AS on_demand_url,
+        va.id AS action_type_id,
+        va.action_name AS action_name,
+        vm.start_action AS start_action,
+        vm.end_action AS end_action,
+        vm.points AS points,
+        rv.thumbnail AS thumbnail_url,
+        stg.stage_name,
+        stg.stage_number,
+        ev.event_name,
+        ev.country AS event_country
+      FROM rally_video_metadata vm
+      INNER JOIN rally_video_actions va ON vm.action_id = va.id
+      LEFT JOIN rally_streams rs ON vm.video_id = rs.video_id
+      LEFT JOIN rally_videos rv ON vm.video_id = rv.id
+      LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
+      LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
+      WHERE vm.video_id = $videoId
+      ORDER BY vm.start_action ASC;
+    ''';
+
+    return await query(sql);
+  }
+
+  /// Fetches actions / moments for a specific rally stream ID
+  Future<List<Map<String, dynamic>>> getVideoActionsForStream(int streamId) async {
+    final sql = '''
+      SELECT 
+        vm.id AS id,
+        vm.video_id AS video_id,
+        rs.id AS stream_id,
+        rs.on_demand_url AS on_demand_url,
+        va.id AS action_type_id,
+        va.action_name AS action_name,
+        vm.start_action AS start_action,
+        vm.end_action AS end_action,
+        vm.points AS points,
+        rv.thumbnail AS thumbnail_url,
+        stg.stage_name,
+        stg.stage_number,
+        ev.event_name,
+        ev.country AS event_country
+      FROM rally_streams rs
+      INNER JOIN rally_video_metadata vm ON rs.video_id = vm.video_id
+      INNER JOIN rally_video_actions va ON vm.action_id = va.id
+      LEFT JOIN rally_videos rv ON rs.video_id = rv.id
+      LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
+      LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
+      WHERE rs.id = $streamId
+      ORDER BY vm.start_action ASC;
+    ''';
+
+    return await query(sql);
+  }
+
+  /// Fetches recent action moments across all streams
+  Future<List<Map<String, dynamic>>> getRecentVideoActions({
+    int limit = 20,
+    int offset = 0,
+    String? actionType,
+  }) async {
+    final whereClauses = <String>[
+      "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''"
+    ];
+
+    if (actionType != null && actionType.isNotEmpty && actionType.toLowerCase() != 'all') {
+      final sanitizedType = actionType.replaceAll("'", "''");
+      whereClauses.add("(va.action_name = '$sanitizedType' OR va.action_name = '${sanitizedType}_segments')");
+    }
+
+    final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
+    final sql = '''
+      SELECT 
+        vm.id AS id,
+        vm.video_id AS video_id,
+        rs.id AS stream_id,
+        rs.on_demand_url AS on_demand_url,
+        va.id AS action_type_id,
+        va.action_name AS action_name,
+        vm.start_action AS start_action,
+        vm.end_action AS end_action,
+        vm.points AS points,
+        rv.thumbnail AS thumbnail_url,
+        stg.stage_name,
+        stg.stage_number,
+        ev.event_name,
+        ev.country AS event_country
+      FROM rally_video_metadata vm
+      INNER JOIN rally_video_actions va ON vm.action_id = va.id
+      INNER JOIN rally_streams rs ON vm.video_id = rs.video_id
+      LEFT JOIN rally_videos rv ON vm.video_id = rv.id
+      LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
+      LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
+      $whereSql
+      ORDER BY vm.id DESC
+      LIMIT $limit OFFSET $offset;
+    ''';
+
+    return await query(sql);
+  }
+
   /// Closes the active database connection
   Future<void> close() async {
     if (_connection != null && _connection!.connected) {

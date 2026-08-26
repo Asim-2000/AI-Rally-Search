@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../models/video_action.dart';
 
 class RallyVideoPlayer extends StatefulWidget {
   final String videoUrl;
@@ -7,6 +8,10 @@ class RallyVideoPlayer extends StatefulWidget {
   final bool showControls;
   final double aspectRatio;
   final String? videoTitle;
+  final VideoAction? initialAction;
+  final double? initialStartTime;
+  final double? initialEndTime;
+  final VoidCallback? onActionCompleted;
 
   const RallyVideoPlayer({
     super.key,
@@ -15,14 +20,19 @@ class RallyVideoPlayer extends StatefulWidget {
     this.showControls = true,
     this.aspectRatio = 16 / 9,
     this.videoTitle,
+    this.initialAction,
+    this.initialStartTime,
+    this.initialEndTime,
+    this.onActionCompleted,
   });
 
   @override
-  State<RallyVideoPlayer> createState() => _RallyVideoPlayerState();
+  State<RallyVideoPlayer> createState() => RallyVideoPlayerState();
 }
 
-class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
+class RallyVideoPlayerState extends State<RallyVideoPlayer> {
   VideoPlayerController? _controller;
+  String? _currentUrl;
   bool _isInitialized = false;
   bool _isLoading = false;
   bool _hasError = false;
@@ -30,16 +40,49 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
   bool _isMuted = false;
   bool _showOverlay = true;
 
+  // Active Action Segment State
+  VideoAction? _activeAction;
+  double? _actionEndTime;
+
   @override
   void initState() {
     super.initState();
-    if (widget.autoPlay) {
+    _currentUrl = widget.videoUrl;
+    if (widget.initialAction != null) {
+      _activeAction = widget.initialAction;
+      _actionEndTime = widget.initialAction!.endTime;
+    } else if (widget.initialEndTime != null) {
+      _actionEndTime = widget.initialEndTime;
+    }
+
+    if (widget.autoPlay || widget.initialAction != null || widget.initialStartTime != null) {
+      _initializePlayer(
+        seekToSeconds: widget.initialAction?.startTime ?? widget.initialStartTime,
+        autoPlay: widget.autoPlay || widget.initialAction != null,
+      );
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RallyVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      _currentUrl = widget.videoUrl;
       _initializePlayer();
     }
   }
 
-  Future<void> _initializePlayer() async {
+  Future<void> _initializePlayer({double? seekToSeconds, bool autoPlay = false}) async {
     if (_isLoading) return;
+
+    final targetUrl = _activeAction?.videoUrl ?? _currentUrl ?? widget.videoUrl;
+    if (targetUrl.isEmpty) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = 'No video URL provided';
+      });
+      return;
+    }
 
     if (_controller != null) {
       _controller!.removeListener(_playerListener);
@@ -51,16 +94,21 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
       _isLoading = true;
       _hasError = false;
       _errorMessage = null;
+      _currentUrl = targetUrl;
     });
 
     try {
-      final uri = Uri.parse(widget.videoUrl);
+      final uri = Uri.parse(targetUrl);
       _controller = VideoPlayerController.networkUrl(uri);
 
       await _controller!.initialize();
       _controller!.addListener(_playerListener);
 
-      if (widget.autoPlay) {
+      if (seekToSeconds != null && seekToSeconds > 0) {
+        await _controller!.seekTo(Duration(milliseconds: (seekToSeconds * 1000).toInt()));
+      }
+
+      if (autoPlay) {
         await _controller!.play();
       }
 
@@ -81,29 +129,106 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
     }
   }
 
-  void _playerListener() {
-    if (mounted) {
-      setState(() {});
+  /// Reusable method to play a specific action moment inside the source video
+  Future<void> playAction(VideoAction action) async {
+    _activeAction = action;
+    _actionEndTime = action.endTime;
+
+    final targetUrl = (action.videoUrl != null && action.videoUrl!.isNotEmpty)
+        ? action.videoUrl!
+        : (_currentUrl ?? widget.videoUrl);
+
+    // If controller is not initialized or points to a different URL
+    if (!_isInitialized || _controller == null || _currentUrl != targetUrl) {
+      _currentUrl = targetUrl;
+      await _initializePlayer(
+        seekToSeconds: action.startTime,
+        autoPlay: true,
+      );
+      return;
     }
+
+    // Video is already initialized for this URL: seek directly to action start and play
+    try {
+      final startMillis = (action.startTime * 1000).toInt().clamp(0, _controller!.value.duration.inMilliseconds);
+      await _controller!.seekTo(Duration(milliseconds: startMillis));
+      await _controller!.play();
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'Failed to seek action: $e';
+        });
+      }
+    }
+  }
+
+  /// Plays the full source video from the beginning without action bounds
+  void playFullVideo() {
+    setState(() {
+      _activeAction = null;
+      _actionEndTime = null;
+    });
+    if (_controller != null && _isInitialized) {
+      _controller!.seekTo(Duration.zero);
+      _controller!.play();
+    } else {
+      _initializePlayer(autoPlay: true);
+    }
+  }
+
+  void _playerListener() {
+    if (!mounted || _controller == null || !_isInitialized) return;
+
+    // Check if an action segment boundary is active
+    if (_activeAction != null && _actionEndTime != null && _actionEndTime! > 0) {
+      final currentMillis = _controller!.value.position.inMilliseconds;
+      final endMillis = (_actionEndTime! * 1000).toInt();
+
+      // Automatically pause when position reaches or exceeds action endTime
+      if (_controller!.value.isPlaying && currentMillis >= endMillis) {
+        _controller!.pause();
+        widget.onActionCompleted?.call();
+      }
+    }
+
+    setState(() {});
   }
 
   @override
   void dispose() {
     _controller?.removeListener(_playerListener);
     _controller?.dispose();
+    _controller = null;
     super.dispose();
   }
 
   void _togglePlayPause() {
     if (!_isInitialized) {
-      _initializePlayer();
+      _initializePlayer(
+        seekToSeconds: _activeAction?.startTime ?? widget.initialStartTime,
+        autoPlay: true,
+      );
       return;
     }
 
     if (_controller!.value.isPlaying) {
       _controller!.pause();
     } else {
-      if (_controller!.value.position >= _controller!.value.duration) {
+      final pos = _controller!.value.position;
+      final dur = _controller!.value.duration;
+
+      // If active action reached its end, replay the action from startTime
+      if (_activeAction != null && _actionEndTime != null) {
+        final endMillis = (_actionEndTime! * 1000).toInt();
+        if (pos.inMilliseconds >= endMillis) {
+          final startMillis = (_activeAction!.startTime * 1000).toInt();
+          _controller!.seekTo(Duration(milliseconds: startMillis));
+        }
+      } else if (pos >= dur && dur > Duration.zero) {
         _controller!.seekTo(Duration.zero);
       }
       _controller!.play();
@@ -134,16 +259,19 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
             backgroundColor: Colors.black,
             foregroundColor: Colors.white,
             title: Text(
-              widget.videoTitle ?? 'Video Player',
+              _activeAction != null
+                  ? '${_activeAction!.title} (${_activeAction!.formattedTimeRange})'
+                  : (widget.videoTitle ?? 'Video Player'),
               style: const TextStyle(fontSize: 16),
             ),
           ),
           body: Center(
             child: RallyVideoPlayer(
-              videoUrl: widget.videoUrl,
+              videoUrl: _currentUrl ?? widget.videoUrl,
               autoPlay: true,
               aspectRatio: 16 / 9,
               videoTitle: widget.videoTitle,
+              initialAction: _activeAction,
             ),
           ),
         ),
@@ -206,7 +334,10 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
             if (!_isInitialized && !_isLoading && !_hasError)
               Center(
                 child: InkWell(
-                  onTap: _initializePlayer,
+                  onTap: () => _initializePlayer(
+                    seekToSeconds: _activeAction?.startTime ?? widget.initialStartTime,
+                    autoPlay: true,
+                  ),
                   borderRadius: BorderRadius.circular(50),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -241,11 +372,11 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Background grid pattern / rally icon
+          // Background icon
           Opacity(
             opacity: 0.08,
             child: Icon(
-              Icons.videocam_rounded,
+              _activeAction != null ? Icons.bolt_rounded : Icons.videocam_rounded,
               size: 100,
               color: Colors.white,
             ),
@@ -261,15 +392,21 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
                     color: Colors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.ondemand_video_rounded, color: Colors.white70, size: 12),
-                      SizedBox(width: 4),
+                      Icon(
+                        _activeAction != null ? Icons.bolt_rounded : Icons.ondemand_video_rounded,
+                        color: _activeAction != null ? Colors.amber : Colors.white70,
+                        size: 12,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        'Tap to Play Stream',
+                        _activeAction != null
+                            ? 'Tap to Play Action (${_activeAction!.formattedTimeRange})'
+                            : 'Tap to Play Stream',
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: _activeAction != null ? Colors.amber : Colors.white70,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -313,7 +450,10 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
-              onPressed: _initializePlayer,
+              onPressed: () => _initializePlayer(
+                seekToSeconds: _activeAction?.startTime ?? widget.initialStartTime,
+                autoPlay: true,
+              ),
               icon: const Icon(Icons.refresh_rounded, size: 14),
               label: const Text('Retry', style: TextStyle(fontSize: 12)),
               style: ElevatedButton.styleFrom(
@@ -334,6 +474,10 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
     final position = _controller!.value.position;
     final duration = _controller!.value.duration;
 
+    final isActionFinished = _activeAction != null &&
+        _actionEndTime != null &&
+        position.inMilliseconds >= (_actionEndTime! * 1000).toInt();
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -350,23 +494,67 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.4),
+                Colors.black.withValues(alpha: 0.5),
                 Colors.transparent,
                 Colors.black.withValues(alpha: 0.8),
               ],
-              stops: const [0.0, 0.5, 1.0],
+              stops: const [0.0, 0.45, 1.0],
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Top Bar
+              // Top Bar with Action Pill or Title
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (widget.videoTitle != null)
+                    if (_activeAction != null)
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.bolt_rounded, size: 14, color: Colors.amber),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  '${_activeAction!.title} (${_activeAction!.formattedTimeRange})',
+                                  style: const TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              InkWell(
+                                onTap: playFullVideo,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white12,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'Full',
+                                    style: TextStyle(color: Colors.white70, fontSize: 9),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (widget.videoTitle != null)
                       Flexible(
                         child: Text(
                           widget.videoTitle!,
@@ -420,16 +608,16 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
+                      color: Colors.black.withValues(alpha: 0.65),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       isPlaying
                           ? Icons.pause_rounded
-                          : (position >= duration && duration > Duration.zero
+                          : (isActionFinished || (position >= duration && duration > Duration.zero)
                               ? Icons.replay_rounded
                               : Icons.play_arrow_rounded),
-                      color: Colors.white,
+                      color: _activeAction != null ? Colors.amber : Colors.white,
                       size: 32,
                     ),
                   ),
@@ -448,7 +636,7 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
                         trackHeight: 3,
                         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                         overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                        activeTrackColor: theme.colorScheme.primary,
+                        activeTrackColor: _activeAction != null ? Colors.amber : theme.colorScheme.primary,
                         inactiveTrackColor: Colors.white24,
                         thumbColor: Colors.white,
                       ),
@@ -482,6 +670,16 @@ class _RallyVideoPlayerState extends State<RallyVideoPlayer> {
                               fontFamily: 'monospace',
                             ),
                           ),
+                          if (_activeAction != null)
+                            Text(
+                              'Action: ${_activeAction!.formattedTimeRange}',
+                              style: const TextStyle(
+                                color: Colors.amber,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
                           Text(
                             _formatDuration(duration),
                             style: const TextStyle(

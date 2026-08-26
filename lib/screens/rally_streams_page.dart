@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/rally_stream.dart';
+import '../models/video_action.dart';
 import '../services/database_service.dart';
+import '../services/video_action_repository.dart';
 import '../widgets/rally_video_player.dart';
+import '../widgets/video_action_card.dart';
+import '../widgets/action_player_modal.dart';
 
 class RallyStreamsPage extends StatefulWidget {
   const RallyStreamsPage({super.key});
@@ -13,6 +17,7 @@ class RallyStreamsPage extends StatefulWidget {
 
 class _RallyStreamsPageState extends State<RallyStreamsPage> {
   final DatabaseService _dbService = DatabaseService();
+  final VideoActionRepository _actionRepo = VideoActionRepository();
 
   List<RallyStream> _streams = [];
   bool _isLoading = false;
@@ -834,6 +839,18 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
                     ),
                   ),
                 const Spacer(),
+                if (stream.videoId != null) ...[
+                  TextButton.icon(
+                    onPressed: () => _showStreamDetailsModal(context, stream, initialTab: 1),
+                    icon: const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
+                    label: const Text('Moments', style: TextStyle(fontSize: 12, color: Colors.amber)),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 TextButton.icon(
                   onPressed: () => _showStreamDetailsModal(context, stream),
                   icon: const Icon(Icons.info_outline_rounded, size: 16),
@@ -1046,7 +1063,7 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
     }
   }
 
-  void _showStreamDetailsModal(BuildContext context, RallyStream stream) {
+  void _showStreamDetailsModal(BuildContext context, RallyStream stream, {int initialTab = 0}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1054,58 +1071,151 @@ class _RallyStreamsPageState extends State<RallyStreamsPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.play_circle_fill_rounded, color: Color(0xFF1E88E5), size: 24),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Stream #${stream.id} Details',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+        return DefaultTabController(
+          length: 2,
+          initialIndex: initialTab,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.play_circle_fill_rounded, color: Color(0xFF1E88E5), size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Stream #${stream.id} Details',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView(
-                  children: [
-                    if (stream.onDemandUrl != null && stream.onDemandUrl!.isNotEmpty) ...[
-                      RallyVideoPlayer(
-                        videoUrl: stream.onDemandUrl!,
-                        videoTitle: 'Stream #${stream.id}',
-                        autoPlay: true,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    _buildDetailItem('ID', '${stream.id}'),
-                    _buildDetailItem('Video ID', stream.videoId?.toString() ?? 'N/A'),
-                    _buildDetailItem('Video Type', stream.videoType ?? 'N/A'),
-                    _buildDetailItem('Clip Status', stream.clipStatus ?? 'N/A'),
-                    _buildDetailItem('Clip Duration', '${stream.clipDuration ?? 0} seconds'),
-                    _buildDetailItem('Clip Start Time', '${stream.clipStartTime ?? 0} seconds'),
-                    _buildDetailItem('Created At', stream.createdAt?.toString() ?? 'N/A'),
-                    _buildDetailItem('Updated At', stream.updatedAt?.toString() ?? 'N/A'),
-                    _buildDetailItem('Download Counter', '${stream.downloadCounter}'),
-                    _buildDetailItem('Share Counter', '${stream.shareCounter}'),
-                    _buildDetailItem('On Demand URL', stream.onDemandUrl ?? 'N/A', isUrl: true),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
                   ],
                 ),
-              ),
-            ],
+                const TabBar(
+                  tabs: [
+                    Tab(text: 'Full Stream Info'),
+                    Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
+                          SizedBox(width: 4),
+                          Text('Detected Moments'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Tab 1: Full Stream Details
+                      ListView(
+                        children: [
+                          if (stream.onDemandUrl != null && stream.onDemandUrl!.isNotEmpty) ...[
+                            RallyVideoPlayer(
+                              videoUrl: stream.onDemandUrl!,
+                              videoTitle: 'Stream #${stream.id}',
+                              autoPlay: true,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          _buildDetailItem('ID', '${stream.id}'),
+                          _buildDetailItem('Video ID', stream.videoId?.toString() ?? 'N/A'),
+                          _buildDetailItem('Video Type', stream.videoType ?? 'N/A'),
+                          _buildDetailItem('Clip Status', stream.clipStatus ?? 'N/A'),
+                          _buildDetailItem('Clip Duration', '${stream.clipDuration ?? 0} seconds'),
+                          _buildDetailItem('Clip Start Time', '${stream.clipStartTime ?? 0} seconds'),
+                          _buildDetailItem('Created At', stream.createdAt?.toString() ?? 'N/A'),
+                          _buildDetailItem('Updated At', stream.updatedAt?.toString() ?? 'N/A'),
+                          _buildDetailItem('Download Counter', '${stream.downloadCounter}'),
+                          _buildDetailItem('Share Counter', '${stream.shareCounter}'),
+                          _buildDetailItem('On Demand URL', stream.onDemandUrl ?? 'N/A', isUrl: true),
+                        ],
+                      ),
+
+                      // Tab 2: Detected Moments / Video Actions
+                      FutureBuilder<List<VideoAction>>(
+                        future: stream.videoId != null
+                            ? _actionRepo.getVideoActionsForVideo(
+                                stream.videoId!,
+                                defaultVideoUrl: stream.onDemandUrl,
+                                defaultStreamId: stream.id,
+                              )
+                            : Future.value(<VideoAction>[]),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 12),
+                                  Text('Loading detected action moments...'),
+                                ],
+                              ),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                'Error loading moments: ${snapshot.error}',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            );
+                          }
+
+                          final actions = snapshot.data ?? [];
+                          if (actions.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.bolt_outlined, size: 48, color: Colors.grey),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'No action moments detected for this video yet',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Actions will appear here when detected for Video #${stream.videoId}',
+                                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return ListView.builder(
+                            itemCount: actions.length,
+                            itemBuilder: (context, index) {
+                              final action = actions[index];
+                              return VideoActionCard(
+                                action: action,
+                                onPlay: (act) {
+                                  ActionPlayerModal.show(context, act);
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -1,10 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
 
+import '../../models/speech/speech_transcription_result.dart';
+import '../../models/speech/spoken_audio_context.dart';
+import '../../models/speech/spoken_word_timestamp.dart';
+import '../../models/speech/transcript_hypothesis.dart';
 import '../../models/supported_language.dart';
 import '../../models/voice_state.dart';
 import 'speech_config.dart';
@@ -27,6 +33,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   void Function(VoiceError error)? _onError;
   SupportedLanguage? _activeLanguage;
   Timer? _maxDurationTimer;
+  DateTime? _recordingStartTime;
 
   OpenAiSpeechToTextService({
     required this.config,
@@ -113,6 +120,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
       );
 
       _setState(VoiceState.listening);
+      _recordingStartTime = DateTime.now();
 
       // Start recording into temporary storage or buffer
       if (kIsWeb) {
@@ -145,12 +153,21 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
 
   @override
   Future<String?> stopListening() async {
+    final detailed = await stopListeningDetailed();
+    return detailed?.text;
+  }
+
+  @override
+  Future<SpeechTranscriptionResult?> stopListeningDetailed() async {
     _maxDurationTimer?.cancel();
     if (_currentState != VoiceState.listening) {
       return null;
     }
 
     _setState(VoiceState.processing);
+    final durationMs = _recordingStartTime != null
+        ? DateTime.now().difference(_recordingStartTime!).inMilliseconds
+        : 0;
 
     try {
       final recordedPath = await _activeRecorder.stop();
@@ -187,23 +204,31 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
             message: 'Audio recording was empty.',
           ),
         );
+        try {
+          if (await audioFile.exists()) await audioFile.delete();
+        } catch (_) {}
         return null;
       }
 
-      final transcript = await _transcribeAudioBytes(
+      final spokenContext = SpokenAudioContext(
+        bytes: Uint8List.fromList(audioBytes),
+        format: 'm4a',
+        sampleRate: 44100,
+        channels: 1,
+        durationMs: durationMs,
+        localFilePath: recordedPath,
+      );
+
+      final result = await _transcribeAudioBytesDetailed(
         audioBytes: audioBytes,
         filename: 'query.m4a',
         language: _activeLanguage ?? SupportedLanguages.defaultLanguage,
+        audioContext: spokenContext,
+        durationMs: durationMs,
       );
 
-      // Clean up temporary audio file
-      try {
-        if (await audioFile.exists()) {
-          await audioFile.delete();
-        }
-      } catch (_) {}
-
-      if (transcript == null || transcript.trim().isEmpty) {
+      if (result == null || result.text.trim().isEmpty) {
+        spokenContext.dispose();
         _setState(VoiceState.error);
         _onError?.call(
           const VoiceError(
@@ -214,10 +239,10 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
         return null;
       }
 
-      final cleanTranscript = transcript.trim();
+      final cleanTranscript = result.text.trim();
       _onResult?.call(cleanTranscript, true);
       _setState(VoiceState.idle);
-      return cleanTranscript;
+      return result;
     } catch (e) {
       _setState(VoiceState.error);
       _onError?.call(
@@ -237,10 +262,34 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
   }) async {
-    return _transcribeAudioBytes(
+    final detailed = await transcribeAudioBytesDetailed(
+      bytes,
+      language: language,
+      filename: filename,
+    );
+    return detailed?.text;
+  }
+
+  @override
+  Future<SpeechTranscriptionResult?> transcribeAudioBytesDetailed(
+    List<int> bytes, {
+    required SupportedLanguage language,
+    String filename = 'audio.m4a',
+  }) async {
+    final spokenContext = SpokenAudioContext(
+      bytes: Uint8List.fromList(bytes),
+      format: filename.endsWith('.wav') ? 'wav' : 'm4a',
+      sampleRate: 44100,
+      channels: 1,
+      durationMs: 0,
+    );
+
+    return _transcribeAudioBytesDetailed(
       audioBytes: bytes,
       filename: filename,
       language: language,
+      audioContext: spokenContext,
+      durationMs: 0,
     );
   }
 
@@ -251,24 +300,46 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   }) async {
     List<int> bytes;
     String filename = 'audio.m4a';
+    String? path;
     if (file is File) {
       bytes = await file.readAsBytes();
       filename = file.uri.pathSegments.isNotEmpty ? file.uri.pathSegments.last : 'audio.m4a';
+      path = file.path;
     } else if (file is String) {
       final f = File(file);
       bytes = await f.readAsBytes();
       filename = f.uri.pathSegments.isNotEmpty ? f.uri.pathSegments.last : 'audio.m4a';
+      path = file;
     } else {
       throw ArgumentError('file must be File or String path');
     }
-    return transcribeAudioBytes(bytes, language: language, filename: filename);
+
+    final spokenContext = SpokenAudioContext(
+      bytes: Uint8List.fromList(bytes),
+      format: filename.endsWith('.wav') ? 'wav' : 'm4a',
+      sampleRate: 44100,
+      channels: 1,
+      durationMs: 0,
+      localFilePath: path,
+    );
+
+    final res = await _transcribeAudioBytesDetailed(
+      audioBytes: bytes,
+      filename: filename,
+      language: language,
+      audioContext: spokenContext,
+      durationMs: 0,
+    );
+    return res?.text;
   }
 
-  /// Sends audio payload to configured proxy / STT endpoint.
-  Future<String?> _transcribeAudioBytes({
+  /// Sends audio payload to configured proxy / STT endpoint and returns rich SpeechTranscriptionResult.
+  Future<SpeechTranscriptionResult?> _transcribeAudioBytesDetailed({
     required List<int> audioBytes,
     required String filename,
     required SupportedLanguage language,
+    SpokenAudioContext? audioContext,
+    int durationMs = 0,
   }) async {
     final uri = Uri.parse(config.endpointUrl);
     final request = http.MultipartRequest('POST', uri);
@@ -285,7 +356,8 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     if (whisperLang != null) {
       request.fields['language'] = whisperLang;
     }
-    request.fields['response_format'] = 'json';
+    // Request verbose_json or json
+    request.fields['response_format'] = 'verbose_json';
 
     // Domain vocabulary prompt context
     final prompt = vocabularyContext.buildVocabularyPrompt(language: language);
@@ -307,7 +379,65 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonBody = jsonDecode(response.body) as Map<String, dynamic>;
-      return jsonBody['text'] as String?;
+      final text = (jsonBody['text'] as String?)?.trim() ?? '';
+      if (text.isEmpty) return null;
+
+      final parsedDurationMs = jsonBody['duration'] != null
+          ? ((jsonBody['duration'] as num).toDouble() * 1000).toInt()
+          : durationMs;
+
+      // Extract optional word-level timestamps if returned by verbose_json
+      final words = <SpokenWordTimestamp>[];
+      if (jsonBody['words'] is List) {
+        for (final w in jsonBody['words']) {
+          if (w is Map) {
+            final wordStr = w['word']?.toString() ?? '';
+            final startSec = (w['start'] as num?)?.toDouble() ?? 0.0;
+            final endSec = (w['end'] as num?)?.toDouble() ?? startSec;
+            final conf = (w['confidence'] as num?)?.toDouble();
+            if (wordStr.isNotEmpty) {
+              words.add(SpokenWordTimestamp(
+                word: wordStr,
+                startMs: (startSec * 1000).toInt(),
+                endMs: (endSec * 1000).toInt(),
+                confidence: conf,
+              ));
+            }
+          }
+        }
+      }
+
+      // Extract segment confidence / logprobs if available
+      double? overallConfidence;
+      final hypotheses = <TranscriptHypothesis>[];
+      if (jsonBody['segments'] is List) {
+        final segments = jsonBody['segments'] as List;
+        if (segments.isNotEmpty) {
+          double totalLogProb = 0.0;
+          int count = 0;
+          for (final s in segments) {
+            if (s is Map && s['avg_logprob'] is num) {
+              totalLogProb += (s['avg_logprob'] as num).toDouble();
+              count++;
+            }
+          }
+          if (count > 0) {
+            final avgLogProb = totalLogProb / count;
+            // Approximate confidence: exp(avgLogProb) clamped to [0.0, 1.0]
+            overallConfidence = exp(avgLogProb).clamp(0.0, 1.0);
+          }
+        }
+      }
+
+      return SpeechTranscriptionResult(
+        text: text,
+        hypotheses: hypotheses,
+        words: words,
+        audioContext: audioContext,
+        language: language,
+        durationMs: parsedDurationMs,
+        confidence: overallConfidence,
+      );
     } else {
       throw Exception('STT HTTP ${response.statusCode}: ${response.body}');
     }

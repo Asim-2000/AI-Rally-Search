@@ -153,8 +153,9 @@ class QueryOutputValidator {
     final int? validatedYearFrom = _validateYear(jsonMap['yearFrom'] ?? jsonMap['year_from']);
     final int? validatedYearTo = _validateYear(jsonMap['yearTo'] ?? jsonMap['year_to']);
 
-    // 4. Match Mode
+    // 4. Match Mode & Person Role
     final matchMode = MatchMode.fromString(jsonMap['driverMatchMode']?.toString() ?? jsonMap['driver_match_mode']?.toString());
+    final personRole = PersonRole.fromString(jsonMap['personRole']?.toString() ?? jsonMap['person_role']?.toString() ?? jsonMap['role']?.toString());
 
     // 5. Limit and Offset validation
     final rawLimit = jsonMap['limit'];
@@ -219,6 +220,7 @@ class QueryOutputValidator {
       yearFrom: validatedYearFrom,
       yearTo: validatedYearTo,
       driverMatchMode: matchMode,
+      personRole: personRole,
       limit: validatedLimit,
       offset: validatedOffset,
     );

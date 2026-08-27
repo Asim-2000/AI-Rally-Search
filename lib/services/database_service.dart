@@ -440,15 +440,29 @@ class DatabaseService {
 
     for (final d in q.driverNames) {
       final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      final tokens = sanitized.split(' ').where((t) => t.isNotEmpty).toList();
+
+      final String dMatch;
+      final String cdMatch;
+      if (tokens.length > 1) {
+        final dTokens = tokens.map((t) => "LOWER($driverAlias.full_name) LIKE '%$t%'").join(' AND ');
+        final cdTokens = tokens.map((t) => "LOWER($codriverAlias.full_name) LIKE '%$t%'").join(' AND ');
+        dMatch = "($dTokens OR LOWER($driverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.driver_link) LIKE '%$sanitized%')";
+        cdMatch = "($cdTokens OR LOWER($codriverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.co_driver_link) LIKE '%$sanitized%')";
+      } else {
+        dMatch = "(LOWER($driverAlias.full_name) LIKE '%$sanitized%' OR LOWER($driverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.driver_link) LIKE '%$sanitized%')";
+        cdMatch = "(LOWER($codriverAlias.full_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.co_driver_link) LIKE '%$sanitized%')";
+      }
+
       switch (q.personRole) {
         case PersonRole.driver:
-          clauses.add("(LOWER($driverAlias.full_name) LIKE '%$sanitized%' OR LOWER($driverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.driver_link) LIKE '%$sanitized%')");
+          clauses.add(dMatch);
           break;
         case PersonRole.coDriver:
-          clauses.add("(LOWER($codriverAlias.full_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.co_driver_link) LIKE '%$sanitized%')");
+          clauses.add(cdMatch);
           break;
         case PersonRole.any:
-          clauses.add("(LOWER($driverAlias.full_name) LIKE '%$sanitized%' OR LOWER($driverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.full_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.driver_link) LIKE '%$sanitized%' OR LOWER($entryListAlias.co_driver_link) LIKE '%$sanitized%')");
+          clauses.add("($dMatch OR $cdMatch)");
           break;
       }
     }
@@ -777,8 +791,16 @@ class DatabaseService {
       }
       for (final d in q.driverNames) {
         final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-        driverMatchClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(el.driver_link) LIKE '%$sanitized%')");
-        codriverMatchClauses.add("(LOWER(cdp.full_name) LIKE '%$sanitized%' OR LOWER(cdp.nick_name) LIKE '%$sanitized%' OR LOWER(el.co_driver_link) LIKE '%$sanitized%')");
+        final tokens = sanitized.split(' ').where((t) => t.isNotEmpty).toList();
+        if (tokens.length > 1) {
+          final dTokens = tokens.map((t) => "LOWER(dp.full_name) LIKE '%$t%'").join(' AND ');
+          final cdTokens = tokens.map((t) => "LOWER(cdp.full_name) LIKE '%$t%'").join(' AND ');
+          driverMatchClauses.add("($dTokens OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(el.driver_link) LIKE '%$sanitized%')");
+          codriverMatchClauses.add("($cdTokens OR LOWER(cdp.nick_name) LIKE '%$sanitized%' OR LOWER(el.co_driver_link) LIKE '%$sanitized%')");
+        } else {
+          driverMatchClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(el.driver_link) LIKE '%$sanitized%')");
+          codriverMatchClauses.add("(LOWER(cdp.full_name) LIKE '%$sanitized%' OR LOWER(cdp.nick_name) LIKE '%$sanitized%' OR LOWER(el.co_driver_link) LIKE '%$sanitized%')");
+        }
       }
       final dMatch = "(${driverMatchClauses.join(' OR ')})";
       final cdMatch = "(${codriverMatchClauses.join(' OR ')})";

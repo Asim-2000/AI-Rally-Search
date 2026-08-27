@@ -1,3 +1,4 @@
+import '../../models/speech/speech_transcription_result.dart';
 import '../../models/supported_language.dart';
 import '../../models/voice_state.dart';
 
@@ -29,11 +30,22 @@ abstract class ISpeechToTextService {
   /// Stops recording, triggers transcription, and returns final transcript text.
   Future<String?> stopListening();
 
+  /// Stops recording, triggers transcription, and returns rich transcription result
+  /// including optional hypotheses, timestamps, and retained audio context.
+  Future<SpeechTranscriptionResult?> stopListeningDetailed();
+
   /// Cancels active recording without executing transcription.
   Future<void> cancelListening();
 
   /// Directly transcribes in-memory audio bytes using the configured STT provider.
   Future<String?> transcribeAudioBytes(
+    List<int> bytes, {
+    required SupportedLanguage language,
+    String filename = 'audio.m4a',
+  });
+
+  /// Directly transcribes in-memory audio bytes returning rich transcription result.
+  Future<SpeechTranscriptionResult?> transcribeAudioBytesDetailed(
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',

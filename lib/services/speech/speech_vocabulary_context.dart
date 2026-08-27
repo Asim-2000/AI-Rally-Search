@@ -16,7 +16,14 @@ abstract class SpeechVocabularyContext {
   List<String> getDomainActionTerms();
 
   /// Formats the contextual vocabulary into a prompt string suitable for STT decoders.
-  String buildVocabularyPrompt({SupportedLanguage? language, int maxTerms = 30});
+  String buildVocabularyPrompt({
+    SupportedLanguage? language,
+    String? activeRally,
+    String? activeDriver,
+    String? country,
+    int? year,
+    int maxTerms = 30,
+  });
 }
 
 /// Default implementation providing dynamic vocabulary with fallback rally domain terms.
@@ -115,17 +122,35 @@ class DefaultSpeechVocabularyContext implements SpeechVocabularyContext {
   List<String> getDomainActionTerms() => List.unmodifiable(_defaultRallyActions);
 
   @override
-  String buildVocabularyPrompt({SupportedLanguage? language, int maxTerms = 30}) {
+  String buildVocabularyPrompt({
+    SupportedLanguage? language,
+    String? activeRally,
+    String? activeDriver,
+    String? country,
+    int? year,
+    int maxTerms = 30,
+  }) {
     final terms = <String>[];
 
+    // Priority 0: Active context terms (Active Rally, Driver, Country, Year)
+    if (activeRally != null && activeRally.isNotEmpty) {
+      terms.add(activeRally);
+    }
+    if (activeDriver != null && activeDriver.isNotEmpty) {
+      terms.add(activeDriver);
+    }
+    if (country != null && country.isNotEmpty && country.toUpperCase() != 'ALL') {
+      terms.add(country);
+    }
+    if (year != null && year > 0) {
+      terms.add(year.toString());
+    }
+
     // Priority 1: High-value proper nouns (Drivers & Rallies)
-    terms.add('Josh Moffett');
-    terms.add('Moonraker');
-    terms.add('Donegal');
-    terms.add('Trackrod');
-    terms.add('Gale Rigg');
-    terms.add('Woodpecker');
-    terms.add('Tarenig');
+    final priorityNames = ['Josh Moffett', 'Moonraker', 'Donegal', 'Trackrod', 'Gale Rigg', 'Woodpecker', 'Tarenig'];
+    for (final name in priorityNames) {
+      if (!terms.contains(name)) terms.add(name);
+    }
 
     // Priority 2: Localized country and action terminology from MultilingualDomainLexicon
     if (language != null) {
@@ -155,16 +180,16 @@ class DefaultSpeechVocabularyContext implements SpeechVocabularyContext {
     }
 
     // Priority 3: English Action Terms
-    terms.add('jump');
-    terms.add('drift');
-    terms.add('crash');
-    terms.add('water splash');
-    terms.add('highlights');
+    final actionTerms = ['jump', 'drift', 'crash', 'water splash', 'highlights'];
+    for (final a in actionTerms) {
+      if (!terms.contains(a)) terms.add(a);
+    }
 
     // Priority 4: Supported Years
-    terms.add('2025');
-    terms.add('2024');
-    terms.add('2026');
+    final yearTerms = ['2025', '2024', '2026'];
+    for (final y in yearTerms) {
+      if (!terms.contains(y)) terms.add(y);
+    }
 
     // Priority 5: Additional custom drivers & rallies
     for (final driver in _customDrivers) {

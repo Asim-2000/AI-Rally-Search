@@ -1,4 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
+
+import '../../models/speech/speech_transcription_result.dart';
+import '../../models/speech/spoken_audio_context.dart';
+import '../../models/speech/spoken_word_timestamp.dart';
+import '../../models/speech/transcript_hypothesis.dart';
 import '../../models/supported_language.dart';
 import '../../models/voice_state.dart';
 import 'speech_to_text_service.dart';
@@ -14,6 +20,9 @@ class MockSpeechToTextService implements ISpeechToTextService {
   Duration simulatedProcessingDelay;
   String? defaultTranscript;
   final Map<String, String> _languageTranscripts = {};
+  List<TranscriptHypothesis> mockHypotheses = [];
+  List<SpokenWordTimestamp> mockWords = [];
+  bool mockAttachAudioContext = false;
 
   void Function(String text, bool isFinal)? _activeResultCallback;
   void Function(VoiceState state)? _activeStateCallback;
@@ -27,6 +36,9 @@ class MockSpeechToTextService implements ISpeechToTextService {
     this.simulatedProcessingDelay = const Duration(milliseconds: 50),
     this.defaultTranscript = 'Show jumps featuring Moffett in Donegal',
     Map<String, String>? languageTranscripts,
+    this.mockHypotheses = const [],
+    this.mockWords = const [],
+    this.mockAttachAudioContext = false,
   }) {
     if (languageTranscripts != null) {
       _languageTranscripts.addAll(languageTranscripts);
@@ -91,6 +103,12 @@ class MockSpeechToTextService implements ISpeechToTextService {
 
   @override
   Future<String?> stopListening() async {
+    final detailed = await stopListeningDetailed();
+    return detailed?.text;
+  }
+
+  @override
+  Future<SpeechTranscriptionResult?> stopListeningDetailed() async {
     if (_currentState != VoiceState.listening) {
       return null;
     }
@@ -111,12 +129,30 @@ class MockSpeechToTextService implements ISpeechToTextService {
       return null;
     }
 
-    final langCode = _activeLanguage?.languageCode.toLowerCase() ?? 'en';
+    final lang = _activeLanguage ?? SupportedLanguages.defaultLanguage;
+    final langCode = lang.languageCode.toLowerCase();
     final transcript = _languageTranscripts[langCode] ?? defaultTranscript ?? 'Show rallies in 2025';
 
     _activeResultCallback?.call(transcript, true);
     _setState(VoiceState.idle);
-    return transcript;
+
+    SpokenAudioContext? audioContext;
+    if (mockAttachAudioContext) {
+      audioContext = SpokenAudioContext(
+        bytes: Uint8List.fromList([0, 1, 2, 3]),
+        durationMs: 1500,
+        format: 'm4a',
+      );
+    }
+
+    return SpeechTranscriptionResult(
+      text: transcript,
+      language: lang,
+      durationMs: 1500,
+      hypotheses: mockHypotheses,
+      words: mockWords,
+      audioContext: audioContext,
+    );
   }
 
   @override
@@ -133,11 +169,39 @@ class MockSpeechToTextService implements ISpeechToTextService {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
   }) async {
+    final detailed = await transcribeAudioBytesDetailed(bytes, language: language, filename: filename);
+    return detailed?.text;
+  }
+
+  @override
+  Future<SpeechTranscriptionResult?> transcribeAudioBytesDetailed(
+    List<int> bytes, {
+    required SupportedLanguage language,
+    String filename = 'audio.m4a',
+  }) async {
     if (shouldFailTranscription || simulatedError != null) {
       return null;
     }
     final langCode = language.languageCode.toLowerCase();
-    return _languageTranscripts[langCode] ?? defaultTranscript ?? 'Show rallies in 2025';
+    final transcript = _languageTranscripts[langCode] ?? defaultTranscript ?? 'Show rallies in 2025';
+
+    SpokenAudioContext? audioContext;
+    if (mockAttachAudioContext || bytes.isNotEmpty) {
+      audioContext = SpokenAudioContext(
+        bytes: Uint8List.fromList(bytes.isNotEmpty ? bytes : [0, 1, 2, 3]),
+        durationMs: 1500,
+        format: 'm4a',
+      );
+    }
+
+    return SpeechTranscriptionResult(
+      text: transcript,
+      language: language,
+      durationMs: 1500,
+      hypotheses: mockHypotheses,
+      words: mockWords,
+      audioContext: audioContext,
+    );
   }
 
   @override

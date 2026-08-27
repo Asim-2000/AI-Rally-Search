@@ -373,15 +373,16 @@ void main() {
       expect(result.candidates.any((c) => c.type == EntityType.rally), isTrue);
     });
 
-    test('Not Found: Fictional entity "Superman" does not invent ID', () async {
+    test('Not Found: Fictional entity "Superman" does not invent ID and produces informative failure', () async {
       const parsedQuery = SearchQuery(
         intent: SearchIntent.searchDriverRallies,
         driverName: 'Superman',
       );
 
       final result = await resolver.resolve(parsedQuery);
+      expect(result.isSuccess, isFalse);
+      expect(result.error, contains('We couldn\'t confidently identify that driver'));
       expect(result.resolvedQuery?.driverId, isNull);
-      expect(result.resolvedQuery?.driverName, 'Superman');
     });
   });
 }

@@ -148,7 +148,9 @@ class MockLlmQueryParser implements LlmQueryParser {
 
     // 2. Extract Driver Name (verbatim phrase extraction)
     String? driverName;
-    if (lower.contains('josh moffett')) {
+    if (lower.contains('max freeman')) {
+      driverName = 'Max Freeman';
+    } else if (lower.contains('josh moffett')) {
       driverName = 'Josh Moffett';
     } else if (lower.contains('philip squires')) {
       driverName = 'Philip Squires';
@@ -242,6 +244,12 @@ class MockLlmQueryParser implements LlmQueryParser {
       rallyName = 'Woodpecker';
     } else if (lower.contains('plains')) {
       rallyName = 'Plains';
+    } else {
+      final rallyRegex = RegExp(r'\brally\s+([a-z0-9\s\-]+?)(?:\s+(?:videos|highlights|results|stages|clips|jump|drift)|$)');
+      final match = rallyRegex.firstMatch(lower);
+      if (match != null) {
+        rallyName = match.group(1)?.trim();
+      }
     }
 
     // 5. Extract City
@@ -294,9 +302,9 @@ class MockLlmQueryParser implements LlmQueryParser {
 
     // 9. Determine Role & Intent
     PersonRole personRole = PersonRole.any;
-    if (lower.contains('co-drove') || lower.contains('co-driver') || lower.contains('codriver') || lower.contains('co driver')) {
+    if (lower.contains('co-drove') || lower.contains('co-driven') || lower.contains('co-driver') || lower.contains('codriver') || lower.contains('co driver') || lower.contains('navigator')) {
       personRole = PersonRole.coDriver;
-    } else if (lower.contains('drove in') || lower.contains('drive in') || lower.contains('as driver')) {
+    } else if (lower.contains('driven by') || lower.contains('drove in') || lower.contains('drive in') || lower.contains('as driver') || lower.contains('where he drove')) {
       personRole = PersonRole.driver;
     }
 
@@ -310,7 +318,7 @@ class MockLlmQueryParser implements LlmQueryParser {
       intent = SearchIntent.getRallyResults;
     } else if (lower.contains('top finisher') || lower.contains('leaderboard') || (lower.contains('top 10') && !lower.contains('uploader'))) {
       intent = SearchIntent.getRallyTopFinishers;
-    } else if (actionType != null || lower.contains('highlight') || lower.contains('moment') || lower.contains('action')) {
+    } else if (actionType != null || lower.contains('highlight') || lower.contains('moment') || lower.contains('action') || lower.contains('video') || lower.contains('clip')) {
       intent = SearchIntent.searchVideoActions;
     } else if (lower.contains('video') && driverName != null) {
       intent = SearchIntent.searchDriverVideos;

@@ -40,7 +40,10 @@ class SearchContext {
 
     final driver = activeDriver ?? referents.activeDriver ?? referents.lastSelectedDriver;
     if (driver != null && driver.isNotEmpty) {
-      sb.writeln('[Context: active driver is "$driver"]');
+      final roleInfo = (referents.activePersonRole != null && referents.activePersonRole != PersonRole.any)
+          ? ' (role: ${referents.activePersonRole!.toRoleString()})'
+          : '';
+      sb.writeln('[Context: active driver is "$driver"$roleInfo]');
     }
 
     if (referents.lastWinner != null && referents.lastWinner!.isNotEmpty) {
@@ -60,6 +63,7 @@ class SearchContext {
       final prevFilters = <String>[];
       if (previousQuery!.rallyNames.isNotEmpty) prevFilters.add('rally: ${previousQuery!.rallyNames.join(', ')}');
       if (previousQuery!.driverNames.isNotEmpty) prevFilters.add('driver: ${previousQuery!.driverNames.join(', ')}');
+      if (previousQuery!.personRole != PersonRole.any) prevFilters.add('role: ${previousQuery!.personRole.toRoleString()}');
       if (previousQuery!.countries.isNotEmpty) prevFilters.add('countries: ${previousQuery!.countries.join(', ')}');
       if (previousQuery!.years.isNotEmpty) prevFilters.add('years: ${previousQuery!.years.join(', ')}');
       if (previousQuery!.actionTypes.isNotEmpty) prevFilters.add('actions: ${previousQuery!.actionTypes.join(', ')}');

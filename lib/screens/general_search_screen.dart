@@ -8,7 +8,9 @@ import '../models/search_query.dart';
 import '../models/search_results.dart';
 import '../models/supported_language.dart';
 import '../models/video_action.dart';
+import '../models/speech/speech_transcription_result.dart';
 import '../services/llm/entity_resolution/database_entity_resolver.dart';
+import '../services/llm/entity_resolution/spoken_entity_resolver.dart';
 import '../services/llm/entity_resolution/entity_lookup_repository.dart';
 import '../services/llm/follow_up_suggestion_engine.dart';
 import '../services/llm/llm_query_parser.dart';
@@ -99,7 +101,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     _repository = widget.repository ?? SearchRepository();
     final parser = widget.llmParser ?? LlmQueryParserFactory.create();
     final lookupRepo = DatabaseEntityLookupRepository();
-    final resolver = DatabaseEntityResolver(repository: lookupRepo);
+    final resolver = SpokenEntityResolver(repository: lookupRepo);
     _nlSearchService = widget.nlSearchService ??
         NaturalLanguageSearchService(
           parser: parser,
@@ -129,12 +131,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   // CONTINUOUS CONVERSATIONAL SEARCH EXECUTION
   // ===========================================================================
 
-  Future<void> _executeNaturalLanguageSearch() async {
-    final queryText = _searchController.text.trim();
+  Future<void> _executeNaturalLanguageSearch({SpeechTranscriptionResult? spokenResult}) async {
+    final queryText = (spokenResult?.text ?? _searchController.text).trim();
     if (queryText.isEmpty) return;
 
     final nextRequestId = _session.activeRequestId + 1;
     setState(() {
+      _searchController.text = queryText;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
       _loadingStatus = 'Understanding your search...';
@@ -153,7 +156,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         previousQuery: _session.activeQuery,
       );
 
-      final result = await _nlSearchService.search(queryText, context: searchContext);
+      final NaturalLanguageSearchResult result;
+      if (spokenResult != null) {
+        result = await _nlSearchService.searchSpoken(spokenResult, context: searchContext);
+      } else {
+        result = await _nlSearchService.search(queryText, context: searchContext);
+      }
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
 
@@ -776,11 +784,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 VoiceSearchButton(
                   speechService: _speechService,
                   selectedLanguage: _selectedLanguage,
+                  onResultDetailed: (speechResult) {
+                    _executeNaturalLanguageSearch(spokenResult: speechResult);
+                  },
                   onTranscriptReceived: (transcript) {
-                    setState(() {
+                    if (_searchController.text != transcript) {
                       _searchController.text = transcript;
-                    });
-                    _executeNaturalLanguageSearch();
+                      _executeNaturalLanguageSearch();
+                    }
                   },
                 ),
                 const SizedBox(width: 8),

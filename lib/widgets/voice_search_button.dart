@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/speech/speech_transcription_result.dart';
 import '../models/supported_language.dart';
 import '../models/voice_state.dart';
 import '../services/speech/speech_to_text_service.dart';
@@ -8,6 +9,7 @@ class VoiceSearchButton extends StatefulWidget {
   final ISpeechToTextService speechService;
   final SupportedLanguage selectedLanguage;
   final ValueChanged<String> onTranscriptReceived;
+  final ValueChanged<SpeechTranscriptionResult>? onResultDetailed;
   final ValueChanged<VoiceError>? onError;
   final ValueChanged<VoiceState>? onStateChanged;
 
@@ -16,6 +18,7 @@ class VoiceSearchButton extends StatefulWidget {
     required this.speechService,
     required this.selectedLanguage,
     required this.onTranscriptReceived,
+    this.onResultDetailed,
     this.onError,
     this.onStateChanged,
   });
@@ -29,6 +32,7 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
   late Animation<double> _pulseAnimation;
   VoiceState _state = VoiceState.idle;
   String? _errorMessage;
+  bool _isAwaitingStopResult = false;
 
   @override
   void initState() {
@@ -65,9 +69,15 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
   Future<void> _toggleListening() async {
     if (_state == VoiceState.listening) {
       // User tapped while listening -> stop & process
-      final transcript = await widget.speechService.stopListening();
-      if (transcript != null && transcript.isNotEmpty) {
-        widget.onTranscriptReceived(transcript);
+      _isAwaitingStopResult = true;
+      final detailed = await widget.speechService.stopListeningDetailed();
+      _isAwaitingStopResult = false;
+      if (detailed != null && detailed.text.isNotEmpty) {
+        if (widget.onResultDetailed != null) {
+          widget.onResultDetailed!(detailed);
+        } else {
+          widget.onTranscriptReceived(detailed.text);
+        }
       }
       return;
     }
@@ -79,15 +89,26 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
 
     // Start listening
     _errorMessage = null;
+    _isAwaitingStopResult = false;
     await widget.speechService.startListening(
       language: widget.selectedLanguage,
       onResult: (transcript, isFinal) {
-        if (isFinal && transcript.isNotEmpty) {
-          widget.onTranscriptReceived(transcript);
+        if (isFinal && transcript.isNotEmpty && !_isAwaitingStopResult) {
+          if (widget.onResultDetailed != null) {
+            widget.onResultDetailed!(
+              SpeechTranscriptionResult.textOnly(
+                text: transcript,
+                language: widget.selectedLanguage,
+              ),
+            );
+          } else {
+            widget.onTranscriptReceived(transcript);
+          }
         }
       },
       onStateChanged: _handleStateChanged,
       onError: (error) {
+        _isAwaitingStopResult = false;
         if (!mounted) return;
         setState(() {
           _errorMessage = error.message;

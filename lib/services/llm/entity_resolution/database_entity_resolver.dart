@@ -77,13 +77,17 @@ class DatabaseEntityResolver implements EntityResolver {
           final isLowConfidenceNoise = rallyRes.confidence < 0.40;
 
           if (!(isBroadRalliesIntent && hasStrongCountry && isLowConfidenceNoise)) {
+            final question = rallyRes.strategy == 'plausible_candidates' && rallyRes.candidateOptions.isNotEmpty
+                ? 'Did you mean "${rallyRes.candidateOptions.first.canonicalName}"?'
+                : (rawRallies.length > 1
+                    ? 'Which rally event named "${rawRally.trim()}" do you mean?'
+                    : (rallyRes.strategy == 'multi_year_ambiguity'
+                        ? 'Which year or edition of "${rawRally.trim()}" are you looking for?'
+                        : 'Which rally event named "${rawRally.trim()}" do you mean?'));
+
             return EntityResolutionResult.clarification(
               parsedQuery: query,
-              clarificationQuestion: rawRallies.length > 1
-                  ? 'Which rally event named "${rawRally.trim()}" do you mean?'
-                  : (rallyRes.strategy == 'multi_year_ambiguity'
-                      ? 'Which year or edition of "${rawRally.trim()}" are you looking for?'
-                      : 'Which rally event named "${rawRally.trim()}" do you mean?'),
+              clarificationQuestion: question,
               candidates: rallyRes.candidateOptions,
               resolutions: resolutions,
             );
@@ -94,6 +98,16 @@ class DatabaseEntityResolver implements EntityResolver {
           primaryResolvedRally ??= rallyRes.resolvedCandidate;
           resolvedRallies.add(rallyRes.resolvedCandidate!.canonicalName);
         } else {
+          final isEntityRequiredIntent = query.intent == SearchIntent.searchVideoActions ||
+              query.intent == SearchIntent.getRallyResults ||
+              query.intent == SearchIntent.getRallyTopFinishers ||
+              query.intent == SearchIntent.getTopUploaders;
+          if (isEntityRequiredIntent) {
+            return EntityResolutionResult.failure(
+              'We couldn\'t confidently identify that rally ("${rawRally.trim()}").',
+              parsedQuery: query,
+            );
+          }
           resolvedRallies.add(rawRally.trim());
         }
       }
@@ -123,9 +137,13 @@ class DatabaseEntityResolver implements EntityResolver {
         }
 
         if (stageRes.isAmbiguous) {
+          final question = stageRes.strategy == 'plausible_candidates' && stageRes.candidateOptions.isNotEmpty
+              ? 'Did you mean "${stageRes.candidateOptions.first.canonicalName}"?'
+              : 'Which stage named "${rawStage.trim()}" do you mean?';
+
           return EntityResolutionResult.clarification(
             parsedQuery: query,
-            clarificationQuestion: 'Which stage named "${rawStage.trim()}" do you mean?',
+            clarificationQuestion: question,
             candidates: stageRes.candidateOptions,
             resolutions: resolutions,
           );
@@ -138,6 +156,13 @@ class DatabaseEntityResolver implements EntityResolver {
             resolvedStageNumbers.add(stageNum);
           }
         } else {
+          final isStageRequiredIntent = query.intent == SearchIntent.searchVideoActions;
+          if (isStageRequiredIntent && query.stageNames.length == 1) {
+            return EntityResolutionResult.failure(
+              'We couldn\'t confidently identify that stage ("${rawStage.trim()}").',
+              parsedQuery: query,
+            );
+          }
           resolvedStages.add(rawStage.trim());
         }
       }
@@ -175,18 +200,56 @@ class DatabaseEntityResolver implements EntityResolver {
             driverNames: resolvedDrivers.isNotEmpty ? resolvedDrivers : workingQuery.driverNames,
           );
 
+          final question = driverRes.strategy == 'plausible_candidates' && driverRes.candidateOptions.isNotEmpty
+              ? 'Did you mean "${driverRes.candidateOptions.first.canonicalName}"?'
+              : 'Which driver named "${rawDriver.trim()}" do you mean?';
+
           return EntityResolutionResult.clarification(
             parsedQuery: query,
-            clarificationQuestion: 'Which driver named "${rawDriver.trim()}" do you mean?',
+            clarificationQuestion: question,
             candidates: driverRes.candidateOptions,
             resolutions: resolutions,
           );
         }
 
         if (driverRes.resolvedCandidate != null) {
-          resolvedDriverIds.add(driverRes.resolvedCandidate!.id);
-          resolvedDrivers.add(driverRes.resolvedCandidate!.canonicalName);
+          final cand = driverRes.resolvedCandidate!;
+          final driverId = cand.metadata?['driverId']?.toString();
+          final codriverId = cand.metadata?['codriverId']?.toString();
+
+          switch (workingQuery.personRole) {
+            case PersonRole.driver:
+              if (driverId != null && driverId.isNotEmpty && driverId != 'null') {
+                resolvedDriverIds.add(driverId);
+              }
+              break;
+            case PersonRole.coDriver:
+              if (codriverId != null && codriverId.isNotEmpty && codriverId != 'null') {
+                resolvedDriverIds.add(codriverId);
+              }
+              break;
+            case PersonRole.any:
+              if (driverId != null && driverId.isNotEmpty && driverId != 'null') {
+                resolvedDriverIds.add(driverId);
+              }
+              if (codriverId != null && codriverId.isNotEmpty && codriverId != 'null') {
+                resolvedDriverIds.add(codriverId);
+              }
+              if (resolvedDriverIds.isEmpty) {
+                resolvedDriverIds.add(cand.id);
+              }
+              break;
+          }
+          resolvedDrivers.add(cand.canonicalName);
         } else {
+          final isDriverRequiredIntent = query.intent == SearchIntent.searchDriverVideos ||
+              query.intent == SearchIntent.searchDriverRallies;
+          if (isDriverRequiredIntent) {
+            return EntityResolutionResult.failure(
+              'We couldn\'t confidently identify that driver ("${rawDriver.trim()}").',
+              parsedQuery: query,
+            );
+          }
           resolvedDrivers.add(rawDriver.trim());
         }
       }
@@ -269,7 +332,7 @@ class DatabaseEntityResolver implements EntityResolver {
       year: effectiveYear,
       country: effectiveCountry,
       city: city,
-      limit: 10,
+      limit: 35,
     );
 
     if (candidates.isEmpty) {
@@ -307,7 +370,7 @@ class DatabaseEntityResolver implements EntityResolver {
             confidence: 0.5,
             strategy: 'multi_year_ambiguity',
             isAmbiguous: true,
-            candidateOptions: scored,
+            candidateOptions: scored.take(5).toList(),
           );
           _putInCache(cacheKey, res);
           return res;
@@ -342,7 +405,7 @@ class DatabaseEntityResolver implements EntityResolver {
       eventId: eventId,
       eventName: eventName,
       year: effectiveYear,
-      limit: 10,
+      limit: 50,
     );
 
     if (candidates.isEmpty) {
@@ -370,7 +433,7 @@ class DatabaseEntityResolver implements EntityResolver {
         confidence: 0.5,
         strategy: 'partial_name_ambiguity',
         isAmbiguous: true,
-        candidateOptions: scored,
+        candidateOptions: scored.take(5).toList(),
       );
       _putInCache(cacheKey, res);
       return res;
@@ -397,7 +460,7 @@ class DatabaseEntityResolver implements EntityResolver {
       phrase,
       eventId: eventId,
       eventName: eventName,
-      limit: 10,
+      limit: 35,
     );
 
     if (candidates.isEmpty) {
@@ -446,7 +509,7 @@ class DatabaseEntityResolver implements EntityResolver {
           confidence: 0.5,
           strategy: 'location_vs_event_ambiguity',
           isAmbiguous: true,
-          candidateOptions: combinedCandidates,
+          candidateOptions: combinedCandidates.take(5).toList(),
         );
         _putInCache(cacheKey, res);
         return res;
@@ -456,7 +519,7 @@ class DatabaseEntityResolver implements EntityResolver {
     final candidates = await _repository.lookupCities(
       phrase,
       country: country,
-      limit: 10,
+      limit: 25,
     );
 
     if (candidates.isEmpty) {
@@ -493,9 +556,12 @@ class DatabaseEntityResolver implements EntityResolver {
       final inContext = c.metadata?['inContext'] as bool? ?? false;
       final yearMatch = candidateYear != null && effectiveYears.contains(candidateYear);
 
+      final isPerson = c.type == EntityType.driver;
+
       final baseScore = PhoneticMatchingHelper.computeCompositeScore(
         queryPhrase: phrase,
         candidateName: c.canonicalName,
+        isPerson: isPerson,
       );
 
       final score = PhoneticMatchingHelper.computeCompositeScore(
@@ -504,6 +570,7 @@ class DatabaseEntityResolver implements EntityResolver {
         queryYear: yearMatch ? candidateYear : (effectiveYears.isNotEmpty ? effectiveYears.first : year),
         candidateYear: candidateYear,
         inContext: inContext,
+        isPerson: isPerson,
       );
 
       final updatedMetadata = Map<String, dynamic>.from(c.metadata ?? {});
@@ -535,12 +602,14 @@ class DatabaseEntityResolver implements EntityResolver {
 
     // Check if top candidate meets confidence threshold
     if (topScore < minConfidenceThreshold) {
+      final isPlausible = topScore >= 0.50;
       return EntityResolution(
         type: top.type,
         rawPhrase: phrase,
         confidence: topScore,
-        strategy: 'below_threshold',
-        candidateOptions: scoredCandidates,
+        strategy: isPlausible ? 'plausible_candidates' : 'below_threshold',
+        isAmbiguous: isPlausible,
+        candidateOptions: isPlausible ? scoredCandidates.take(5).toList() : const [],
       );
     }
 

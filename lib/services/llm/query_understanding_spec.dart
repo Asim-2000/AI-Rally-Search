@@ -26,6 +26,10 @@ CRITICAL RULES:
    - NEVER collapse multiple values into one composite string (e.g. DO NOT output "Ireland and Scotland" or "Josh Moffett or Sam Moffett").
    - If a filter is singular, output a 1-element array (e.g. countries: ["Ireland"], actionTypes: ["jump"]). If absent, output an empty array [].
    - `driverMatchMode`: Set to "ANY" by default ("Josh or Sam", "featuring Josh and Sam"). Set to "ALL" ONLY when the user explicitly requests both/all drivers simultaneously in participation/victory queries (e.g. "rallies where both Josh Moffett and Sam Moffett participated").
+   - `personRole`: Extract the competitor role constraint from user wording:
+     * "CO_DRIVER": When user explicitly asks for co-driver/navigator role (e.g. "co-driven by Max Freeman", "where Max Freeman was co-driver", "Max Freeman as navigator", "rallies co-driven by X").
+     * "DRIVER": When user explicitly asks for driver role (e.g. "driven by Josh Moffett", "where Josh Moffett drove", "Josh Moffett as driver").
+     * "ANY": Default for general participation or unspecified role (e.g. "participated in", "competed in", "rallies involving X", "where X took part").
 
 3. MULTILINGUAL SEMANTIC UNDERSTANDING & CANONICAL MAPPING:
    - Queries may be expressed in English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Norwegian, Latvian, Czech, Croatian, Lithuanian, Slovak, Urdu, Arabic, Swahili, Welsh, Irish, or mixed/code-switched phrases.
@@ -223,6 +227,11 @@ CRITICAL RULES:
           'enum': ['ANY', 'ALL'],
           'description': 'ANY by default; ALL only if user explicitly says "both" or "all" drivers.',
         },
+        'personRole': {
+          'type': 'string',
+          'enum': ['ANY', 'DRIVER', 'CO_DRIVER'],
+          'description': 'ANY by default ("participated in", "competed in", "rallies involving X"); DRIVER if user explicitly asked for driver role ("driven by", "drove in"); CO_DRIVER if user explicitly asked for co-driver/navigator role ("co-driven by", "navigator").',
+        },
         'limit': {
           'type': ['integer', 'null'],
           'description': 'Number of items to retrieve (default 20).',
@@ -254,6 +263,7 @@ CRITICAL RULES:
         'yearFrom',
         'yearTo',
         'driverMatchMode',
+        'personRole',
         'limit',
         'offset',
         'requiresClarification',
@@ -357,6 +367,11 @@ CRITICAL RULES:
         'type': 'STRING',
         'enum': ['ANY', 'ALL'],
         'description': 'ANY by default; ALL if user requested both/all.',
+      },
+      'personRole': {
+        'type': 'STRING',
+        'enum': ['ANY', 'DRIVER', 'CO_DRIVER'],
+        'description': 'ANY by default; DRIVER if driven by; CO_DRIVER if co-driven/navigator.',
       },
       'limit': {
         'type': 'INTEGER',

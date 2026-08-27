@@ -29,7 +29,16 @@ enum PersonRole {
     return PersonRole.any;
   }
 
-  String toRoleString() => name.toUpperCase();
+  String toRoleString() {
+    switch (this) {
+      case PersonRole.driver:
+        return 'DRIVER';
+      case PersonRole.coDriver:
+        return 'CO_DRIVER';
+      case PersonRole.any:
+        return 'ANY';
+    }
+  }
 }
 
 /// General structured search query representation.

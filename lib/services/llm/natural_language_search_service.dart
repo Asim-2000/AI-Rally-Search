@@ -2,9 +2,11 @@ import '../../models/entity_candidate.dart';
 import '../../models/result_referent_context.dart';
 import '../../models/search_query.dart';
 import '../../models/search_results.dart';
+import '../../models/speech/speech_transcription_result.dart';
 import '../search_repository.dart';
 import '../speech/voice_entity_recovery_service.dart';
 import 'entity_resolution/entity_resolver.dart';
+import 'entity_resolution/spoken_entity_resolver.dart';
 import 'llm_query_parser.dart';
 import 'query_output_validator.dart';
 import 'query_parse_result.dart';
@@ -144,14 +146,15 @@ class NaturalLanguageSearchResult {
 }
 
 /// Orchestrates Natural Language Search:
-/// 1. Takes user natural-language string.
+/// 1. Takes user natural-language string or rich spoken transcription result.
 /// 2. Performs Voice Entity Recovery / Normalization if applicable.
 /// 3. Passes it through an [LlmQueryParser] to produce an extracted [SearchQuery].
 /// 4. Validates against clarification or parsing errors.
-/// 5. Resolves entity phrases deterministically via injected [EntityResolver].
+/// 5. Resolves entity phrases deterministically via injected [EntityResolver] / [SpokenEntityResolver].
 /// 6. If ambiguous or clarification required, returns candidates to UI.
 /// 7. Executes deterministic search via existing [ISearchRepository].
 /// 8. Captures granular latency (parse, entity resolution, DB) and cost telemetry.
+/// 9. Deterministically disposes audio context when search completes.
 class NaturalLanguageSearchService {
   final LlmQueryParser parser;
   final EntityResolver entityResolver;
@@ -166,10 +169,28 @@ class NaturalLanguageSearchService {
   })  : repository = repository ?? SearchRepository(),
         voiceRecoveryService = voiceRecoveryService ?? const VoiceEntityRecoveryService();
 
+  /// Executes natural language search from a rich [SpeechTranscriptionResult] end-to-end,
+  /// guaranteeing deterministic disposal of retained audio context in a finally block.
+  Future<NaturalLanguageSearchResult> searchSpoken(
+    SpeechTranscriptionResult speechResult, {
+    SearchContext? context,
+  }) async {
+    try {
+      return await search(
+        speechResult.text,
+        context: context,
+        speechResult: speechResult,
+      );
+    } finally {
+      speechResult.disposeAudio();
+    }
+  }
+
   /// Executes natural language search end-to-end.
   Future<NaturalLanguageSearchResult> search(
     String naturalQuery, {
     SearchContext? context,
+    SpeechTranscriptionResult? speechResult,
   }) async {
     final overallStopwatch = Stopwatch()..start();
     final clean = naturalQuery.trim();
@@ -223,7 +244,16 @@ class NaturalLanguageSearchService {
 
       // Step 4: Deterministic Entity Resolution
       final erStopwatch = Stopwatch()..start();
-      final resolutionResult = await entityResolver.resolve(parsedQuery, context: context);
+      final EntityResolutionResult resolutionResult;
+      if (speechResult != null && entityResolver is SpokenEntityResolver) {
+        resolutionResult = await (entityResolver as SpokenEntityResolver).resolveSpoken(
+          parsedQuery: parsedQuery,
+          speechResult: speechResult,
+          context: context,
+        );
+      } else {
+        resolutionResult = await entityResolver.resolve(parsedQuery, context: context);
+      }
       erStopwatch.stop();
 
       if (resolutionResult.requiresClarification) {
@@ -273,6 +303,7 @@ class NaturalLanguageSearchService {
         queryDriver: resolvedQuery.driverName,
         queryRallies: resolvedQuery.targetRallyNames,
         queryDrivers: resolvedQuery.driverNames,
+        queryPersonRole: resolvedQuery.personRole,
       );
 
       return NaturalLanguageSearchResult(

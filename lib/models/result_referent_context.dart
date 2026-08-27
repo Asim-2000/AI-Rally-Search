@@ -1,4 +1,5 @@
 import 'search_intent.dart';
+import 'search_query.dart';
 import 'search_results.dart';
 import 'video_action.dart';
 
@@ -16,6 +17,7 @@ class ResultReferentContext {
   final String? activeDriver;
   final String? activeDriverId;
   final List<String> activeDrivers;
+  final PersonRole? activePersonRole;
   final String? activeStage;
   final String? activeStageNumber;
   final String? lastWinner;
@@ -33,6 +35,7 @@ class ResultReferentContext {
     this.activeDriver,
     this.activeDriverId,
     this.activeDrivers = const [],
+    this.activePersonRole,
     this.activeStage,
     this.activeStageNumber,
     this.lastWinner,
@@ -55,6 +58,7 @@ class ResultReferentContext {
     String? activeDriver,
     String? activeDriverId,
     List<String>? activeDrivers,
+    PersonRole? activePersonRole,
     String? activeStage,
     String? activeStageNumber,
     String? lastWinner,
@@ -66,6 +70,7 @@ class ResultReferentContext {
     Map<String, dynamic>? metadata,
     bool clearActiveRally = false,
     bool clearActiveDriver = false,
+    bool clearActivePersonRole = false,
     bool clearActiveStage = false,
     bool clearLastWinner = false,
   }) {
@@ -76,6 +81,7 @@ class ResultReferentContext {
       activeDriver: clearActiveDriver ? null : (activeDriver ?? this.activeDriver),
       activeDriverId: clearActiveDriver ? null : (activeDriverId ?? this.activeDriverId),
       activeDrivers: clearActiveDriver ? const [] : (activeDrivers ?? this.activeDrivers),
+      activePersonRole: clearActivePersonRole ? null : (activePersonRole ?? this.activePersonRole),
       activeStage: clearActiveStage ? null : (activeStage ?? this.activeStage),
       activeStageNumber: clearActiveStage ? null : (activeStageNumber ?? this.activeStageNumber),
       lastWinner: clearLastWinner ? null : (lastWinner ?? this.lastWinner),
@@ -96,6 +102,7 @@ class ResultReferentContext {
     String? queryDriver,
     List<String>? queryRallies,
     List<String>? queryDrivers,
+    PersonRole? queryPersonRole,
   }) {
     String? activeRally = previous.activeRally;
     String? activeRallyId = previous.activeRallyId;
@@ -103,6 +110,10 @@ class ResultReferentContext {
     String? activeDriver = previous.activeDriver;
     String? activeDriverId = previous.activeDriverId;
     List<String> activeDrivers = List<String>.from(previous.activeDrivers);
+    PersonRole? activePersonRole = previous.activePersonRole;
+    if (queryPersonRole != null && queryPersonRole != PersonRole.any) {
+      activePersonRole = queryPersonRole;
+    }
     String? activeStage = previous.activeStage;
     String? activeStageNumber = previous.activeStageNumber;
     String? lastWinner = previous.lastWinner;
@@ -135,6 +146,7 @@ class ResultReferentContext {
         activeRallies: activeRallies,
         activeDriver: activeDriver,
         activeDrivers: activeDrivers,
+        activePersonRole: activePersonRole,
       );
     }
 
@@ -175,7 +187,7 @@ class ResultReferentContext {
         final parts = results.whereType<RallyParticipationResult>().toList();
         if (parts.isNotEmpty) {
           final first = parts.first;
-          if (first.driverName.isNotEmpty) {
+          if ((activeDriver == null || activeDriver.isEmpty) && first.driverName.isNotEmpty) {
             activeDriver = first.driverName;
           }
           if (parts.length == 1 && first.eventName.isNotEmpty) {
@@ -233,6 +245,7 @@ class ResultReferentContext {
       activeDriver: activeDriver,
       activeDriverId: activeDriverId,
       activeDrivers: activeDrivers,
+      activePersonRole: activePersonRole,
       activeStage: activeStage,
       activeStageNumber: activeStageNumber,
       lastWinner: lastWinner,

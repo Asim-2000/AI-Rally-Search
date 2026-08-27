@@ -1,4 +1,5 @@
 import '../../../models/entity_candidate.dart';
+import '../../../models/search_query.dart';
 import '../../database_service.dart';
 import 'phonetic_matching_helper.dart';
 import 'transliteration_helper.dart';
@@ -18,6 +19,7 @@ abstract class IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 25,
   });
 
@@ -45,7 +47,7 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
   final DatabaseService _dbService;
 
   DatabaseEntityLookupRepository({DatabaseService? dbService})
-      : _dbService = dbService ?? DatabaseService();
+    : _dbService = dbService ?? DatabaseService();
 
   /// Generates a bounded, high-recall list of candidate search patterns incorporating
   /// normalized full phrase, space-collapsed, descriptor-stripped stem, 3-char token prefixes,
@@ -92,21 +94,39 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     // Token prefixes (length >= 3) and anchor fragments
     // Filter out generic motorsport words and years from standalone single-token patterns
     const genericWords = {
-      'rally', 'rallye', 'rali', 'rajd', 'rallijsprints',
-      'stage', 'stages', 'forestry', 'championship', 'series',
-      'international', 'regional',
+      'rally',
+      'rallye',
+      'rali',
+      'rajd',
+      'rallijsprints',
+      'stage',
+      'stages',
+      'forestry',
+      'championship',
+      'series',
+      'international',
+      'regional',
     };
 
     final tokens = normalized.split(' ').where((t) => t.length >= 3).toList();
     if (tokens.length == 2) {
       patterns.add('${tokens[1]} ${tokens[0]}');
     }
-    final distinctiveTokens = tokens.where((t) => !genericWords.contains(t) && !RegExp(r'^\d{4}$').hasMatch(t)).toList();
-    final targetTokens = distinctiveTokens.isNotEmpty ? distinctiveTokens : tokens;
+    final distinctiveTokens = tokens
+        .where(
+          (t) => !genericWords.contains(t) && !RegExp(r'^\d{4}$').hasMatch(t),
+        )
+        .toList();
+    final targetTokens = distinctiveTokens.isNotEmpty
+        ? distinctiveTokens
+        : tokens;
 
     // Prioritize distinctive tokens
     final orderedTokens = targetTokens.length > 1
-        ? [targetTokens.last, ...targetTokens.sublist(0, targetTokens.length - 1)]
+        ? [
+            targetTokens.last,
+            ...targetTokens.sublist(0, targetTokens.length - 1),
+          ]
         : targetTokens;
 
     for (final token in orderedTokens) {
@@ -149,10 +169,18 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     }
 
     // Bounded internal character n-grams from collapsed and acoustic representations
-    final ngrams = PhoneticMatchingHelper.generateNgramAnchors(collapsed, n: 3, maxAnchors: 4);
+    final ngrams = PhoneticMatchingHelper.generateNgramAnchors(
+      collapsed,
+      n: 3,
+      maxAnchors: 4,
+    );
     patterns.addAll(ngrams);
     if (acousticCollapsed != collapsed) {
-      final acNgrams = PhoneticMatchingHelper.generateNgramAnchors(acousticCollapsed, n: 3, maxAnchors: 3);
+      final acNgrams = PhoneticMatchingHelper.generateNgramAnchors(
+        acousticCollapsed,
+        n: 3,
+        maxAnchors: 3,
+      );
       patterns.addAll(acNgrams);
     }
 
@@ -177,7 +205,9 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       final pEscaped = p.replaceAll("'", "''").toLowerCase();
       patternClauses.add("LOWER(ev.event_name) LIKE '%$pEscaped%'");
       if (pEscaped.length >= 3 && !pEscaped.contains(' ')) {
-        patternClauses.add("REPLACE(LOWER(ev.event_name), ' ', '') LIKE '%$pEscaped%'");
+        patternClauses.add(
+          "REPLACE(LOWER(ev.event_name), ' ', '') LIKE '%$pEscaped%'",
+        );
       }
     }
 
@@ -186,11 +216,18 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     final whereClauses = <String>['(${patternClauses.join(' OR ')})'];
 
     if (year != null && year > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
+      whereClauses.add(
+        "(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)",
+      );
     }
 
-    if (country != null && country.trim().isNotEmpty && country.toUpperCase() != 'ALL') {
-      final sanitizedCountry = country.trim().replaceAll("'", "''").toLowerCase();
+    if (country != null &&
+        country.trim().isNotEmpty &&
+        country.toUpperCase() != 'ALL') {
+      final sanitizedCountry = country
+          .trim()
+          .replaceAll("'", "''")
+          .toLowerCase();
       whereClauses.add("LOWER(ev.country) LIKE '%$sanitizedCountry%'");
     }
 
@@ -205,7 +242,8 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     final distEscaped = distinctive.replaceAll("'", "''").toLowerCase();
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
-    final sql = '''
+    final sql =
+        '''
       SELECT 
         ev.event_id,
         ev.event_name,
@@ -259,6 +297,7 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 35,
   }) async {
     final clean = phrase.trim().replaceAll("'", "''");
@@ -272,23 +311,36 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       driverPatternClauses.add("LOWER(dp.full_name) LIKE '%$pEscaped%'");
       codriverPatternClauses.add("LOWER(cdp.full_name) LIKE '%$pEscaped%'");
       if (pEscaped.length >= 3 && !pEscaped.contains(' ')) {
-        driverPatternClauses.add("REPLACE(LOWER(dp.full_name), ' ', '') LIKE '%$pEscaped%'");
-        codriverPatternClauses.add("REPLACE(LOWER(cdp.full_name), ' ', '') LIKE '%$pEscaped%'");
+        driverPatternClauses.add(
+          "REPLACE(LOWER(dp.full_name), ' ', '') LIKE '%$pEscaped%'",
+        );
+        codriverPatternClauses.add(
+          "REPLACE(LOWER(cdp.full_name), ' ', '') LIKE '%$pEscaped%'",
+        );
       }
     }
 
-    driverPatternClauses.add("LOWER(dp.nick_name) LIKE '%${clean.toLowerCase()}%'");
-    codriverPatternClauses.add("LOWER(cdp.nick_name) LIKE '%${clean.toLowerCase()}%'");
+    driverPatternClauses.add(
+      "LOWER(dp.nick_name) LIKE '%${clean.toLowerCase()}%'",
+    );
+    codriverPatternClauses.add(
+      "LOWER(cdp.nick_name) LIKE '%${clean.toLowerCase()}%'",
+    );
 
     final driverNameMatchSql = '(${driverPatternClauses.join(' OR ')})';
     final codriverNameMatchSql = '(${codriverPatternClauses.join(' OR ')})';
 
     final normalized = PhoneticMatchingHelper.normalize(clean);
     final tokens = normalized.split(' ').where((t) => t.length >= 3).toList();
-    final surnameToken = tokens.isNotEmpty ? tokens.last.replaceAll("'", "''") : clean.replaceAll("'", "''");
-    final surnamePrefix = surnameToken.length >= 3 ? surnameToken.substring(0, 3) : surnameToken;
+    final surnameToken = tokens.isNotEmpty
+        ? tokens.last.replaceAll("'", "''")
+        : clean.replaceAll("'", "''");
+    final surnamePrefix = surnameToken.length >= 3
+        ? surnameToken.substring(0, 3)
+        : surnameToken;
 
-    final driverRankSql = '''
+    final driverRankSql =
+        '''
       CASE 
         WHEN LOWER(dp.full_name) = '${clean.toLowerCase()}' THEN 1
         WHEN LOWER(dp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
@@ -298,7 +350,8 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       END
     ''';
 
-    final codriverRankSql = '''
+    final codriverRankSql =
+        '''
       CASE 
         WHEN LOWER(cdp.full_name) = '${clean.toLowerCase()}' THEN 1
         WHEN LOWER(cdp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
@@ -319,14 +372,21 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       } else if (eventName != null && eventName.isNotEmpty) {
         final sanitizedEv = eventName.replaceAll("'", "''").toLowerCase();
         driverContextClauses.add("LOWER(ev.event_name) LIKE '%$sanitizedEv%'");
-        codriverContextClauses.add("LOWER(ev.event_name) LIKE '%$sanitizedEv%'");
+        codriverContextClauses.add(
+          "LOWER(ev.event_name) LIKE '%$sanitizedEv%'",
+        );
       }
       if (year != null && year > 0) {
-        driverContextClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
-        codriverContextClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
+        driverContextClauses.add(
+          "(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)",
+        );
+        codriverContextClauses.add(
+          "(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)",
+        );
       }
 
-      final contextSql = '''
+      final contextSql =
+          '''
         (SELECT DISTINCT
           dp.driver_id AS id,
           dp.account_id,
@@ -366,12 +426,18 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
 
       final contextRows = await _dbService.query(contextSql);
       if (contextRows.isNotEmpty) {
-        return await _mergeAndMapPersonCandidates(contextRows, inContext: true, cleanPhrase: clean, limit: limit);
+        return await _mergeAndMapPersonCandidates(
+          contextRows,
+          inContext: true,
+          cleanPhrase: clean,
+          limit: limit,
+        );
       }
     }
 
     // General lookup across BOTH user_driver_profile and user_codriver_profile
-    final sql = '''
+    final sql =
+        '''
       (SELECT 
         dp.driver_id AS id,
         dp.account_id,
@@ -405,7 +471,12 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     ''';
 
     final rows = await _dbService.query(sql);
-    return await _mergeAndMapPersonCandidates(rows, inContext: false, cleanPhrase: clean, limit: limit);
+    return await _mergeAndMapPersonCandidates(
+      rows,
+      inContext: false,
+      cleanPhrase: clean,
+      limit: limit,
+    );
   }
 
   /// Consolidates person rows from driver and co-driver tables into unified candidates.
@@ -429,8 +500,11 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
 
     // If account_ids exist, query both user_driver_profile and user_codriver_profile for complete cross-role discovery
     if (matchedAccountIds.isNotEmpty) {
-      final accIn = matchedAccountIds.map((a) => "'${a.replaceAll("'", "''")}'").join(', ');
-      final crossRoleSql = '''
+      final accIn = matchedAccountIds
+          .map((a) => "'${a.replaceAll("'", "''")}'")
+          .join(', ');
+      final crossRoleSql =
+          '''
         (SELECT 
           dp.driver_id AS id,
           dp.account_id,
@@ -470,7 +544,8 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       final name = r['full_name']?.toString()?.trim() ?? '';
       if (name.isEmpty) continue;
       final accountId = r['account_id']?.toString()?.trim();
-      final hasAcc = accountId != null && accountId.isNotEmpty && accountId != 'null';
+      final hasAcc =
+          accountId != null && accountId.isNotEmpty && accountId != 'null';
       final key = hasAcc ? 'acc:$accountId' : 'name:${name.toLowerCase()}';
 
       if (!merged.containsKey(key)) {
@@ -485,16 +560,20 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
         final existing = merged[key]!;
         final existingRole = existing['role']?.toString();
         final currentRole = r['role']?.toString();
-        if (existingRole != null && currentRole != null && existingRole != currentRole) {
+        if (existingRole != null &&
+            currentRole != null &&
+            existingRole != currentRole) {
           existing['role'] = 'both';
         }
         if (currentRole == 'driver') {
           existing['driver_id'] = r['id'];
           // Preserve driver name if existing was empty
-          if (existing['driver_name'] == null) existing['driver_name'] = r['full_name'];
+          if (existing['driver_name'] == null)
+            existing['driver_name'] = r['full_name'];
         } else if (currentRole == 'co_driver') {
           existing['codriver_id'] = r['id'];
-          if (existing['codriver_name'] == null) existing['codriver_name'] = r['full_name'];
+          if (existing['codriver_name'] == null)
+            existing['codriver_name'] = r['full_name'];
         }
         if (r['participated_event'] != null) {
           existing['participated_event'] = r['participated_event'];
@@ -508,8 +587,12 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     final candidates = merged.values.map((r) {
       final role = r['role']?.toString() ?? 'driver';
       final accountId = r['account_id']?.toString()?.trim();
-      final driverId = r['driver_id']?.toString() ?? (role == 'driver' ? r['id']?.toString() : null);
-      final codriverId = r['codriver_id']?.toString() ?? (role == 'co_driver' ? r['id']?.toString() : null);
+      final driverId =
+          r['driver_id']?.toString() ??
+          (role == 'driver' ? r['id']?.toString() : null);
+      final codriverId =
+          r['codriver_id']?.toString() ??
+          (role == 'co_driver' ? r['id']?.toString() : null);
       final id = driverId ?? codriverId ?? r['id']?.toString() ?? '';
       final name = r['full_name']?.toString() ?? '';
       final country = r['country']?.toString();
@@ -524,7 +607,8 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       } else {
         parts.add('DRIVER');
       }
-      if (country != null && country.isNotEmpty) parts.add(country.toUpperCase());
+      if (country != null && country.isNotEmpty)
+        parts.add(country.toUpperCase());
       if (event != null && event.isNotEmpty) parts.add(event);
       if (yr != null && yr.isNotEmpty) parts.add(yr);
 
@@ -548,8 +632,10 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
 
     // Sort by match rank first, then exact matches
     candidates.sort((a, b) {
-      final aRank = int.tryParse(a.metadata?['matchRank']?.toString() ?? '') ?? 5;
-      final bRank = int.tryParse(b.metadata?['matchRank']?.toString() ?? '') ?? 5;
+      final aRank =
+          int.tryParse(a.metadata?['matchRank']?.toString() ?? '') ?? 5;
+      final bRank =
+          int.tryParse(b.metadata?['matchRank']?.toString() ?? '') ?? 5;
       if (aRank != bRank) return aRank.compareTo(bRank);
 
       final aName = a.canonicalName.toLowerCase();
@@ -576,15 +662,22 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     if (clean.isEmpty) return [];
 
     final cleanLower = clean.toLowerCase();
-    final cleanNum = cleanLower.replaceAll('ss', '').replaceAll('stage', '').trim();
+    final cleanNum = cleanLower
+        .replaceAll('ss', '')
+        .replaceAll('stage', '')
+        .trim();
 
     final patterns = _buildCandidatePatterns(phrase);
     final patternClauses = <String>[];
     for (final p in patterns) {
       final pEscaped = p.replaceAll("'", "''").toLowerCase();
       patternClauses.add("LOWER(stg.stage_name) LIKE '%$pEscaped%'");
-      if (pEscaped.length >= 3 && !pEscaped.contains(' ') && !pEscaped.endsWith('%')) {
-        patternClauses.add("REPLACE(LOWER(stg.stage_name), ' ', '') LIKE '%$pEscaped%'");
+      if (pEscaped.length >= 3 &&
+          !pEscaped.contains(' ') &&
+          !pEscaped.endsWith('%')) {
+        patternClauses.add(
+          "REPLACE(LOWER(stg.stage_name), ' ', '') LIKE '%$pEscaped%'",
+        );
       }
     }
 
@@ -603,7 +696,8 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     }
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
-    final sql = '''
+    final sql =
+        '''
       SELECT 
         stg.stage_id,
         stg.stage_name,
@@ -664,13 +758,19 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       "TRIM(ev.city) != ''",
     ];
 
-    if (country != null && country.trim().isNotEmpty && country.toUpperCase() != 'ALL') {
-      final sanitizedCountry = country.trim().replaceAll("'", "''").toLowerCase();
+    if (country != null &&
+        country.trim().isNotEmpty &&
+        country.toUpperCase() != 'ALL') {
+      final sanitizedCountry = country
+          .trim()
+          .replaceAll("'", "''")
+          .toLowerCase();
       whereClauses.add("LOWER(ev.country) LIKE '%$sanitizedCountry%'");
     }
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
-    final sql = '''
+    final sql =
+        '''
       SELECT DISTINCT 
         ev.city,
         ev.country
@@ -688,10 +788,10 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
         id: 'city_${city.toLowerCase().replaceAll(' ', '_')}',
         type: EntityType.city,
         canonicalName: city,
-        subtitle: cCountry != null && cCountry.isNotEmpty ? cCountry.toUpperCase() : null,
-        metadata: {
-          'country': cCountry,
-        },
+        subtitle: cCountry != null && cCountry.isNotEmpty
+            ? cCountry.toUpperCase()
+            : null,
+        metadata: {'country': cCountry},
       );
     }).toList();
   }
@@ -705,7 +805,8 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     if (clean.isEmpty) return [];
 
     final cleanLower = clean.toLowerCase();
-    final sql = '''
+    final sql =
+        '''
       SELECT 
         fp.fan_id AS id,
         ua.user_name AS username,
@@ -737,14 +838,17 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
       final displayName = (username != null && username.isNotEmpty)
           ? username
           : ((fullName != null && fullName.isNotEmpty)
-              ? fullName
-              : ((email != null && email.isNotEmpty) ? email : 'Rally Contributor'));
+                ? fullName
+                : ((email != null && email.isNotEmpty)
+                      ? email
+                      : 'Rally Contributor'));
 
       return EntityCandidate(
         id: id,
         type: EntityType.uploader,
         canonicalName: displayName,
-        subtitle: (fullName != null && fullName.isNotEmpty && fullName != username)
+        subtitle:
+            (fullName != null && fullName.isNotEmpty && fullName != username)
             ? fullName
             : (username != null && username.isNotEmpty ? '@$username' : null),
         metadata: {

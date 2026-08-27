@@ -73,27 +73,58 @@ class MySqlEntitySearchDataSource implements IEntitySearchDataSource {
       final current = people.putIfAbsent(
         accountId,
         () => {
-          'name': row['full_name']?.toString() ?? '',
           'country': row['country']?.toString(),
           'role': row['person_role']?.toString(),
+          'driverNames': <String>{},
+          'codriverNames': <String>{},
         },
       );
+      final profileName = row['full_name']?.toString().trim() ?? '';
       if (row['person_role'] == 'driver') {
         current['driverId'] = row['profile_id']?.toString();
+        if (profileName.isNotEmpty) {
+          (current['driverNames'] as Set<String>).add(profileName);
+        }
       } else {
         current['codriverId'] = row['profile_id']?.toString();
+        if (profileName.isNotEmpty) {
+          (current['codriverNames'] as Set<String>).add(profileName);
+        }
       }
       if (current['driverId'] != null && current['codriverId'] != null) {
         current['role'] = 'both';
       }
     }
     for (final entry in people.entries) {
+      final driverNames = (entry.value['driverNames'] as Set<String>).toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      final codriverNames =
+          (entry.value['codriverNames'] as Set<String>).toList()
+            ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      final searchableNames = <String>{
+        ...driverNames,
+        ...codriverNames,
+      }.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      // Deterministic display policy: driver profile name first when present,
+      // otherwise co-driver profile name; lexical order breaks same-role ties.
+      final displayName = driverNames.isNotEmpty
+          ? driverNames.first
+          : codriverNames.first;
       entities.add(
         CanonicalSearchEntity(
           canonicalId: entry.key,
-          canonicalName: entry.value['name']?.toString() ?? '',
+          canonicalName: displayName,
           entityType: SearchEntityType.person,
-          metadata: {'accountId': entry.key, ...entry.value},
+          metadata: {
+            'accountId': entry.key,
+            'driverId': entry.value['driverId'],
+            'codriverId': entry.value['codriverId'],
+            'role': entry.value['role'],
+            'country': entry.value['country'],
+            'searchableNames': searchableNames,
+            'canonicalDisplayNamePolicy':
+                'driver_profile_then_codriver_profile_lexical',
+          },
         ),
       );
     }

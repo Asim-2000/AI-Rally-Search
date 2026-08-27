@@ -5,8 +5,8 @@ import '../llm/entity_resolution/pronunciation/algorithmic_pronunciation_encoder
 import 'entity_search_models.dart';
 import 'entity_search_service.dart';
 
-class _IndexedEntity {
-  final CanonicalSearchEntity source;
+class _IndexedName {
+  final String name;
   final String normalized;
   final String collapsed;
   final Set<String> tokens;
@@ -14,22 +14,23 @@ class _IndexedEntity {
   final Set<String> trigrams;
   final String phonetic;
 
+  _IndexedName(this.name)
+    : normalized = _searchText(name),
+      collapsed = _searchText(name).replaceAll(' ', ''),
+      tokens = _searchText(name).split(' ').where((e) => e.isNotEmpty).toSet(),
+      bigrams = _grams(_searchText(name).replaceAll(' ', ''), 2),
+      trigrams = _grams(_searchText(name).replaceAll(' ', ''), 3),
+      phonetic = _phonetic(name);
+}
+
+class _IndexedEntity {
+  final CanonicalSearchEntity source;
+  final List<_IndexedName> names;
+
   _IndexedEntity(this.source)
-    : normalized = _searchText(source.canonicalName),
-      collapsed = _searchText(source.canonicalName).replaceAll(' ', ''),
-      tokens = _searchText(source.canonicalName)
-          .split(' ')
-          .where((e) => e.isNotEmpty)
-          .toSet(),
-      bigrams = _grams(
-        _searchText(source.canonicalName).replaceAll(' ', ''),
-        2,
-      ),
-      trigrams = _grams(
-        _searchText(source.canonicalName).replaceAll(' ', ''),
-        3,
-      ),
-      phonetic = _phonetic(source.canonicalName);
+    : names = _searchableNames(source)
+          .map(_IndexedName.new)
+          .toList(growable: false);
 }
 
 class InMemoryEntitySearchService implements IEntitySearchService {
@@ -74,11 +75,17 @@ class InMemoryEntitySearchService implements IEntitySearchService {
           2 *
               (e.source.canonicalId.length +
                   e.source.canonicalName.length +
-                  e.normalized.length +
-                  e.collapsed.length +
-                  e.phonetic.length +
-                  e.bigrams.join().length +
-                  e.trigrams.join().length),
+                  e.names.fold<int>(
+                    0,
+                    (nameSum, name) =>
+                        nameSum +
+                        name.name.length +
+                        name.normalized.length +
+                        name.collapsed.length +
+                        name.phonetic.length +
+                        name.bigrams.join().length +
+                        name.trigrams.join().length,
+                  )),
     );
     return indexStats = EntitySearchIndexStats(
       entityCount: next.length,
@@ -119,57 +126,31 @@ class InMemoryEntitySearchService implements IEntitySearchService {
         continue;
       }
       evaluated++;
-      final exact =
-          raw.toLowerCase() == entity.source.canonicalName.toLowerCase()
-          ? 1.0
-          : 0.0;
-      final normalizedExact = normalized == entity.normalized ? 1.0 : 0.0;
-      final token = _tokenScore(
-        tokens,
-        entity.tokens,
-        normalized,
-        entity.normalized,
-      );
-      final bi = _dice(bigrams, entity.bigrams);
-      final tri = _dice(trigrams, entity.trigrams);
-      final ngram = 0.4 * bi + 0.6 * tri;
-      final lexical = max(
-        PhoneticMatchingHelper.jaroWinkler(collapsed, entity.collapsed),
-        PhoneticMatchingHelper.diceTrigram(collapsed, entity.collapsed),
-      );
-      final phoneticScore = max(
-        PhoneticMatchingHelper.jaroWinkler(phonetic, entity.phonetic),
-        PhoneticMatchingHelper.diceBigram(phonetic, entity.phonetic),
-      );
       final context = _contextScore(entity, request);
-      final signals = EntitySearchSignals(
-        exactScore: exact,
-        normalizedExactScore: normalizedExact,
-        tokenScore: token,
-        ngramScore: ngram,
-        lexicalScore: lexical,
-        phoneticScore: phoneticScore,
-        contextScore: context,
-      );
-      final strongest = [
-        exact,
-        normalizedExact,
-        token,
-        ngram,
-        lexical,
-        phoneticScore,
-      ]..sort();
-      // Ranking combines independent evidence while preventing context from
-      // overwhelming a poor name match. Resolver thresholds remain separate.
-      final score =
-          (0.62 * strongest.last +
-                  0.23 * strongest[strongest.length - 2] +
-                  0.10 * token +
-                  0.05 * context)
-              .clamp(0.0, 1.0);
-      if (strongest.last < 0.18) {
+      _ScoredName? best;
+      for (final name in entity.names) {
+        final scored = _scoreName(
+          raw,
+          normalized,
+          collapsed,
+          tokens,
+          bigrams,
+          trigrams,
+          phonetic,
+          name,
+          context,
+        );
+        if (best == null || scored.score > best.score) best = scored;
+      }
+      if (best == null || best.strongest < 0.18) {
         continue;
       }
+      final exact = best.signals.exactScore;
+      final normalizedExact = best.signals.normalizedExactScore;
+      final token = best.signals.tokenScore;
+      final ngram = best.signals.ngramScore;
+      final lexical = best.signals.lexicalScore;
+      final phoneticScore = best.signals.phoneticScore;
       final matched = <String>{
         if (exact > 0) 'exact',
         if (normalizedExact > 0) 'normalized_exact',
@@ -184,10 +165,11 @@ class InMemoryEntitySearchService implements IEntitySearchService {
           canonicalId: entity.source.canonicalId,
           canonicalName: entity.source.canonicalName,
           entityType: entity.source.entityType,
-          score: score,
-          signals: signals,
+          score: best.score,
+          signals: best.signals,
           matchedBy: matched,
-          metadata: entity.source.metadata,
+          metadata: Map<String, Object?>.from(entity.source.metadata)
+            ..['matchedSearchableName'] = best.name,
         ),
       );
     }
@@ -206,6 +188,57 @@ class InMemoryEntitySearchService implements IEntitySearchService {
       latency: stopwatch.elapsed,
     );
     return returned;
+  }
+
+  static _ScoredName _scoreName(
+    String raw,
+    String normalized,
+    String collapsed,
+    Set<String> tokens,
+    Set<String> bigrams,
+    Set<String> trigrams,
+    String phonetic,
+    _IndexedName name,
+    double context,
+  ) {
+    final exact = raw.toLowerCase() == name.name.toLowerCase() ? 1.0 : 0.0;
+    final normalizedExact = normalized == name.normalized ? 1.0 : 0.0;
+    final token = _tokenScore(tokens, name.tokens, normalized, name.normalized);
+    final ngram =
+        0.4 * _dice(bigrams, name.bigrams) +
+        0.6 * _dice(trigrams, name.trigrams);
+    final lexical = max(
+      PhoneticMatchingHelper.jaroWinkler(collapsed, name.collapsed),
+      PhoneticMatchingHelper.diceTrigram(collapsed, name.collapsed),
+    );
+    final phoneticScore = max(
+      PhoneticMatchingHelper.jaroWinkler(phonetic, name.phonetic),
+      PhoneticMatchingHelper.diceBigram(phonetic, name.phonetic),
+    );
+    final signals = EntitySearchSignals(
+      exactScore: exact,
+      normalizedExactScore: normalizedExact,
+      tokenScore: token,
+      ngramScore: ngram,
+      lexicalScore: lexical,
+      phoneticScore: phoneticScore,
+      contextScore: context,
+    );
+    final strongest = [
+      exact,
+      normalizedExact,
+      token,
+      ngram,
+      lexical,
+      phoneticScore,
+    ]..sort();
+    final score =
+        (0.62 * strongest.last +
+                0.23 * strongest[strongest.length - 2] +
+                0.10 * token +
+                0.05 * context)
+            .clamp(0.0, 1.0);
+    return _ScoredName(name.name, score, strongest.last, signals);
   }
 
   static bool _roleAllowed(_IndexedEntity entity, dynamic requested) {
@@ -276,6 +309,14 @@ class InMemoryEntitySearchService implements IEntitySearchService {
   }
 }
 
+class _ScoredName {
+  final String name;
+  final double score;
+  final double strongest;
+  final EntitySearchSignals signals;
+  const _ScoredName(this.name, this.score, this.strongest, this.signals);
+}
+
 final _pronunciationEncoder = AlgorithmicPronunciationEncoder();
 
 String _searchText(String value) =>
@@ -283,6 +324,17 @@ String _searchText(String value) =>
 
 String _phonetic(String value) =>
     _pronunciationEncoder.encodeCollapsedQuery(_searchText(value));
+
+Set<String> _searchableNames(CanonicalSearchEntity entity) {
+  final names = <String>{entity.canonicalName.trim()};
+  final stored = entity.metadata['searchableNames'];
+  if (stored is Iterable) {
+    names.addAll(
+      stored.map((e) => e.toString().trim()).where((e) => e.isNotEmpty),
+    );
+  }
+  return names;
+}
 
 Set<String> _grams(String value, int n) {
   if (value.isEmpty) return {};

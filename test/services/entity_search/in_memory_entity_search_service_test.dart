@@ -83,4 +83,35 @@ void main() {
     expect(result.first.canonicalId, 'r1');
     expect(result.first.signals.contextScore, 0);
   });
+
+  test(
+    'scores every legitimate person name but returns one account identity',
+    () async {
+      final service = InMemoryEntitySearchService.fromEntities(const [
+        CanonicalSearchEntity(
+          canonicalId: 'account-1',
+          canonicalName: 'Melly Chris',
+          entityType: SearchEntityType.person,
+          metadata: {
+            'accountId': 'account-1',
+            'driverId': 'driver-1',
+            'codriverId': 'codriver-1',
+            'role': 'both',
+            'searchableNames': ['Melly Chris', 'Chris Melly'],
+          },
+        ),
+      ]);
+      final result = await service.search(
+        const EntitySearchRequest(
+          rawMention: 'Chris Melly',
+          entityType: SearchEntityType.person,
+        ),
+      );
+      expect(result, hasLength(1));
+      expect(result.single.canonicalId, 'account-1');
+      expect(result.single.canonicalName, 'Melly Chris');
+      expect(result.single.metadata['matchedSearchableName'], 'Chris Melly');
+    expect(result.single.score, 0.95);
+    },
+  );
 }

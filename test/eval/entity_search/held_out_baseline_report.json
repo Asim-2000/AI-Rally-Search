@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-27T15:11:23.288060Z",
+  "generatedAt": "2026-08-27T15:21:30.556181Z",
   "frozenImplementation": true,
   "seed": 20260827,
   "heldOutComposition": {
@@ -235,10 +235,14 @@
       "type": "person",
       "metadata": {
         "accountId": "7fbc61fb-cd17-489a-8bb4-7363384ab0ec",
-        "name": "Dave Marka",
-        "country": "AF",
+        "driverId": null,
+        "codriverId": "3485b9e6-d2c7-4e38-a09c-632a16547df3",
         "role": "co_driver",
-        "codriverId": "3485b9e6-d2c7-4e38-a09c-632a16547df3"
+        "country": "AF",
+        "searchableNames": [
+          "Dave Marka"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -247,10 +251,14 @@
       "type": "person",
       "metadata": {
         "accountId": "36ab72b7-60d3-4e6b-97e4-ae9cb4a054b2",
-        "name": "James Harrison",
-        "country": "GB",
+        "driverId": "3448d117-fd9e-4765-a942-93c0c9235cff",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "3448d117-fd9e-4765-a942-93c0c9235cff"
+        "country": "GB",
+        "searchableNames": [
+          "James Harrison"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -259,10 +267,14 @@
       "type": "person",
       "metadata": {
         "accountId": "ad044934-2995-46ff-b5c9-f13bb4862f7c",
-        "name": "Lars-Håkon Lundgreen",
-        "country": "NO",
+        "driverId": null,
+        "codriverId": "5503d8ba-d7d5-4500-8b54-13d3541767bd",
         "role": "co_driver",
-        "codriverId": "5503d8ba-d7d5-4500-8b54-13d3541767bd"
+        "country": "NO",
+        "searchableNames": [
+          "Lars-Håkon Lundgreen"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -271,10 +283,14 @@
       "type": "person",
       "metadata": {
         "accountId": "f7e7500b-4a89-49e7-b57a-c61141ff0ed4",
-        "name": "Sam Stewart",
-        "country": "DZ",
+        "driverId": "004df6cc-8969-4315-9148-13bd3b1a4c18",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        "country": "DZ",
+        "searchableNames": [
+          "Sam Stewart"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -283,10 +299,14 @@
       "type": "person",
       "metadata": {
         "accountId": "e03d3db2-a698-49c7-b99d-26acbd7359bd",
-        "name": "Desi Henry",
-        "country": "DE",
+        "driverId": "8f94b57c-2901-48ed-917b-4f8dd5fe476c",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "8f94b57c-2901-48ed-917b-4f8dd5fe476c"
+        "country": "DE",
+        "searchableNames": [
+          "Desi Henry"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -295,10 +315,14 @@
       "type": "person",
       "metadata": {
         "accountId": "881d112a-63cd-4d95-ac82-7cb41eb7a9dd",
-        "name": "Jamal Hicks",
-        "country": "NG",
+        "driverId": null,
+        "codriverId": "f9d76918-03a8-4d18-bf13-3248727d5f7d",
         "role": "co_driver",
-        "codriverId": "f9d76918-03a8-4d18-bf13-3248727d5f7d"
+        "country": "NG",
+        "searchableNames": [
+          "Jamal Hicks"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -307,10 +331,14 @@
       "type": "person",
       "metadata": {
         "accountId": "83a23467-c5be-4694-96bc-cc0df7cddc86",
-        "name": "Frank Tore Larse",
-        "country": "GB",
+        "driverId": "c4118b87-e991-412b-9ac6-12b326656a4c",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "c4118b87-e991-412b-9ac6-12b326656a4c"
+        "country": "GB",
+        "searchableNames": [
+          "Frank Tore Larse"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -319,10 +347,14 @@
       "type": "person",
       "metadata": {
         "accountId": "29372f43-34e2-4155-8594-483b16bf2a86",
-        "name": "Nial Hornang",
-        "country": "AL",
+        "driverId": "85cd7efb-9b42-42df-9edc-5355260927f4",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "85cd7efb-9b42-42df-9edc-5355260927f4"
+        "country": "AL",
+        "searchableNames": [
+          "Nial Hornang"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -331,10 +363,14 @@
       "type": "person",
       "metadata": {
         "accountId": "59eb6b47-03c8-4a7a-8a78-0721ac0c5d2f",
-        "name": "Derek Mcgarity",
-        "country": "GB",
+        "driverId": "b4f79f94-7fac-4628-9800-f1e1389af418",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "b4f79f94-7fac-4628-9800-f1e1389af418"
+        "country": "GB",
+        "searchableNames": [
+          "Derek Mcgarity"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -343,11 +379,15 @@
       "type": "person",
       "metadata": {
         "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
-        "name": "melly chris",
-        "country": "AF",
-        "role": "both",
         "driverId": "01888281-b264-4460-a0c2-7cd18daa7824",
-        "codriverId": "000f00f4-f4df-4704-a90e-963865959aec"
+        "codriverId": "000f00f4-f4df-4704-a90e-963865959aec",
+        "role": "both",
+        "country": "AF",
+        "searchableNames": [
+          "chris melly",
+          "melly chris"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -356,10 +396,14 @@
       "type": "person",
       "metadata": {
         "accountId": "92fe5689-a13b-4fbc-a823-61fb3d5691d8",
-        "name": "Caolan Mckenna",
-        "country": "IE",
+        "driverId": null,
+        "codriverId": "a70b05f8-504b-40e6-b589-ac3d0c8860d6",
         "role": "co_driver",
-        "codriverId": "a70b05f8-504b-40e6-b589-ac3d0c8860d6"
+        "country": "IE",
+        "searchableNames": [
+          "Caolan Mckenna"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -368,10 +412,14 @@
       "type": "person",
       "metadata": {
         "accountId": "fa474f77-f4b0-4125-a04d-34540f6a6cb9",
-        "name": "lloyd Destro",
-        "country": "KE",
+        "driverId": null,
+        "codriverId": "611f3aa4-d321-4331-966d-9c6ef8dcf994",
         "role": "co_driver",
-        "codriverId": "611f3aa4-d321-4331-966d-9c6ef8dcf994"
+        "country": "KE",
+        "searchableNames": [
+          "lloyd Destro"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -380,10 +428,14 @@
       "type": "person",
       "metadata": {
         "accountId": "1c2deb84-ac23-41d1-a319-c7d5edf808cb",
-        "name": "Anders Kjær",
-        "country": "GB",
+        "driverId": "3a79cfd9-3970-4cea-b430-3bc5460cd315",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "3a79cfd9-3970-4cea-b430-3bc5460cd315"
+        "country": "GB",
+        "searchableNames": [
+          "Anders Kjær"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -392,11 +444,15 @@
       "type": "person",
       "metadata": {
         "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
-        "name": "Tom Williams",
-        "country": "GB",
-        "role": "both",
         "driverId": "60735257-183c-4fed-b281-a5aa2b4b5e7a",
-        "codriverId": "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        "codriverId": "f0fe74f4-66e5-47b0-84ef-293ad4a686fc",
+        "role": "both",
+        "country": "GB",
+        "searchableNames": [
+          "michael gilbey",
+          "Tom Williams"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -405,10 +461,14 @@
       "type": "person",
       "metadata": {
         "accountId": "7639cb28-e76f-4640-a7e1-ac9168457290",
-        "name": "morten erik abrahamsen",
-        "country": "GB",
+        "driverId": null,
+        "codriverId": "0a5bda89-d890-4672-8c6f-2ee95940be05",
         "role": "co_driver",
-        "codriverId": "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        "country": "GB",
+        "searchableNames": [
+          "morten erik abrahamsen"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -417,10 +477,14 @@
       "type": "person",
       "metadata": {
         "accountId": "fb70ef49-e363-406f-b4d4-13e5f8204ccc",
-        "name": "Zubair Fawad",
-        "country": "PK",
+        "driverId": "fae3a401-f0ec-4415-9567-748155f1c2b4",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "fae3a401-f0ec-4415-9567-748155f1c2b4"
+        "country": "PK",
+        "searchableNames": [
+          "Zubair Fawad"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -429,10 +493,14 @@
       "type": "person",
       "metadata": {
         "accountId": "cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
-        "name": "Max Freeman",
-        "country": "GB",
+        "driverId": null,
+        "codriverId": "7a633b52-950e-49ef-8cab-34cd43e99366",
         "role": "co_driver",
-        "codriverId": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        "country": "GB",
+        "searchableNames": [
+          "Max Freeman"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -441,10 +509,14 @@
       "type": "person",
       "metadata": {
         "accountId": "354f3f2b-e3c6-4ea8-971f-bcfabf85fd33",
-        "name": "PJ McDermott Jnr",
-        "country": "IE",
+        "driverId": "3cc25e4e-3c2b-457c-99d2-9a120f5e578d",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "3cc25e4e-3c2b-457c-99d2-9a120f5e578d"
+        "country": "IE",
+        "searchableNames": [
+          "PJ McDermott Jnr"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -453,10 +525,14 @@
       "type": "person",
       "metadata": {
         "accountId": "1ca67bff-49a7-45dd-a01f-dcb387f67727",
-        "name": "New Driver",
-        "country": "DZ",
+        "driverId": "00abb675-43d8-401a-9f17-eb773ae0a92f",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "00abb675-43d8-401a-9f17-eb773ae0a92f"
+        "country": "DZ",
+        "searchableNames": [
+          "New Driver"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -465,10 +541,14 @@
       "type": "person",
       "metadata": {
         "accountId": "5ea11dc3-c407-441b-b1ab-409c7baeb505",
-        "name": "Paul Barrett",
-        "country": "IE",
+        "driverId": "5e247f4c-0aee-452f-aa8b-6d93c168ea43",
+        "codriverId": null,
         "role": "driver",
-        "driverId": "5e247f4c-0aee-452f-aa8b-6d93c168ea43"
+        "country": "IE",
+        "searchableNames": [
+          "Paul Barrett"
+        ],
+        "canonicalDisplayNamePolicy": "driver_profile_then_codriver_profile_lexical"
       }
     },
     {
@@ -1941,9 +2021,9 @@
           "score": 0.607008547008547
         },
         {
-          "accountId": "5a13af77-00a5-4f7d-b669-8b04b6db0ba3",
-          "name": "Meirion Evans",
-          "score": 0.5699797424797425
+          "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
+          "name": "melly chris",
+          "score": 0.6058290598290598
         }
       ]
     },
@@ -3011,14 +3091,14 @@
           "score": 0.5720238095238096
         },
         {
+          "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
+          "name": "melly chris",
+          "score": 0.557537037037037
+        },
+        {
           "accountId": "3cd2fc95-734b-4f67-afdb-105bba60493e",
           "name": "Damien Garvy",
           "score": 0.5325378787878788
-        },
-        {
-          "accountId": "59eb6b47-03c8-4a7a-8a78-0721ac0c5d2f",
-          "name": "Derek Mcgarity",
-          "score": 0.512724358974359
         }
       ]
     },
@@ -3097,14 +3177,14 @@
           "score": 0.5484126984126985
         },
         {
+          "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
+          "name": "melly chris",
+          "score": 0.5372222222222223
+        },
+        {
           "accountId": "3cd2fc95-734b-4f67-afdb-105bba60493e",
           "name": "Damien Garvy",
           "score": 0.5128619528619529
-        },
-        {
-          "accountId": "fa474f77-f4b0-4125-a04d-34540f6a6cb9",
-          "name": "lloyd Destro",
-          "score": 0.5043164983164983
         }
       ]
     },
@@ -3302,6 +3382,11 @@
           "score": 0.8622222222222222
         },
         {
+          "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
+          "name": "melly chris",
+          "score": 0.6087777777777779
+        },
+        {
           "accountId": "d8cf07aa-eca1-4864-b0b1-66326604a7f4",
           "name": "McElhinney Rhys",
           "score": 0.6018783068783069
@@ -3315,11 +3400,6 @@
           "accountId": "3cd2fc95-734b-4f67-afdb-105bba60493e",
           "name": "Damien Garvy",
           "score": 0.5128619528619529
-        },
-        {
-          "accountId": "1c2deb84-ac23-41d1-a319-c7d5edf808cb",
-          "name": "Anders Kjær",
-          "score": 0.5122895622895622
         }
       ]
     },
@@ -3737,6 +3817,11 @@
           "score": 0.6589511784511783
         },
         {
+          "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
+          "name": "melly chris",
+          "score": 0.5800555555555555
+        },
+        {
           "accountId": "6a335ccd-6e38-4ad2-ba9e-74c88e37ea87",
           "name": "Jason Campbell",
           "score": 0.5381497761497762
@@ -3744,11 +3829,6 @@
         {
           "accountId": "1459af64-1767-43e9-9f2e-c76272d049a5",
           "name": "Kasimir Barnes",
-          "score": 0.5270470085470085
-        },
-        {
-          "accountId": "e976962e-c9ae-45f6-8f70-c0036d697295",
-          "name": "Nicolas Valici",
           "score": 0.5270470085470085
         }
       ]
@@ -5156,6 +5236,11 @@
           "score": 0.5643976856476856
         },
         {
+          "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
+          "name": "Tom Williams",
+          "score": 0.537208485958486
+        },
+        {
           "accountId": "e9f6f527-765f-498c-b4fb-34602c90e1d4",
           "name": "Haris Pinermay",
           "score": 0.5336538461538461
@@ -5164,11 +5249,6 @@
           "accountId": "7dca12c1-f13f-419b-a4c2-601f41173b1a",
           "name": "Grégoire Munster",
           "score": 0.5276434676434676
-        },
-        {
-          "accountId": "cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
-          "name": "Max Freeman",
-          "score": 0.5186410256410257
         }
       ]
     },
@@ -5381,9 +5461,9 @@
           "score": 0.5662777777777778
         },
         {
-          "accountId": "5a13af77-00a5-4f7d-b669-8b04b6db0ba3",
-          "name": "Meirion Evans",
-          "score": 0.5166868686868687
+          "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
+          "name": "Tom Williams",
+          "score": 0.5220757020757021
         }
       ]
     },
@@ -5510,9 +5590,9 @@
           "score": 0.5907195767195768
         },
         {
-          "accountId": "b6a65a3f-7019-4f04-99fc-5e91176dd9d9",
-          "name": "Nomol Jackson",
-          "score": 0.5623653198653199
+          "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
+          "name": "Tom Williams",
+          "score": 0.5786259666259667
         }
       ]
     },
@@ -5570,15 +5650,20 @@
       "corruption": "chris melly",
       "rank": 1,
       "tokenScore": 1.0,
-      "ngramScore": 0.8055555555555556,
-      "lexicalScore": 0.75,
-      "phoneticScore": 0.875,
-      "finalScore": 0.92125,
+      "ngramScore": 1.0,
+      "lexicalScore": 1.0,
+      "phoneticScore": 1.0,
+      "finalScore": 0.95,
       "top5": [
         {
           "accountId": "419633b1-56ca-483a-8c10-0141d7cc3092",
           "name": "melly chris",
-          "score": 0.92125
+          "score": 0.95
+        },
+        {
+          "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
+          "name": "Tom Williams",
+          "score": 0.5880683760683761
         },
         {
           "accountId": "e9f6f527-765f-498c-b4fb-34602c90e1d4",
@@ -5594,11 +5679,6 @@
           "accountId": "47118c57-2a41-431b-8a81-2bb49c195955",
           "name": "joachim hvaal",
           "score": 0.5623653198653199
-        },
-        {
-          "accountId": "58161181-909b-49c5-ae82-56529c502e74",
-          "name": "Kristiane Hvaal Engh",
-          "score": 0.5382222222222222
         }
       ]
     },
@@ -10420,7 +10500,7 @@
     }
   ],
   "canonicalPersonNamePolicy": {
-    "currentPolicy": "first discovered profile row; SQL UNION lists driver profiles before co-driver profiles",
+    "currentPolicy": "driver profile name when present, otherwise co-driver profile name; normalized lexical tie-break within a role",
     "audit": [
       {
         "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
@@ -10740,10 +10820,10 @@
   },
   "resolverSafety": {
     "cases": 13,
-    "falseConfidentAutoResolution": 1,
+    "falseConfidentAutoResolution": 0,
     "correctAutoResolution": 1,
     "clarification": 2,
-    "noMatch": 9,
+    "noMatch": 10,
     "details": [
       {
         "id": "positive_aluksne",
@@ -10856,11 +10936,11 @@
       {
         "id": "driver_role_mismatch",
         "expected": null,
-        "resolved": "Dave Marka",
-        "autoResolved": true,
+        "resolved": null,
+        "autoResolved": false,
         "clarification": false,
-        "error": null,
-        "falseConfident": true
+        "error": "We couldn't confidently identify that driver (\"Dave Marka\").",
+        "falseConfident": false
       }
     ]
   },
@@ -10875,43 +10955,43 @@
     "maxRawEvaluated": 1359
   },
   "memory": {
-    "representationSizeEstimateBytes": 1011034,
-    "processRssBeforeBytes": 155795456,
-    "processRssAfterBytes": 189202432,
-    "processRssDeltaBytes": 33406976,
+    "representationSizeEstimateBytes": 1069262,
+    "processRssBeforeBytes": 155877376,
+    "processRssAfterBytes": 189825024,
+    "processRssDeltaBytes": 33947648,
     "limitation": "RSS includes DB loading/runtime allocation and is not an isolated Dart heap measurement."
   },
   "performance": {
     "entityCount": 2554,
-    "measuredRebuildMicroseconds": 115437,
+    "measuredRebuildMicroseconds": 119193,
     "queryLatencyByTypeMicroseconds": {
       "rally": {
         "count": 214,
-        "mean": 16314.640186915887,
-        "p50": 15191,
-        "p95": 25323,
-        "max": 33499
+        "mean": 16009.556074766355,
+        "p50": 14791,
+        "p95": 26126,
+        "max": 37325
       },
       "person": {
         "count": 218,
-        "mean": 8642.963302752294,
-        "p50": 8583,
-        "p95": 12341,
-        "max": 13694
+        "mean": 9521.802752293577,
+        "p50": 9280,
+        "p95": 12272,
+        "max": 14492
       },
       "stage": {
         "count": 203,
-        "mean": 39562.99014778325,
-        "p50": 36132,
-        "p95": 69689,
-        "max": 77982
+        "mean": 37976.84729064039,
+        "p50": 34945,
+        "p95": 67085,
+        "max": 72897
       },
       "uploader": {
         "count": 168,
-        "mean": 48336.76190476191,
-        "p50": 47008,
-        "p95": 60279,
-        "max": 84604
+        "mean": 47759.40476190476,
+        "p50": 46601,
+        "p95": 57920,
+        "max": 76192
       }
     }
   }

@@ -180,7 +180,7 @@ void main() {
       },
       'personDiagnostics': personDiagnostics,
       'canonicalPersonNamePolicy': {
-        'currentPolicy': 'first discovered profile row; SQL UNION lists driver profiles before co-driver profiles',
+        'currentPolicy': 'driver profile name when present, otherwise co-driver profile name; normalized lexical tie-break within a role',
         'audit': personAudit,
       },
       'resolverSafety': safety,

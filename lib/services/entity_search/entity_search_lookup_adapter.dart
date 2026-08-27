@@ -1,4 +1,5 @@
 import '../../models/entity_candidate.dart';
+import '../../models/search_query.dart';
 import '../llm/entity_resolution/entity_lookup_repository.dart';
 import 'entity_search_models.dart';
 import 'entity_search_service.dart';
@@ -73,17 +74,42 @@ class EntitySearchLookupAdapter implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 25,
-  }) => _search(
-    phrase,
-    SearchEntityType.person,
-    limit,
-    year: year,
-    context: {
-      if (eventId != null) 'eventId': eventId,
-      if (eventName != null) 'eventName': eventName,
-    },
-  );
+  }) async {
+    final candidates = await _search(
+      phrase,
+      SearchEntityType.person,
+      limit,
+      year: year,
+      context: {
+        if (eventId != null) 'eventId': eventId,
+        if (eventName != null) 'eventName': eventName,
+      },
+    );
+    return candidates
+        .where(
+          (candidate) => isPersonRoleEligible(candidate.metadata, personRole),
+        )
+        .toList(growable: false);
+  }
+
+  static bool isPersonRoleEligible(
+    Map<String, dynamic>? metadata,
+    PersonRole requestedRole,
+  ) {
+    final driverId = metadata?['driverId']?.toString();
+    final codriverId = metadata?['codriverId']?.toString();
+    final hasDriver =
+        driverId != null && driverId.isNotEmpty && driverId != 'null';
+    final hasCodriver =
+        codriverId != null && codriverId.isNotEmpty && codriverId != 'null';
+    return switch (requestedRole) {
+      PersonRole.driver => hasDriver,
+      PersonRole.coDriver => hasCodriver,
+      PersonRole.any => hasDriver || hasCodriver,
+    };
+  }
 
   @override
   Future<List<EntityCandidate>> lookupStages(

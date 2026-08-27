@@ -10,6 +10,7 @@ import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/services/database_service.dart';
 import 'package:ai_rally_search/services/entity_search/entity_search_lookup_adapter.dart';
+import 'package:ai_rally_search/services/entity_search/controlled_fallback_entity_resolver.dart';
 import 'package:ai_rally_search/services/entity_search/in_memory_entity_search_service.dart';
 import 'package:ai_rally_search/services/entity_search/mysql_entity_search_data_source.dart';
 import 'package:ai_rally_search/services/llm/entity_resolution/database_entity_resolver.dart';
@@ -29,10 +30,17 @@ void main() {
       );
       await service.rebuild();
       final old = DatabaseEntityLookupRepository(dbService: db);
-      final resolver = DatabaseEntityResolver(
+      final newResolver = DatabaseEntityResolver(
         repository: EntitySearchLookupAdapter(
           searchService: service,
           cityFallback: old,
+        ),
+      );
+      final resolver = ControlledFallbackEntityResolver(
+        legacyResolver: DatabaseEntityResolver(repository: old),
+        entitySearchResolver: newResolver,
+        config: const EntitySearchFallbackConfig(
+          mode: EntitySearchFallbackMode.fallback,
         ),
       );
       final positives = _positives;

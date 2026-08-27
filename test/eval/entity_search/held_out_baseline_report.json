@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-27T15:21:30.556181Z",
+  "generatedAt": "2026-08-27T15:36:35.284767Z",
   "frozenImplementation": true,
   "seed": 20260827,
   "heldOutComposition": {
@@ -10956,42 +10956,42 @@
   },
   "memory": {
     "representationSizeEstimateBytes": 1069262,
-    "processRssBeforeBytes": 155877376,
-    "processRssAfterBytes": 189825024,
-    "processRssDeltaBytes": 33947648,
+    "processRssBeforeBytes": 156024832,
+    "processRssAfterBytes": 189906944,
+    "processRssDeltaBytes": 33882112,
     "limitation": "RSS includes DB loading/runtime allocation and is not an isolated Dart heap measurement."
   },
   "performance": {
     "entityCount": 2554,
-    "measuredRebuildMicroseconds": 119193,
+    "measuredRebuildMicroseconds": 118372,
     "queryLatencyByTypeMicroseconds": {
       "rally": {
         "count": 214,
-        "mean": 16009.556074766355,
-        "p50": 14791,
-        "p95": 26126,
-        "max": 37325
+        "mean": 16792.093457943924,
+        "p50": 15441,
+        "p95": 27199,
+        "max": 47263
       },
       "person": {
         "count": 218,
-        "mean": 9521.802752293577,
-        "p50": 9280,
-        "p95": 12272,
-        "max": 14492
+        "mean": 9405.642201834862,
+        "p50": 9074,
+        "p95": 12258,
+        "max": 13882
       },
       "stage": {
         "count": 203,
-        "mean": 37976.84729064039,
-        "p50": 34945,
-        "p95": 67085,
-        "max": 72897
+        "mean": 39234.620689655174,
+        "p50": 36073,
+        "p95": 67687,
+        "max": 75160
       },
       "uploader": {
         "count": 168,
-        "mean": 47759.40476190476,
-        "p50": 46601,
-        "p95": 57920,
-        "max": 76192
+        "mean": 49207.45238095238,
+        "p50": 48353,
+        "p95": 58607,
+        "max": 90645
       }
     }
   }

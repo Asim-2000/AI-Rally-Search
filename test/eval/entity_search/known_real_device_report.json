@@ -2,6 +2,11 @@
   {
     "input": "aluksni",
     "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -83,6 +88,11 @@
   {
     "input": "aluksnay",
     "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -164,6 +174,11 @@
   {
     "input": "aluksney",
     "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -245,6 +260,11 @@
   {
     "input": "alux new",
     "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -326,6 +346,11 @@
   {
     "input": "a looks nay",
     "type": "rally",
+    "legacyOutcome": "no_match",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Did you mean \"Rally Alūksne 2026\"?",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -407,6 +432,11 @@
   {
     "input": "eluksne",
     "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -488,6 +518,11 @@
   {
     "input": "aluknse",
     "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
     "top5": [
       {
         "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
@@ -569,6 +604,11 @@
   {
     "input": "pawel malgo",
     "type": "person",
+    "legacyOutcome": "no_match",
+    "newCandidateRank": null,
+    "finalResolverOutcome": "no_match",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "no match",
     "top5": [
       {
         "id": "f71bb120-b213-487c-abe0-e11d0e508ad5",
@@ -650,6 +690,11 @@
   {
     "input": "shea brain",
     "type": "person",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": null,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Did you mean \"Catherine Brain\"?",
     "top5": [
       {
         "id": "36ab72b7-60d3-4e6b-97e4-ae9cb4a054b2",
@@ -731,6 +776,11 @@
   {
     "input": "donny gall",
     "type": "rally",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Which year or edition of \"donny gall\" are you looking for?",
     "top5": [
       {
         "id": "01594380-c4aa-4d99-b19c-af125e032102",
@@ -812,6 +862,11 @@
   {
     "input": "kemel berg",
     "type": "stage",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Which stage named \"kemel berg\" do you mean?",
     "top5": [
       {
         "id": "831768d8-dcbf-4113-b191-206ef58ab34c",
@@ -893,6 +948,11 @@
   {
     "input": "dushniki",
     "type": "stage",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Which stage named \"dushniki\" do you mean?",
     "top5": [
       {
         "id": "a2933c28-547e-44c2-8a5b-e39afbd6ff1e",

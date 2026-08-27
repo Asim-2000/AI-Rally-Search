@@ -1,6 +1,7 @@
 import '../../models/entity_candidate.dart';
 import '../../models/search_query.dart';
 import '../llm/entity_resolution/entity_lookup_repository.dart';
+import 'controlled_fallback_entity_resolver.dart';
 import 'entity_search_models.dart';
 import 'entity_search_service.dart';
 
@@ -46,7 +47,8 @@ class EntitySearchLookupAdapter implements IEntityLookupRepository {
             canonicalName: c.canonicalName,
             score: c.score,
             metadata: Map<String, dynamic>.from(c.metadata)
-              ..['retrievalSignals'] = c.signals.toMap(),
+              ..['retrievalSignals'] = c.signals.toMap()
+              ..['candidateOrigin'] = CandidateOrigin.entitySearch.name,
           ),
         )
         .toList(growable: false);

@@ -2,10 +2,10 @@
   "totalQueries": 168,
   "positive": {
     "queries": 62,
-    "correctConfident": 17,
+    "correctConfident": 33,
     "wrongConfident": 0,
-    "clarification": 22,
-    "noMatch": 23,
+    "clarification": 26,
+    "noMatch": 3,
     "details": [
       {
         "input": "aluksnay",
@@ -76,8 +76,8 @@
         "type": "driver",
         "resolved": null,
         "correct": false,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"shea brain\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "donny gall rally",
@@ -110,9 +110,9 @@
         "input": "kortrik",
         "canonical": "6 Uren van Kortrijk 2024",
         "type": "rally",
-        "resolved": null,
-        "correct": false,
-        "clarification": true,
+        "resolved": "6 Uren van Kortrijk 2024",
+        "correct": true,
+        "clarification": false,
         "error": null
       },
       {
@@ -272,55 +272,55 @@
         "input": "Jon Gunnar Stoten",
         "canonical": "Jon-Gunnar Støten",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Jon-Gunnar Støten",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Jon Gunnar Stoten\")."
+        "error": null
       },
       {
         "input": "Michal Babicka",
         "canonical": "Michal Babička",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Michal Babička",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Michal Babicka\")."
+        "error": null
       },
       {
         "input": "Adam Zelik",
         "canonical": "Adam Zelík",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Adam Zelík",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Adam Zelik\")."
+        "error": null
       },
       {
         "input": "Veroslav Cvrcek",
         "canonical": "Věroslav Cvrček",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Věroslav Cvrček",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Veroslav Cvrcek\")."
+        "error": null
       },
       {
         "input": "Piotr Krotoszynski",
         "canonical": "Piotr Krotoszyński",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Piotr Krotoszyński",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Piotr Krotoszynski\")."
+        "error": null
       },
       {
         "input": "Herve Emerio",
         "canonical": "Hervé Emeriau",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Hervé Emeriau",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Herve Emerio\")."
+        "error": null
       },
       {
         "input": "Jose Pawla",
@@ -328,8 +328,8 @@
         "type": "driver",
         "resolved": null,
         "correct": false,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Jose Pawla\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Sergio Ramon",
@@ -337,17 +337,17 @@
         "type": "driver",
         "resolved": null,
         "correct": false,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Sergio Ramon\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Raphael Czwartkovski",
         "canonical": "Raphaël Czwartkowski",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Raphaël Czwartkowski",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Raphael Czwartkovski\")."
+        "error": null
       },
       {
         "input": "Vitor Mathias",
@@ -355,8 +355,8 @@
         "type": "driver",
         "resolved": null,
         "correct": false,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Vitor Mathias\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Steven OConnor",
@@ -364,8 +364,8 @@
         "type": "driver",
         "resolved": null,
         "correct": false,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Steven OConnor\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Dermot OToole",
@@ -389,37 +389,37 @@
         "input": "Nenad Loncarich",
         "canonical": "Nenad Lončarič",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Nenad Lončarič",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Nenad Loncarich\")."
+        "error": null
       },
       {
         "input": "Matej Bogovich",
         "canonical": "Matej Bogović",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Matej Bogović",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Matej Bogovich\")."
+        "error": null
       },
       {
         "input": "Andrej Medich",
         "canonical": "Andrej Medić",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Andrej Medić",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Andrej Medich\")."
+        "error": null
       },
       {
         "input": "John Shanahan Jr",
         "canonical": "John Shanahan jnr.",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "John Shanahan jnr.",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"John Shanahan Jr\")."
+        "error": null
       },
       {
         "input": "Max Frieman",
@@ -434,37 +434,37 @@
         "input": "Jan Erik Mall",
         "canonical": "Jan-Erik Mäll",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Jan-Erik Mäll",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Jan Erik Mall\")."
+        "error": null
       },
       {
         "input": "Katarina Schmidt",
         "canonical": "Catharina Schmidt",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Catharina Schmidt",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Katarina Schmidt\")."
+        "error": null
       },
       {
         "input": "Pawel Molgo",
         "canonical": "Paweł Molgo",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Paweł Molgo",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Pawel Molgo\")."
+        "error": null
       },
       {
         "input": "Shea Breen",
         "canonical": "Shea Breen",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Shea Breen",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Shea Breen\")."
+        "error": null
       },
       {
         "input": "Stoten",
@@ -570,15 +570,15 @@
   "negativeConfusable": {
     "queries": 106,
     "wrongConfident": 0,
-    "clarification": 23,
-    "rejection": 83,
+    "clarification": 30,
+    "rejection": 76,
     "details": [
       {
         "input": "Josh Smith",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Josh Smith\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Sam Williams",
@@ -591,22 +591,22 @@
         "input": "Keith O'Connor",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Keith O'Connor\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Craig McErlean",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Craig McErlean\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Callum Breen",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Callum Breen\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Paul Moffett",
@@ -619,15 +619,15 @@
         "input": "David Cronin",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"David Cronin\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Michael Devine",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Michael Devine\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Mark Freeman",
@@ -640,8 +640,8 @@
         "input": "John Breen",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"John Breen\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Brain",

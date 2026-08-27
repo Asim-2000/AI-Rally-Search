@@ -24,12 +24,12 @@ class MySqlEntitySearchDataSource implements IEntitySearchDataSource {
         SELECT account_id, driver_id AS profile_id, full_name, country,
                'driver' AS person_role
         FROM user_driver_profile
-        WHERE account_id IS NOT NULL AND full_name IS NOT NULL AND TRIM(full_name) <> ''
+        WHERE driver_id IS NOT NULL AND full_name IS NOT NULL AND TRIM(full_name) <> ''
         UNION ALL
         SELECT account_id, codriver_id AS profile_id, full_name, country,
                'co_driver' AS person_role
         FROM user_codriver_profile
-        WHERE account_id IS NOT NULL AND full_name IS NOT NULL AND TRIM(full_name) <> '';
+        WHERE codriver_id IS NOT NULL AND full_name IS NOT NULL AND TRIM(full_name) <> '';
       '''),
       await database.query('''
         SELECT stg.stage_id, stg.stage_name, stg.stage_number, stg.event_id,
@@ -69,7 +69,33 @@ class MySqlEntitySearchDataSource implements IEntitySearchDataSource {
     final people = <String, Map<String, Object?>>{};
     for (final row in batches[1]) {
       final accountId = row['account_id']?.toString() ?? '';
-      if (accountId.isEmpty) continue;
+      final profileId = row['profile_id']?.toString() ?? '';
+      final profileName = row['full_name']?.toString().trim() ?? '';
+      final role = row['person_role']?.toString();
+      if (accountId.isEmpty) {
+        if (profileId.isEmpty || profileName.isEmpty) continue;
+        final isDriver = role == 'driver';
+        entities.add(
+          CanonicalSearchEntity(
+            canonicalId: isDriver
+                ? 'person:driver:$profileId'
+                : 'person:codriver:$profileId',
+            canonicalName: profileName,
+            entityType: SearchEntityType.person,
+            metadata: {
+              'accountId': null,
+              'driverId': isDriver ? profileId : null,
+              'codriverId': isDriver ? null : profileId,
+              'role': isDriver ? 'driver' : 'co_driver',
+              'country': row['country']?.toString(),
+              'canonicalDisplayName': profileName,
+              'searchableNames': [profileName],
+              'identityKind': isDriver ? 'driver' : 'codriver',
+            },
+          ),
+        );
+        continue;
+      }
       final current = people.putIfAbsent(
         accountId,
         () => {
@@ -79,7 +105,6 @@ class MySqlEntitySearchDataSource implements IEntitySearchDataSource {
           'codriverNames': <String>{},
         },
       );
-      final profileName = row['full_name']?.toString().trim() ?? '';
       if (row['person_role'] == 'driver') {
         current['driverId'] = row['profile_id']?.toString();
         if (profileName.isNotEmpty) {
@@ -112,7 +137,7 @@ class MySqlEntitySearchDataSource implements IEntitySearchDataSource {
           : codriverNames.first;
       entities.add(
         CanonicalSearchEntity(
-          canonicalId: entry.key,
+          canonicalId: 'person:account:${entry.key}',
           canonicalName: displayName,
           entityType: SearchEntityType.person,
           metadata: {
@@ -122,6 +147,8 @@ class MySqlEntitySearchDataSource implements IEntitySearchDataSource {
             'role': entry.value['role'],
             'country': entry.value['country'],
             'searchableNames': searchableNames,
+            'canonicalDisplayName': displayName,
+            'identityKind': 'account',
             'canonicalDisplayNamePolicy':
                 'driver_profile_then_codriver_profile_lexical',
           },

@@ -1,4 +1,3 @@
-import 'dart:math';
 import '../../../models/entity_candidate.dart';
 import '../../../models/search_query.dart';
 import '../../../models/speech/speech_transcription_result.dart';
@@ -7,9 +6,8 @@ import 'acoustic/acoustic_candidate_scorer.dart';
 import 'database_entity_resolver.dart';
 import 'entity_lookup_repository.dart';
 import 'entity_resolver.dart';
-import 'phonetic_matching_helper.dart';
+import '../../entity_search/controlled_fallback_entity_resolver.dart';
 import 'pronunciation/algorithmic_pronunciation_encoder.dart';
-import 'pronunciation/entity_pronunciation_metadata.dart';
 import 'pronunciation/phonetic_entity_index.dart';
 import 'pronunciation/pronunciation_encoder.dart';
 
@@ -23,7 +21,7 @@ import 'pronunciation/pronunciation_encoder.dart';
 /// 3. Phonetic fallback operates under a CLARIFICATION-ONLY policy: it surfaces
 ///    "Did you mean?" suggestions to the user, preventing unconfirmed auto-execution.
 class SpokenEntityResolver implements EntityResolver {
-  final DatabaseEntityResolver _baseResolver;
+  final EntityResolver _baseResolver;
   final IEntityLookupRepository _repository;
   final IPronunciationEncoder _pronunciationEncoder;
   final IPhoneticEntityIndex? _phoneticIndex;
@@ -31,22 +29,24 @@ class SpokenEntityResolver implements EntityResolver {
 
   SpokenEntityResolver({
     required IEntityLookupRepository repository,
-    DatabaseEntityResolver? baseResolver,
+    EntityResolver? baseResolver,
     IPronunciationEncoder? pronunciationEncoder,
     IPhoneticEntityIndex? phoneticIndex,
     IAcousticCandidateScorer? acousticScorer,
     double minConfidenceThreshold = 0.75,
     double minScoreGap = 0.15,
-  })  : _repository = repository,
-        _baseResolver = baseResolver ??
-            DatabaseEntityResolver(
-              repository: repository,
-              minConfidenceThreshold: minConfidenceThreshold,
-              minScoreGap: minScoreGap,
-            ),
-        _pronunciationEncoder = pronunciationEncoder ?? AlgorithmicPronunciationEncoder(),
-        _phoneticIndex = phoneticIndex,
-        _acousticScorer = acousticScorer ?? const NoOpAcousticCandidateScorer();
+  }) : _repository = repository,
+       _baseResolver =
+           baseResolver ??
+           DatabaseEntityResolver(
+             repository: repository,
+             minConfidenceThreshold: minConfidenceThreshold,
+             minScoreGap: minScoreGap,
+           ),
+       _pronunciationEncoder =
+           pronunciationEncoder ?? AlgorithmicPronunciationEncoder(),
+       _phoneticIndex = phoneticIndex,
+       _acousticScorer = acousticScorer ?? const NoOpAcousticCandidateScorer();
 
   /// Access to underlying lookup repository.
   IEntityLookupRepository get repository => _repository;
@@ -78,10 +78,18 @@ class SpokenEntityResolver implements EntityResolver {
     SearchContext? context,
   }) async {
     // 1. Primary candidate resolution via standard lexical resolver
-    final primaryResult = await resolve(parsedQuery, context: context);
+    final primaryResult = _baseResolver is ControlledFallbackEntityResolver
+        ? await _baseResolver.resolveControlled(
+            parsedQuery,
+            context: context,
+            voice: true,
+          )
+        : await resolve(parsedQuery, context: context);
 
     // If primary query resolved cleanly (confident match), return primary result immediately
-    if (primaryResult.isSuccess && !primaryResult.requiresClarification && primaryResult.error == null) {
+    if (primaryResult.isSuccess &&
+        !primaryResult.requiresClarification &&
+        primaryResult.error == null) {
       return primaryResult;
     }
 
@@ -125,7 +133,10 @@ class SpokenEntityResolver implements EntityResolver {
 
     for (final driverName in parsedQuery.driverNames) {
       if (driverName.trim().isEmpty) continue;
-      final candidates = await index.searchPersons(driverName.trim(), limit: 10);
+      final candidates = await index.searchPersons(
+        driverName.trim(),
+        limit: 10,
+      );
       if (candidates.isNotEmpty) {
         return _buildPhoneticClarification(
           parsedQuery: parsedQuery,

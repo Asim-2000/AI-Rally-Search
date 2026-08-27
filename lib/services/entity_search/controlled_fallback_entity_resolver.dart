@@ -22,6 +22,41 @@ class EntitySearchFallbackConfig {
   }
 }
 
+/// In-memory, query-text-free operational counters for controlled rollout.
+class EntitySearchFallbackMetrics {
+  int legacyResolved = 0;
+  int legacyClarified = 0;
+  int legacyNoMatch = 0;
+  int entitySearchInvoked = 0;
+  int entitySearchResolved = 0;
+  int entitySearchClarified = 0;
+  int entitySearchNoMatch = 0;
+  int entitySearchRecoveredLegacyFailure = 0;
+  int roleConstraintRejected = 0;
+  int yearConstraintRejected = 0;
+  int duplicateIdentityClarification = 0;
+  int legacyLatencyMicroseconds = 0;
+  int entitySearchLatencyMicroseconds = 0;
+  int totalResolutionLatencyMicroseconds = 0;
+
+  Map<String, Object> toMap() => {
+    'legacyResolved': legacyResolved,
+    'legacyClarified': legacyClarified,
+    'legacyNoMatch': legacyNoMatch,
+    'entitySearchInvoked': entitySearchInvoked,
+    'entitySearchResolved': entitySearchResolved,
+    'entitySearchClarified': entitySearchClarified,
+    'entitySearchNoMatch': entitySearchNoMatch,
+    'entitySearchRecoveredLegacyFailure': entitySearchRecoveredLegacyFailure,
+    'roleConstraintRejected': roleConstraintRejected,
+    'yearConstraintRejected': yearConstraintRejected,
+    'duplicateIdentityClarification': duplicateIdentityClarification,
+    'legacyLatencyMicroseconds': legacyLatencyMicroseconds,
+    'entitySearchLatencyMicroseconds': entitySearchLatencyMicroseconds,
+    'totalResolutionLatencyMicroseconds': totalResolutionLatencyMicroseconds,
+  };
+}
+
 class EntitySearchShadowDiagnostic {
   final String rawMention;
   final EntityType entityType;
@@ -66,13 +101,15 @@ class ControlledFallbackEntityResolver implements EntityResolver {
   final EntityResolver entitySearchResolver;
   final EntitySearchFallbackConfig config;
   final IEntitySearchFallbackTelemetry telemetry;
+  final EntitySearchFallbackMetrics metrics;
 
-  const ControlledFallbackEntityResolver({
+  ControlledFallbackEntityResolver({
     required this.legacyResolver,
     required this.entitySearchResolver,
     this.config = const EntitySearchFallbackConfig(),
     this.telemetry = const NoOpEntitySearchFallbackTelemetry(),
-  });
+    EntitySearchFallbackMetrics? metrics,
+  }) : metrics = metrics ?? EntitySearchFallbackMetrics();
 
   @override
   Future<EntityResolutionResult> resolve(
@@ -85,27 +122,89 @@ class ControlledFallbackEntityResolver implements EntityResolver {
     SearchContext? context,
     bool voice = false,
   }) async {
+    final totalWatch = Stopwatch()..start();
+    final legacyWatch = Stopwatch()..start();
     final legacy = await legacyResolver.resolve(query, context: context);
+    legacyWatch.stop();
+    metrics.legacyLatencyMicroseconds += legacyWatch.elapsedMicroseconds;
+    _incrementOutcome(legacy, legacy: true);
+    final unsafeLegacyPerson = _hasUnbridgedLegacyPerson(query, legacy);
     if (config.mode == EntitySearchFallbackMode.off ||
-        _isClearLegacyWinner(query, legacy)) {
+        (_isClearLegacyWinner(query, legacy) && !unsafeLegacyPerson)) {
+      totalWatch.stop();
+      metrics.totalResolutionLatencyMicroseconds +=
+          totalWatch.elapsedMicroseconds;
       return legacy;
     }
 
+    metrics.entitySearchInvoked++;
     final watch = Stopwatch()..start();
     final recovered = await entitySearchResolver.resolve(
       query,
       context: context,
     );
     watch.stop();
+    metrics.entitySearchLatencyMicroseconds += watch.elapsedMicroseconds;
+    _incrementOutcome(recovered, legacy: false);
     _recordDiagnostics(query, legacy, recovered, watch.elapsed);
 
     if (config.mode == EntitySearchFallbackMode.shadow) {
+      totalWatch.stop();
+      metrics.totalResolutionLatencyMicroseconds +=
+          totalWatch.elapsedMicroseconds;
       return legacy;
     }
-    if (voice && _isRecoveredAutoResolution(recovered)) {
-      return _voiceClarification(query, recovered);
+    if (!_hasUsefulOutcome(legacy) && _hasUsefulOutcome(recovered)) {
+      metrics.entitySearchRecoveredLegacyFailure++;
     }
-    return _hasUsefulOutcome(recovered) ? recovered : legacy;
+    if (_isDuplicateIdentityClarification(recovered)) {
+      metrics.duplicateIdentityClarification++;
+    }
+    EntityResolutionResult result;
+    if (voice && _isRecoveredAutoResolution(recovered)) {
+      result = _voiceClarification(query, recovered);
+    } else {
+      result = _hasUsefulOutcome(recovered) || unsafeLegacyPerson
+          ? recovered
+          : legacy;
+    }
+    totalWatch.stop();
+    metrics.totalResolutionLatencyMicroseconds +=
+        totalWatch.elapsedMicroseconds;
+    return result;
+  }
+
+  void _incrementOutcome(
+    EntityResolutionResult result, {
+    required bool legacy,
+  }) {
+    final outcome = _outcome(result);
+    if (legacy) {
+      if (outcome == 'resolved') metrics.legacyResolved++;
+      if (outcome == 'clarification') metrics.legacyClarified++;
+      if (outcome == 'no_match') metrics.legacyNoMatch++;
+    } else {
+      if (outcome == 'resolved') metrics.entitySearchResolved++;
+      if (outcome == 'clarification') metrics.entitySearchClarified++;
+      if (outcome == 'no_match') metrics.entitySearchNoMatch++;
+    }
+  }
+
+  static bool _isDuplicateIdentityClarification(EntityResolutionResult result) {
+    if (!result.requiresClarification) return false;
+    final people = result.candidates
+        .where((candidate) => candidate.type == EntityType.driver)
+        .toList();
+    for (var i = 0; i < people.length; i++) {
+      for (var j = i + 1; j < people.length; j++) {
+        if (people[i].canonicalName.toLowerCase() ==
+                people[j].canonicalName.toLowerCase() &&
+            _canonicalIdentity(people[i]) != _canonicalIdentity(people[j])) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   static bool _hasUsefulOutcome(EntityResolutionResult result) =>
@@ -128,6 +227,24 @@ class ControlledFallbackEntityResolver implements EntityResolver {
     if (expected == 0) return true;
     return result.resolutions.values.where((r) => r.isResolved).length >=
         expected;
+  }
+
+  /// A NULL-account SQL person row is not globally unique: another driver or
+  /// co-driver profile may have the same name without an account bridge.
+  /// The complete index must validate identity and role before execution.
+  static bool _hasUnbridgedLegacyPerson(
+    SearchQuery query,
+    EntityResolutionResult result,
+  ) {
+    if (query.driverNames.isEmpty) return false;
+    return result.resolutions.values.any((resolution) {
+      if (resolution.type != EntityType.driver || !resolution.isResolved) {
+        return false;
+      }
+      final candidate = resolution.resolvedCandidate;
+      final accountId = candidate?.metadata?['accountId']?.toString();
+      return accountId == null || accountId.isEmpty || accountId == 'null';
+    });
   }
 
   static bool _isRecoveredAutoResolution(EntityResolutionResult result) =>

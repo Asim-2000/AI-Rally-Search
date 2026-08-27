@@ -2,10 +2,10 @@
   "totalQueries": 168,
   "positive": {
     "queries": 62,
-    "correctConfident": 33,
+    "correctConfident": 34,
     "wrongConfident": 0,
-    "clarification": 26,
-    "noMatch": 3,
+    "clarification": 27,
+    "noMatch": 1,
     "details": [
       {
         "input": "aluksnay",
@@ -65,10 +65,10 @@
         "input": "pawel malgo",
         "canonical": "Paweł Molgo",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
+        "resolved": "Paweł Molgo",
+        "correct": true,
         "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"pawel malgo\")."
+        "error": null
       },
       {
         "input": "shea brain",
@@ -326,9 +326,9 @@
         "input": "Jose Pawla",
         "canonical": "José Paula",
         "type": "driver",
-        "resolved": null,
-        "correct": false,
-        "clarification": true,
+        "resolved": "José Paula",
+        "correct": true,
+        "clarification": false,
         "error": null
       },
       {
@@ -373,8 +373,8 @@
         "type": "driver",
         "resolved": null,
         "correct": false,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"Dermot OToole\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "Tanja Zingelmann",
@@ -461,9 +461,9 @@
         "input": "Shea Breen",
         "canonical": "Shea Breen",
         "type": "driver",
-        "resolved": "Shea Breen",
-        "correct": true,
-        "clarification": false,
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
         "error": null
       },
       {
@@ -570,8 +570,8 @@
   "negativeConfusable": {
     "queries": 106,
     "wrongConfident": 0,
-    "clarification": 30,
-    "rejection": 76,
+    "clarification": 65,
+    "rejection": 41,
     "details": [
       {
         "input": "Josh Smith",
@@ -836,8 +836,8 @@
         "input": "FictionalEntity2 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity2 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity3 PseudoName",
@@ -850,8 +850,8 @@
         "input": "FictionalEntity4 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity4 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity5 PseudoName",
@@ -864,8 +864,8 @@
         "input": "FictionalEntity6 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity6 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity7 PseudoName",
@@ -878,8 +878,8 @@
         "input": "FictionalEntity8 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity8 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity9 PseudoName",
@@ -892,8 +892,8 @@
         "input": "FictionalEntity10 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity10 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity11 PseudoName",
@@ -906,8 +906,8 @@
         "input": "FictionalEntity12 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity12 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity13 PseudoName",
@@ -920,8 +920,8 @@
         "input": "FictionalEntity14 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity14 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity15 PseudoName",
@@ -934,8 +934,8 @@
         "input": "FictionalEntity16 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity16 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity17 PseudoName",
@@ -948,8 +948,8 @@
         "input": "FictionalEntity18 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity18 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity19 PseudoName",
@@ -962,8 +962,8 @@
         "input": "FictionalEntity20 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity20 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity21 PseudoName",
@@ -976,8 +976,8 @@
         "input": "FictionalEntity22 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity22 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity23 PseudoName",
@@ -990,8 +990,8 @@
         "input": "FictionalEntity24 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity24 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity25 PseudoName",
@@ -1004,8 +1004,8 @@
         "input": "FictionalEntity26 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity26 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity27 PseudoName",
@@ -1018,8 +1018,8 @@
         "input": "FictionalEntity28 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity28 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity29 PseudoName",
@@ -1032,8 +1032,8 @@
         "input": "FictionalEntity30 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity30 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity31 PseudoName",
@@ -1046,8 +1046,8 @@
         "input": "FictionalEntity32 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity32 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity33 PseudoName",
@@ -1060,8 +1060,8 @@
         "input": "FictionalEntity34 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity34 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity35 PseudoName",
@@ -1074,8 +1074,8 @@
         "input": "FictionalEntity36 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity36 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity37 PseudoName",
@@ -1088,8 +1088,8 @@
         "input": "FictionalEntity38 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity38 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity39 PseudoName",
@@ -1102,8 +1102,8 @@
         "input": "FictionalEntity40 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity40 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity41 PseudoName",
@@ -1116,8 +1116,8 @@
         "input": "FictionalEntity42 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity42 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity43 PseudoName",
@@ -1130,8 +1130,8 @@
         "input": "FictionalEntity44 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity44 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity45 PseudoName",
@@ -1144,8 +1144,8 @@
         "input": "FictionalEntity46 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity46 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity47 PseudoName",
@@ -1158,8 +1158,8 @@
         "input": "FictionalEntity48 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity48 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity49 PseudoName",
@@ -1172,8 +1172,8 @@
         "input": "FictionalEntity50 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity50 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity51 PseudoName",
@@ -1186,8 +1186,8 @@
         "input": "FictionalEntity52 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity52 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity53 PseudoName",
@@ -1200,8 +1200,8 @@
         "input": "FictionalEntity54 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity54 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity55 PseudoName",
@@ -1214,8 +1214,8 @@
         "input": "FictionalEntity56 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity56 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity57 PseudoName",
@@ -1228,8 +1228,8 @@
         "input": "FictionalEntity58 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity58 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity59 PseudoName",
@@ -1242,8 +1242,8 @@
         "input": "FictionalEntity60 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity60 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity61 PseudoName",
@@ -1256,8 +1256,8 @@
         "input": "FictionalEntity62 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity62 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity63 PseudoName",
@@ -1270,8 +1270,8 @@
         "input": "FictionalEntity64 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity64 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity65 PseudoName",
@@ -1284,8 +1284,8 @@
         "input": "FictionalEntity66 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity66 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity67 PseudoName",
@@ -1298,8 +1298,8 @@
         "input": "FictionalEntity68 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity68 PseudoName\")."
+        "clarification": true,
+        "error": null
       },
       {
         "input": "FictionalEntity69 PseudoName",
@@ -1312,10 +1312,73 @@
         "input": "FictionalEntity70 PseudoName",
         "type": "driver",
         "resolved": null,
-        "clarification": false,
-        "error": "We couldn't confidently identify that driver (\"FictionalEntity70 PseudoName\")."
+        "clarification": true,
+        "error": null
       }
     ]
   },
-  "falseConfidentAutoResolution": 0
+  "falseConfidentAutoResolution": 0,
+  "fallbackTelemetry": {
+    "legacyResolved": 37,
+    "legacyClarified": 55,
+    "legacyNoMatch": 81,
+    "entitySearchInvoked": 155,
+    "entitySearchResolved": 16,
+    "entitySearchClarified": 96,
+    "entitySearchNoMatch": 43,
+    "entitySearchRecoveredLegacyFailure": 39,
+    "roleConstraintRejected": 49,
+    "yearConstraintRejected": 0,
+    "duplicateIdentityClarification": 12,
+    "legacyLatencyMicroseconds": 17500547,
+    "entitySearchLatencyMicroseconds": 49958023,
+    "totalResolutionLatencyMicroseconds": 67468335
+  },
+  "nullAccountSafety": [
+    {
+      "case": "same visible name / different IDs",
+      "input": "Shea Breen",
+      "role": "any",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    },
+    {
+      "case": "wrong PersonRole",
+      "input": "Paweł Molgo",
+      "role": "coDriver",
+      "resolvedCanonicalId": null,
+      "clarification": false,
+      "error": "We couldn't confidently identify that driver (\"Paweł Molgo\").",
+      "safe": true
+    },
+    {
+      "case": "common surname collision",
+      "input": "David Young",
+      "role": "any",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    },
+    {
+      "case": "partial person name",
+      "input": "Paweł",
+      "role": "any",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    },
+    {
+      "case": "duplicate person names",
+      "input": "John O'Sullivan",
+      "role": "driver",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    }
+  ]
 }

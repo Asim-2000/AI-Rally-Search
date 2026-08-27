@@ -39,6 +39,7 @@ class InMemoryEntitySearchService implements IEntitySearchService {
   @override
   EntitySearchIndexStats? indexStats;
   EntitySearchQueryStats? lastQueryStats;
+  Future<EntitySearchIndexStats>? _initialLoad;
 
   InMemoryEntitySearchService({required this.dataSource});
 
@@ -98,6 +99,10 @@ class InMemoryEntitySearchService implements IEntitySearchService {
   Future<List<EntitySearchCandidate>> search(
     EntitySearchRequest request,
   ) async {
+    if (indexStats == null) {
+      _initialLoad ??= rebuild();
+      await _initialLoad;
+    }
     final stopwatch = Stopwatch()..start();
     final raw = request.rawMention.trim();
     if (raw.isEmpty || request.limit <= 0) {

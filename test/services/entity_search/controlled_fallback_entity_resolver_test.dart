@@ -1,6 +1,7 @@
 import 'package:ai_rally_search/models/entity_candidate.dart';
 import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
+import 'package:ai_rally_search/models/result_referent_context.dart';
 import 'package:ai_rally_search/services/entity_search/controlled_fallback_entity_resolver.dart';
 import 'package:ai_rally_search/services/llm/entity_resolution/entity_resolver.dart';
 import 'package:ai_rally_search/services/llm/llm_query_parser.dart';
@@ -200,6 +201,19 @@ void main() {
       EntitySearchFallbackConfig.fromValue('fallback').mode,
       EntitySearchFallbackMode.fallback,
     );
+  });
+
+  test('confirmed fallback stores canonical rally referent for follow-up', () {
+    final referents = ResultReferentContext.empty.copyWith(
+      activeRally: _rally.canonicalName,
+      activeRallyId: _rally.id,
+      activeRallies: [_rally.canonicalName],
+      lastSelectedRally: _rally.canonicalName,
+      lastSelectedRallyId: _rally.id,
+    );
+    expect(referents.activeRallyId, 'event-1');
+    expect(referents.activeRally, 'Rally Alūksne 2026');
+    expect(referents.activeRally, isNot('aluksni'));
   });
 }
 

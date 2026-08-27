@@ -30,10 +30,12 @@ void main() {
       );
       await service.rebuild();
       final old = DatabaseEntityLookupRepository(dbService: db);
+      final fallbackMetrics = EntitySearchFallbackMetrics();
       final newResolver = DatabaseEntityResolver(
         repository: EntitySearchLookupAdapter(
           searchService: service,
           cityFallback: old,
+          metrics: fallbackMetrics,
         ),
       );
       final resolver = ControlledFallbackEntityResolver(
@@ -42,6 +44,7 @@ void main() {
         config: const EntitySearchFallbackConfig(
           mode: EntitySearchFallbackMode.fallback,
         ),
+        metrics: fallbackMetrics,
       );
       final positives = _positives;
       final negatives = _negatives;
@@ -108,6 +111,35 @@ void main() {
           'error': result.error,
         });
       }
+      final nullAccountSafety = <Map<String, Object?>>[];
+      for (final item in const <(String, PersonRole, String)>[
+        ('Shea Breen', PersonRole.any, 'same visible name / different IDs'),
+        ('Paweł Molgo', PersonRole.coDriver, 'wrong PersonRole'),
+        ('David Young', PersonRole.any, 'common surname collision'),
+        ('Paweł', PersonRole.any, 'partial person name'),
+        ('John O\'Sullivan', PersonRole.driver, 'duplicate person names'),
+      ]) {
+        final result = await resolver.resolve(
+          SearchQuery(
+            intent: SearchIntent.searchDriverRallies,
+            driverNames: [item.$1],
+            personRole: item.$2,
+          ),
+        );
+        final resolved = result.resolutions.values
+            .where((resolution) => resolution.isResolved)
+            .firstOrNull
+            ?.resolvedCandidate;
+        nullAccountSafety.add({
+          'case': item.$3,
+          'input': item.$1,
+          'role': item.$2.name,
+          'resolvedCanonicalId': resolved?.id,
+          'clarification': result.requiresClarification,
+          'error': result.error,
+          'safe': resolved == null,
+        });
+      }
       final report = {
         'totalQueries': positives.length + negatives.length,
         'positive': {
@@ -127,11 +159,14 @@ void main() {
         },
         'falseConfidentAutoResolution':
             wrongPositiveConfident + negativeWrongConfident,
+        'fallbackTelemetry': fallbackMetrics.toMap(),
+        'nullAccountSafety': nullAccountSafety,
       };
       const path =
           'test/eval/entity_search/audited_resolver_safety_report.json';
       await File(path)
           .writeAsString(const JsonEncoder.withIndent('  ').convert(report));
+      expect(nullAccountSafety.every((entry) => entry['safe'] == true), isTrue);
       print(
         const JsonEncoder.withIndent('  ').convert({
           'totalQueries': report['totalQueries'],

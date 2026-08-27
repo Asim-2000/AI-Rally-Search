@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../models/conversational_search_session.dart';
 import '../models/entity_candidate.dart';
@@ -12,6 +13,13 @@ import '../models/speech/speech_transcription_result.dart';
 import '../services/llm/entity_resolution/database_entity_resolver.dart';
 import '../services/llm/entity_resolution/spoken_entity_resolver.dart';
 import '../services/llm/entity_resolution/entity_lookup_repository.dart';
+import '../services/entity_search/controlled_fallback_entity_resolver.dart';
+import '../services/entity_search/entity_search_lookup_adapter.dart';
+import '../services/entity_search/in_memory_entity_search_service.dart';
+import '../services/entity_search/mysql_entity_search_data_source.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import '../services/llm/follow_up_suggestion_engine.dart';
 import '../services/llm/llm_query_parser.dart';
 import '../services/llm/llm_query_parser_factory.dart';
@@ -101,8 +109,29 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     _repository = widget.repository ?? SearchRepository();
     final parser = widget.llmParser ?? LlmQueryParserFactory.create();
     final lookupRepo = DatabaseEntityLookupRepository();
-    final resolver = SpokenEntityResolver(repository: lookupRepo);
-    _nlSearchService = widget.nlSearchService ??
+    final fallbackMetrics = EntitySearchFallbackMetrics();
+    final controlledResolver = ControlledFallbackEntityResolver(
+      legacyResolver: DatabaseEntityResolver(repository: lookupRepo),
+      entitySearchResolver: DatabaseEntityResolver(
+        repository: EntitySearchLookupAdapter(
+          searchService: InMemoryEntitySearchService(
+            dataSource: MySqlEntitySearchDataSource(),
+          ),
+          cityFallback: lookupRepo,
+          metrics: fallbackMetrics,
+        ),
+      ),
+      config: EntitySearchFallbackConfig.fromValue(
+        dotenv.env['ENTITY_SEARCH_FALLBACK_MODE'],
+      ),
+      metrics: fallbackMetrics,
+    );
+    final resolver = SpokenEntityResolver(
+      repository: lookupRepo,
+      baseResolver: controlledResolver,
+    );
+    _nlSearchService =
+        widget.nlSearchService ??
         NaturalLanguageSearchService(
           parser: parser,
           entityResolver: resolver,
@@ -111,9 +140,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     _speechService = widget.speechService ?? SpeechServiceFactory.create();
 
     if (widget.initialQuery != null) {
-      _session = _session.copyWith(
-        activeQuery: widget.initialQuery!,
-      );
+      _session = _session.copyWith(activeQuery: widget.initialQuery!);
       _executeDeterministicSearch(resetPage: true);
     } else {
       _executeDeterministicSearch(resetPage: true);
@@ -131,7 +158,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   // CONTINUOUS CONVERSATIONAL SEARCH EXECUTION
   // ===========================================================================
 
-  Future<void> _executeNaturalLanguageSearch({SpeechTranscriptionResult? spokenResult}) async {
+  Future<void> _executeNaturalLanguageSearch({
+    SpeechTranscriptionResult? spokenResult,
+  }) async {
     final queryText = (spokenResult?.text ?? _searchController.text).trim();
     if (queryText.isEmpty) return;
 
@@ -158,9 +187,15 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       final NaturalLanguageSearchResult result;
       if (spokenResult != null) {
-        result = await _nlSearchService.searchSpoken(spokenResult, context: searchContext);
+        result = await _nlSearchService.searchSpoken(
+          spokenResult,
+          context: searchContext,
+        );
       } else {
-        result = await _nlSearchService.search(queryText, context: searchContext);
+        result = await _nlSearchService.search(
+          queryText,
+          context: searchContext,
+        );
       }
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
@@ -187,7 +222,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       final parsedQuery = result.query!;
       final l10n = AppLocalizations.of(context);
-      final localizedSummary = _buildLocalizedInterpretedSummary(parsedQuery, l10n);
+      final localizedSummary = _buildLocalizedInterpretedSummary(
+        parsedQuery,
+        l10n,
+      );
 
       // Determine which fields were inherited vs refined in this turn
       final inherited = <String>{};
@@ -195,7 +233,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       if (parsedQuery.rallyNames.isNotEmpty) {
         if (_session.activeQuery.rallyNames.isNotEmpty &&
-            _session.activeQuery.rallyNames.first == parsedQuery.rallyNames.first) {
+            _session.activeQuery.rallyNames.first ==
+                parsedQuery.rallyNames.first) {
           inherited.add('rally');
         } else {
           refinements.add('rally');
@@ -203,7 +242,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       }
       if (parsedQuery.driverNames.isNotEmpty) {
         if (_session.activeQuery.driverNames.isNotEmpty &&
-            _session.activeQuery.driverNames.first == parsedQuery.driverNames.first) {
+            _session.activeQuery.driverNames.first ==
+                parsedQuery.driverNames.first) {
           inherited.add('driver');
         } else {
           refinements.add('driver');
@@ -214,7 +254,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       }
       if (parsedQuery.countries.isNotEmpty) {
         if (_session.activeQuery.countries.isNotEmpty &&
-            _session.activeQuery.countries.first == parsedQuery.countries.first) {
+            _session.activeQuery.countries.first ==
+                parsedQuery.countries.first) {
           inherited.add('country');
         } else {
           refinements.add('country');
@@ -359,7 +400,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           );
           referents = referents.copyWith(
             activeRally: candidate.canonicalName,
+            activeRallyId: candidate.id,
             activeRallies: [candidate.canonicalName],
+            lastSelectedRally: candidate.canonicalName,
+            lastSelectedRallyId: candidate.id,
           );
           break;
         case EntityType.driver:
@@ -385,10 +429,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           break;
       }
 
-      _session = _session.copyWith(
-        activeQuery: updated,
-        referents: referents,
-      );
+      _session = _session.copyWith(activeQuery: updated, referents: referents);
     });
     _executeDeterministicSearch(resetPage: true);
   }
@@ -396,9 +437,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   void _handleSuggestionSelected(FollowUpSuggestion suggestion) {
     if (suggestion.targetQuery != null) {
       setState(() {
-        _session = _session.copyWith(
-          activeQuery: suggestion.targetQuery!,
-        );
+        _session = _session.copyWith(activeQuery: suggestion.targetQuery!);
       });
       _executeDeterministicSearch(resetPage: true);
     } else if (suggestion.queryText != null) {
@@ -420,7 +459,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     );
   }
 
-  String _buildLocalizedInterpretedSummary(SearchQuery query, AppLocalizations? l10n) {
+  String _buildLocalizedInterpretedSummary(
+    SearchQuery query,
+    AppLocalizations? l10n,
+  ) {
     if (l10n == null) {
       return QueryOutputValidator.generateInterpretedSummary(query);
     }
@@ -444,7 +486,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         break;
       case SearchIntent.searchVideoActions:
         if (query.actionTypes.isNotEmpty) {
-          final actionsStr = query.actionTypes.map((a) => _getLocalizedActionName(a, l10n)).join(', ');
+          final actionsStr = query.actionTypes
+              .map((a) => _getLocalizedActionName(a, l10n))
+              .join(', ');
           parts.add('${l10n.intentSearchVideoActions} ($actionsStr)');
         } else {
           parts.add(l10n.intentSearchVideoActions);
@@ -462,12 +506,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     final filters = <String>[];
-    if (query.driverNames.isNotEmpty) filters.add('${l10n.filterDriver}: ${query.driverNames.join(', ')}');
-    if (query.rallyNames.isNotEmpty) filters.add('${l10n.filterRally}: ${query.rallyNames.join(', ')}');
-    if (query.countries.isNotEmpty) filters.add('${l10n.filterCountry}: ${query.countries.join(', ')}');
-    if (query.cities.isNotEmpty) filters.add('${l10n.filterCity}: ${query.cities.join(', ')}');
-    if (query.stageNames.isNotEmpty) filters.add('${l10n.filterStage}: ${query.stageNames.join(', ')}');
-    if (query.years.isNotEmpty) filters.add('${l10n.filterYear}: ${query.years.join(', ')}');
+    if (query.driverNames.isNotEmpty)
+      filters.add('${l10n.filterDriver}: ${query.driverNames.join(', ')}');
+    if (query.rallyNames.isNotEmpty)
+      filters.add('${l10n.filterRally}: ${query.rallyNames.join(', ')}');
+    if (query.countries.isNotEmpty)
+      filters.add('${l10n.filterCountry}: ${query.countries.join(', ')}');
+    if (query.cities.isNotEmpty)
+      filters.add('${l10n.filterCity}: ${query.cities.join(', ')}');
+    if (query.stageNames.isNotEmpty)
+      filters.add('${l10n.filterStage}: ${query.stageNames.join(', ')}');
+    if (query.years.isNotEmpty)
+      filters.add('${l10n.filterYear}: ${query.years.join(', ')}');
 
     if (filters.isEmpty) {
       return parts.join();
@@ -477,23 +527,39 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   String _getLocalizedActionName(String actionType, AppLocalizations l10n) {
     switch (actionType.toLowerCase()) {
-      case 'jump': return l10n.actionJump;
-      case 'drift': return l10n.actionDrift;
-      case 'crash': return l10n.actionCrash;
-      case 'spin': return l10n.actionSpin;
-      case 'donut': return l10n.actionDonut;
-      case 'hairpin': return l10n.actionHairpin;
-      case 'water splash': return l10n.actionWaterSplash;
-      case 'start line': return l10n.actionStartLine;
-      case 'near miss': return l10n.actionNearMiss;
-      case 'mechanical failure': return l10n.actionMechanicalFailure;
-      case 'offroad': return l10n.actionOffroad;
-      case 'stuck': return l10n.actionStuck;
-      default: return actionType;
+      case 'jump':
+        return l10n.actionJump;
+      case 'drift':
+        return l10n.actionDrift;
+      case 'crash':
+        return l10n.actionCrash;
+      case 'spin':
+        return l10n.actionSpin;
+      case 'donut':
+        return l10n.actionDonut;
+      case 'hairpin':
+        return l10n.actionHairpin;
+      case 'water splash':
+        return l10n.actionWaterSplash;
+      case 'start line':
+        return l10n.actionStartLine;
+      case 'near miss':
+        return l10n.actionNearMiss;
+      case 'mechanical failure':
+        return l10n.actionMechanicalFailure;
+      case 'offroad':
+        return l10n.actionOffroad;
+      case 'stuck':
+        return l10n.actionStuck;
+      default:
+        return actionType;
     }
   }
 
-  void _showTelemetryDialog(BuildContext context, NaturalLanguageSearchResult result) {
+  void _showTelemetryDialog(
+    BuildContext context,
+    NaturalLanguageSearchResult result,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final parseResult = result.parseResult;
     final theme = Theme.of(context);
@@ -504,7 +570,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.analytics_outlined, color: theme.colorScheme.primary, size: 24),
+            Icon(
+              Icons.analytics_outlined,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
             const SizedBox(width: 8),
             const Text(
               'AI Query Telemetry & Evaluation',
@@ -531,7 +601,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                     Expanded(
                       child: Text(
                         'Provider: ${parseResult.provider?.name.toUpperCase() ?? 'UNKNOWN'} (${parseResult.model ?? 'default'})',
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -540,80 +613,174 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               const SizedBox(height: 12),
 
               // Pillar 1: Cost
-              const Text('💰 Cost & Token Usage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                '💰 Cost & Token Usage',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Prompt Tokens:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('${parseResult.promptTokens ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(
+                    'Prompt Tokens:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    '${parseResult.promptTokens ?? 0}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Completion Tokens:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('${parseResult.completionTokens ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(
+                    'Completion Tokens:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    '${parseResult.completionTokens ?? 0}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Estimated USD Cost:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text(parseResult.formattedCost, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 12)),
+                  Text(
+                    'Estimated USD Cost:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    parseResult.formattedCost,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
 
               // Pillar 2: Latency
-              const Text('⏱️ Latency Breakdown', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                '⏱️ Latency Breakdown',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('LLM Parse Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('${result.parseLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(
+                    'LLM Parse Time:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    '${result.parseLatencyMs} ms',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Entity Resolution Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('${result.entityResolutionLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(
+                    'Entity Resolution Time:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    '${result.entityResolutionLatencyMs} ms',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Database Execution Time:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('${result.dbLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(
+                    'Database Execution Time:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    '${result.dbLatencyMs} ms',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Total End-to-End Latency:', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('${result.totalLatencyMs} ms', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 12)),
+                  Text(
+                    'Total End-to-End Latency:',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  Text(
+                    '${result.totalLatencyMs} ms',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
 
               // Referents Context
-              const Text('🧠 Result-Derived Referent Context', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                '🧠 Result-Derived Referent Context',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 4),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                  color: isDark
+                      ? const Color(0xFF1E1E1E)
+                      : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Active Rally: ${result.referents.activeRally ?? 'none'}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
-                    Text('Active Driver: ${result.referents.activeDriver ?? 'none'}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
-                    Text('Last Winner: ${result.referents.lastWinner ?? 'none'}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                    Text(
+                      'Active Rally: ${result.referents.activeRally ?? 'none'}',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'Active Driver: ${result.referents.activeDriver ?? 'none'}',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'Last Winner: ${result.referents.lastWinner ?? 'none'}',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -621,18 +788,26 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
               // Structured SearchQuery
               if (result.query != null) ...[
-                const Text('🔍 Structured Query JSON', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text(
+                  '🔍 Structured Query JSON',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
                 const SizedBox(height: 4),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                    color: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     result.query!.toMap().toString(),
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
@@ -654,7 +829,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final totalPages = (_totalCount / _pageSize).ceil();
-    final suggestions = FollowUpSuggestionEngine.generate(_session, response: _searchResponse);
+    final suggestions = FollowUpSuggestionEngine.generate(
+      _session,
+      response: _searchResponse,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -694,7 +872,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 items: SupportedLanguages.all.map((lang) {
                   return DropdownMenuItem<SupportedLanguage>(
                     value: lang,
-                    child: Text('${lang.nativeName} (${lang.languageCode.toUpperCase()})'),
+                    child: Text(
+                      '${lang.nativeName} (${lang.languageCode.toUpperCase()})',
+                    ),
                   );
                 }).toList(),
                 onChanged: (lang) {
@@ -748,12 +928,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    textDirection: _selectedLanguage.isRtl ? TextDirection.rtl : TextDirection.ltr,
-                    textAlign: _selectedLanguage.isRtl ? TextAlign.right : TextAlign.left,
+                    textDirection: _selectedLanguage.isRtl
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    textAlign: _selectedLanguage.isRtl
+                        ? TextAlign.right
+                        : TextAlign.left,
                     decoration: InputDecoration(
                       hintText: 'Search rallies, drivers, jumps, or ask a question...',
                       hintStyle: const TextStyle(fontSize: 13),
-                      prefixIcon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF1E88E5), size: 20),
+                      prefixIcon: const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Color(0xFF1E88E5),
+                        size: 20,
+                      ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear_rounded, size: 18),
@@ -764,16 +952,26 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                             )
                           : null,
                       filled: true,
-                      fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      fillColor: isDark
+                          ? const Color(0xFF2A2A2A)
+                          : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 1.5),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF1E88E5),
+                          width: 1.5,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: isDark ? Colors.blue.withValues(alpha: 0.4) : Colors.blue.withValues(alpha: 0.3),
+                          color: isDark
+                              ? Colors.blue.withValues(alpha: 0.4)
+                              : Colors.blue.withValues(alpha: 0.3),
                         ),
                       ),
                     ),
@@ -800,8 +998,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   icon: const Icon(Icons.search_rounded, size: 18),
                   label: const Text('Search'),
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],
@@ -842,7 +1045,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.auto_awesome_rounded, size: 16, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -858,21 +1065,33 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   if (_lastNlResult != null) ...[
                     const SizedBox(width: 8),
                     InkWell(
-                      onTap: () => _showTelemetryDialog(context, _lastNlResult!),
+                      onTap: () =>
+                          _showTelemetryDialog(context, _lastNlResult!),
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.25,
+                            ),
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.analytics_outlined, size: 13, color: theme.colorScheme.primary),
+                            Icon(
+                              Icons.analytics_outlined,
+                              size: 13,
+                              color: theme.colorScheme.primary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${_lastNlResult!.totalLatencyMs > 0 ? "${_lastNlResult!.totalLatencyMs}ms" : _lastNlResult!.parseResult.formattedLatency} · ${_lastNlResult!.parseResult.formattedCost}',
@@ -914,7 +1133,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                             color: theme.colorScheme.primary,
                           ),
                         ),
-                        TextSpan(text: ' ${_resultTypeLabel(_session.activeQuery.intent)}'),
+                        TextSpan(
+                          text:
+                              ' ${_resultTypeLabel(_session.activeQuery.intent)}',
+                        ),
                       ],
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -936,12 +1158,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           ),
 
           // 6. Dynamic Result View Dispatcher
-          Expanded(
-            child: _buildDynamicResultsView(context),
-          ),
+          Expanded(child: _buildDynamicResultsView(context)),
 
           // 7. Contextual Suggested Follow-ups
-          if (!_isLoading && _searchResponse != null && _searchResponse!.results.isNotEmpty)
+          if (!_isLoading &&
+              _searchResponse != null &&
+              _searchResponse!.results.isNotEmpty)
             SuggestedFollowUpsBar(
               suggestions: suggestions,
               onSuggestionSelected: _handleSuggestionSelected,
@@ -984,7 +1206,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text(_loadingStatus, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            Text(
+              _loadingStatus,
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            ),
           ],
         ),
       );
@@ -997,7 +1222,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red,
+                size: 48,
+              ),
               const SizedBox(height: 12),
               Text(
                 _errorMessage!,
@@ -1023,9 +1252,16 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.withValues(alpha: 0.4)),
+              Icon(
+                Icons.search_off_rounded,
+                size: 64,
+                color: Colors.grey.withValues(alpha: 0.4),
+              ),
               const SizedBox(height: 16),
-              const Text('No search results found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'No search results found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               const Text(
                 'Active search context is preserved. Try removing a filter or searching for another event.',
@@ -1045,7 +1281,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                     onPressed: () {
                       setState(() {
                         _session = _session.copyWith(
-                          activeQuery: const SearchQuery(intent: SearchIntent.searchRallies),
+                          activeQuery: const SearchQuery(
+                            intent: SearchIntent.searchRallies,
+                          ),
                         );
                       });
                       _executeDeterministicSearch(resetPage: true);
@@ -1096,7 +1334,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: parts.length,
-          itemBuilder: (ctx, idx) => DriverParticipationCard(participation: parts[idx]),
+          itemBuilder: (ctx, idx) =>
+              DriverParticipationCard(participation: parts[idx]),
         );
 
       case SearchIntent.getRallyResults:
@@ -1175,9 +1414,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       decoration: BoxDecoration(
         color: theme.cardColor,
         border: Border(
-          top: BorderSide(
-            color: isDark ? Colors.white12 : Colors.black12,
-          ),
+          top: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
         ),
       ),
       child: SafeArea(
@@ -1194,7 +1431,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               icon: const Icon(Icons.chevron_left_rounded, size: 18),
               label: const Text('Prev'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
             ),
@@ -1202,7 +1442,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               child: Text(
                 'Page $_currentPage of $totalPages',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -1216,7 +1459,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               icon: const Icon(Icons.chevron_right_rounded, size: 18),
               label: const Text('Next'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
             ),

@@ -10,10 +10,12 @@ import 'entity_search_service.dart';
 class EntitySearchLookupAdapter implements IEntityLookupRepository {
   final IEntitySearchService searchService;
   final IEntityLookupRepository cityFallback;
+  final EntitySearchFallbackMetrics? metrics;
 
   const EntitySearchLookupAdapter({
     required this.searchService,
     required this.cityFallback,
+    this.metrics,
   });
 
   Future<List<EntityCandidate>> _search(
@@ -34,7 +36,13 @@ class EntitySearchLookupAdapter implements IEntityLookupRepository {
         context: context,
       ),
     );
-    return candidates
+    final eligible = candidates
+        .where((candidate) {
+          if (year == null || type != SearchEntityType.rally) return true;
+          final allowed = candidate.metadata['year'] == year;
+          if (!allowed) metrics?.yearConstraintRejected++;
+          return allowed;
+        })
         .map(
           (c) => EntityCandidate(
             id: c.canonicalId,
@@ -52,6 +60,7 @@ class EntitySearchLookupAdapter implements IEntityLookupRepository {
           ),
         )
         .toList(growable: false);
+    return eligible;
   }
 
   @override
@@ -90,9 +99,11 @@ class EntitySearchLookupAdapter implements IEntityLookupRepository {
       },
     );
     return candidates
-        .where(
-          (candidate) => isPersonRoleEligible(candidate.metadata, personRole),
-        )
+        .where((candidate) {
+          final allowed = isPersonRoleEligible(candidate.metadata, personRole);
+          if (!allowed) metrics?.roleConstraintRejected++;
+          return allowed;
+        })
         .toList(growable: false);
   }
 

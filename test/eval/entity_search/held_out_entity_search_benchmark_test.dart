@@ -39,12 +39,22 @@ void main() {
     final old = DatabaseEntityLookupRepository(dbService: database);
     final generator = DeterministicCorruptionGenerator(heldOutSeed);
     final selected = <CanonicalSearchEntity>[];
+    final fixtureSeedIdByCanonicalId = <String, String>{};
     for (final entry in heldOutEntityIds.entries) {
       for (final id in entry.value) {
         final matches = all
-            .where((e) => e.entityType == entry.key && e.canonicalId == id)
+            .where(
+              (e) =>
+                  e.entityType == entry.key &&
+                  (e.canonicalId == id ||
+                      (entry.key == SearchEntityType.person &&
+                          e.metadata['accountId']?.toString() == id)),
+            )
             .toList();
-        if (matches.isNotEmpty) selected.add(matches.single);
+        if (matches.isNotEmpty) {
+          selected.add(matches.single);
+          fixtureSeedIdByCanonicalId[matches.single.canonicalId] = id;
+        }
       }
     }
     expect(
@@ -64,7 +74,7 @@ void main() {
     for (final target in selected) {
       final corruptions = generator.generate(
         target.canonicalName,
-        target.canonicalId,
+        fixtureSeedIdByCanonicalId[target.canonicalId] ?? target.canonicalId,
         person: target.entityType == SearchEntityType.person,
       );
       for (final corruption in corruptions) {

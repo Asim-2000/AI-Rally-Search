@@ -1,0 +1,821 @@
+{
+  "seed": 20260828,
+  "sample": {
+    "ACCOUNT_BACKED": 20,
+    "NULL_DRIVER": 40,
+    "NULL_CODRIVER": 40
+  },
+  "metrics": {
+    "ACCOUNT_BACKED": {
+      "queries": 219,
+      "recallAt1": 0.8812785388127854,
+      "recallAt5": 1.0,
+      "recallAt10": 1.0,
+      "mrr": 0.9204718417047183
+    },
+    "NULL_DRIVER": {
+      "queries": 446,
+      "recallAt1": 0.9977578475336323,
+      "recallAt5": 1.0,
+      "recallAt10": 1.0,
+      "mrr": 0.9988789237668162
+    },
+    "NULL_CODRIVER": {
+      "queries": 443,
+      "recallAt1": 0.9954853273137697,
+      "recallAt5": 1.0,
+      "recallAt10": 1.0,
+      "mrr": 0.9977426636568849
+    },
+    "ALL_PERSON": {
+      "queries": 1108,
+      "recallAt1": 0.973826714801444,
+      "recallAt5": 1.0,
+      "recallAt10": 1.0,
+      "mrr": 0.9829271961492178
+    }
+  },
+  "pawelMolgo": {
+    "role": "driver",
+    "finalBehavior": "resolved",
+    "resolvedIds": [
+      "0c7cef00-0888-41a6-8a4b-e64b32a75971"
+    ],
+    "candidates": [
+      {
+        "rank": 1,
+        "canonicalId": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "canonicalName": "Paweł Molgo",
+        "role": "driver",
+        "driverId": "0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "codriverId": null,
+        "tokenScore": 0.5,
+        "ngramScore": 0.6861111111111111,
+        "lexicalScore": 0.9266666666666666,
+        "phoneticScore": 0.9180555555555555,
+        "finalScore": 0.8356861111111111
+      },
+      {
+        "rank": 2,
+        "canonicalId": "person:driver:7991d6c3-e5a7-4cb6-b413-70bc0bf47c1a",
+        "canonicalName": "Paweł Hoffman",
+        "role": "driver",
+        "driverId": "7991d6c3-e5a7-4cb6-b413-70bc0bf47c1a",
+        "codriverId": null,
+        "tokenScore": 0.5,
+        "ngramScore": 0.4,
+        "lexicalScore": 0.8558333333333334,
+        "phoneticScore": 0.8526984126984127,
+        "finalScore": 0.7767373015873017
+      },
+      {
+        "rank": 3,
+        "canonicalId": "person:driver:6c30b7ae-ad58-4cf4-8100-a2c0f686800a",
+        "canonicalName": "Paweł Ważny",
+        "role": "driver",
+        "driverId": "6c30b7ae-ad58-4cf4-8100-a2c0f686800a",
+        "codriverId": null,
+        "tokenScore": 0.5,
+        "ngramScore": 0.4027777777777778,
+        "lexicalScore": 0.8400000000000001,
+        "phoneticScore": 0.8222222222222222,
+        "finalScore": 0.7599111111111112
+      },
+      {
+        "rank": 4,
+        "canonicalId": "person:driver:ce7af879-5d40-4d29-a003-144188837d20",
+        "canonicalName": "Paweł Wysocki",
+        "role": "driver",
+        "driverId": "ce7af879-5d40-4d29-a003-144188837d20",
+        "codriverId": null,
+        "tokenScore": 0.5,
+        "ngramScore": 0.36,
+        "lexicalScore": 0.8200000000000001,
+        "phoneticScore": 0.6851851851851851,
+        "finalScore": 0.7159925925925927
+      },
+      {
+        "rank": 5,
+        "canonicalId": "person:driver:95814c9d-ce90-4725-9f56-be78a6a6bdfc",
+        "canonicalName": "Paweł Osicki",
+        "role": "driver",
+        "driverId": "95814c9d-ce90-4725-9f56-be78a6a6bdfc",
+        "codriverId": null,
+        "tokenScore": 0.5,
+        "ngramScore": 0.3801857585139319,
+        "lexicalScore": 0.8290909090909091,
+        "phoneticScore": 0.6296296296296297,
+        "finalScore": 0.7088511784511785
+      }
+    ]
+  },
+  "sheaBreen": {
+    "any": {
+      "role": "any",
+      "finalBehavior": "clarification",
+      "resolvedIds": [],
+      "candidates": [
+        {
+          "rank": 1,
+          "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+          "canonicalName": "Shea Breen",
+          "role": "driver",
+          "driverId": "24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+          "codriverId": null,
+          "tokenScore": 0.5,
+          "ngramScore": 0.5928571428571427,
+          "lexicalScore": 0.9111111111111111,
+          "phoneticScore": 0.9428571428571428,
+          "finalScore": 0.8441269841269841
+        },
+        {
+          "rank": 2,
+          "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+          "canonicalName": "Shea Breen",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+          "tokenScore": 0.5,
+          "ngramScore": 0.5928571428571427,
+          "lexicalScore": 0.9111111111111111,
+          "phoneticScore": 0.9428571428571428,
+          "finalScore": 0.8441269841269841
+        },
+        {
+          "rank": 3,
+          "canonicalId": "person:driver:6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+          "canonicalName": "Shay Byrne",
+          "role": "driver",
+          "driverId": "6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+          "codriverId": null,
+          "tokenScore": 0.0,
+          "ngramScore": 0.05,
+          "lexicalScore": 0.8222222222222222,
+          "phoneticScore": 0.8285714285714285,
+          "finalScore": 0.7028253968253968
+        },
+        {
+          "rank": 4,
+          "canonicalId": "person:codriver:848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+          "canonicalName": "Shea Kelly",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+          "tokenScore": 0.5,
+          "ngramScore": 0.3214285714285714,
+          "lexicalScore": 0.6296296296296297,
+          "phoneticScore": 0.8,
+          "finalScore": 0.6908148148148149
+        },
+        {
+          "rank": 5,
+          "canonicalId": "person:codriver:14ffd959-9498-42e8-9040-1cd7b159a25c",
+          "canonicalName": "Shane Byrne",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "14ffd959-9498-42e8-9040-1cd7b159a25c",
+          "tokenScore": 0.0,
+          "ngramScore": 0.05,
+          "lexicalScore": 0.8226455026455027,
+          "phoneticScore": 0.7663492063492063,
+          "finalScore": 0.6863005291005292
+        }
+      ]
+    },
+    "driver": {
+      "role": "driver",
+      "finalBehavior": "clarification",
+      "resolvedIds": [],
+      "candidates": [
+        {
+          "rank": 1,
+          "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+          "canonicalName": "Shea Breen",
+          "role": "driver",
+          "driverId": "24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+          "codriverId": null,
+          "tokenScore": 0.5,
+          "ngramScore": 0.5928571428571427,
+          "lexicalScore": 0.9111111111111111,
+          "phoneticScore": 0.9428571428571428,
+          "finalScore": 0.8441269841269841
+        },
+        {
+          "rank": 2,
+          "canonicalId": "person:driver:6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+          "canonicalName": "Shay Byrne",
+          "role": "driver",
+          "driverId": "6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+          "codriverId": null,
+          "tokenScore": 0.0,
+          "ngramScore": 0.05,
+          "lexicalScore": 0.8222222222222222,
+          "phoneticScore": 0.8285714285714285,
+          "finalScore": 0.7028253968253968
+        },
+        {
+          "rank": 3,
+          "canonicalId": "person:driver:7f8bef9a-d047-427a-b57c-a7e835623bd5",
+          "canonicalName": "Sean Ryan",
+          "role": "driver",
+          "driverId": "7f8bef9a-d047-427a-b57c-a7e835623bd5",
+          "codriverId": null,
+          "tokenScore": 0.0,
+          "ngramScore": 0.05714285714285714,
+          "lexicalScore": 0.825,
+          "phoneticScore": 0.7428571428571429,
+          "finalScore": 0.6823571428571429
+        },
+        {
+          "rank": 4,
+          "canonicalId": "person:driver:83b372a1-6a42-4bd2-94a6-fb9616843400",
+          "canonicalName": "Seamus Branniff",
+          "role": "driver",
+          "driverId": "83b372a1-6a42-4bd2-94a6-fb9616843400",
+          "codriverId": null,
+          "tokenScore": 0.0,
+          "ngramScore": 0.17744360902255638,
+          "lexicalScore": 0.8005952380952381,
+          "phoneticScore": 0.7506493506493506,
+          "finalScore": 0.6690183982683983
+        },
+        {
+          "rank": 5,
+          "canonicalId": "person:driver:a82852c4-843e-42d4-996f-e5d4c9712e85",
+          "canonicalName": "Sean Corbin",
+          "role": "driver",
+          "driverId": "a82852c4-843e-42d4-996f-e5d4c9712e85",
+          "codriverId": null,
+          "tokenScore": 0.0,
+          "ngramScore": 0.09411764705882353,
+          "lexicalScore": 0.8004761904761906,
+          "phoneticScore": 0.6899470899470899,
+          "finalScore": 0.6549830687830688
+        }
+      ]
+    },
+    "coDriver": {
+      "role": "coDriver",
+      "finalBehavior": "clarification",
+      "resolvedIds": [],
+      "candidates": [
+        {
+          "rank": 1,
+          "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+          "canonicalName": "Shea Breen",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+          "tokenScore": 0.5,
+          "ngramScore": 0.5928571428571427,
+          "lexicalScore": 0.9111111111111111,
+          "phoneticScore": 0.9428571428571428,
+          "finalScore": 0.8441269841269841
+        },
+        {
+          "rank": 2,
+          "canonicalId": "person:codriver:848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+          "canonicalName": "Shea Kelly",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+          "tokenScore": 0.5,
+          "ngramScore": 0.3214285714285714,
+          "lexicalScore": 0.6296296296296297,
+          "phoneticScore": 0.8,
+          "finalScore": 0.6908148148148149
+        },
+        {
+          "rank": 3,
+          "canonicalId": "person:codriver:14ffd959-9498-42e8-9040-1cd7b159a25c",
+          "canonicalName": "Shane Byrne",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "14ffd959-9498-42e8-9040-1cd7b159a25c",
+          "tokenScore": 0.0,
+          "ngramScore": 0.05,
+          "lexicalScore": 0.8226455026455027,
+          "phoneticScore": 0.7663492063492063,
+          "finalScore": 0.6863005291005292
+        },
+        {
+          "rank": 4,
+          "canonicalId": "person:codriver:588fc38d-db6d-4158-ac4b-83779e5d02e2",
+          "canonicalName": "Shane Barry",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "588fc38d-db6d-4158-ac4b-83779e5d02e2",
+          "tokenScore": 0.0,
+          "ngramScore": 0.047058823529411764,
+          "lexicalScore": 0.7845502645502646,
+          "phoneticScore": 0.7841269841269841,
+          "finalScore": 0.6667703703703703
+        },
+        {
+          "rank": 5,
+          "canonicalId": "person:codriver:801b7627-7a1d-45ab-aece-1163e2ee60d7",
+          "canonicalName": "Sean Brady",
+          "role": "co_driver",
+          "driverId": null,
+          "codriverId": "801b7627-7a1d-45ab-aece-1163e2ee60d7",
+          "tokenScore": 0.0,
+          "ngramScore": 0.2357142857142857,
+          "lexicalScore": 0.7999999999999999,
+          "phoneticScore": 0.6904761904761904,
+          "finalScore": 0.6548095238095237
+        }
+      ]
+    }
+  },
+  "sameNameCollisions": {
+    "collisionGroups": 292,
+    "audited": [
+      {
+        "name": "Zubair Fawad",
+        "identities": [
+          {
+            "id": "person:account:7f0c4716-e4da-455b-a221-56e829ae156b",
+            "role": "driver"
+          },
+          {
+            "id": "person:account:84a21256-a5c7-4719-8fe1-146f6b036686",
+            "role": "driver"
+          },
+          {
+            "id": "person:account:77bdf5d7-892f-42cf-bf62-cfbc06d66fe6",
+            "role": "driver"
+          },
+          {
+            "id": "person:account:fb70ef49-e363-406f-b4d4-13e5f8204ccc",
+            "role": "driver"
+          },
+          {
+            "id": "person:account:6144248a-f09e-444f-be16-c7c5cd02e9a0",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:account:93c6e9d6-87fa-4a7f-bb24-948acdc16966",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Darragh Kelly",
+        "identities": [
+          {
+            "id": "person:driver:87d739bc-3e3f-4d35-95f7-839d96af9017",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:d0a95d7f-13b4-4d7c-b690-f58a5b90b3ce",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:da7ab61f-15ff-484c-8792-febfe40c0880",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:5702d276-a76c-46c4-bc34-ef7f5d91ae5f",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:8dd92d9f-8f99-482e-9cc2-7179442f2a08",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:a081477d-e591-4baa-bc16-c89d7611e5d7",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Niall McKenna",
+        "identities": [
+          {
+            "id": "person:driver:0e0a0b48-8327-4464-a731-b5dd83fefaec",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:be93bb02-2f6f-4e9c-9244-37504038c415",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:c0846937-4f34-45c1-95bf-523528ae5988",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Kevin Flanagan",
+        "identities": [
+          {
+            "id": "person:driver:12599026-3702-47e6-ab92-11d1a6fdaeb7",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:a555b65e-ff43-48d8-a12e-c3c09cf9be83",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:b45ff7d4-dbb2-4608-ada2-02e5589fc31b",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Gareth Hughes",
+        "identities": [
+          {
+            "id": "person:driver:338480ac-c528-485d-aa23-da41fb0dfe7b",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:851ad4c0-18f8-4da4-9624-1e8cf70137b7",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:a5e60b75-61de-4702-b568-cd5798422882",
+            "role": "driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Killian O'Reilly",
+        "identities": [
+          {
+            "id": "person:driver:3c093c0e-6f66-4fe0-9449-88afbfcc26ca",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:0f1a36a7-5395-40af-bc25-4b2c0be0bd94",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:20364fea-fa43-49fe-9e65-34a55d4111e1",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Philip Smith",
+        "identities": [
+          {
+            "id": "person:driver:56b3d19a-025b-4b48-bdaa-9542909cd9bd",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:9cc2027e-e55c-49fd-856e-457c793b42c5",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:053bb340-4aad-4458-9526-0f3370675064",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "John O'Sullivan",
+        "identities": [
+          {
+            "id": "person:driver:7bc948b1-fa76-4432-b647-3d4d1358b0a7",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:84e444ea-a3fd-4545-881e-9f83ff7d093c",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:dad62146-306f-4688-92ef-3c5182433ea5",
+            "role": "driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "David Murphy",
+        "identities": [
+          {
+            "id": "person:driver:896a4b18-29d4-4fb4-8a7a-94f2e1a31c99",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:897208b7-89ec-47f7-bf4e-69228fbb506f",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:efda237f-d743-434b-bd3f-9abf05607596",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Tom Murphy",
+        "identities": [
+          {
+            "id": "person:driver:8fe1306f-76d4-4fe4-8f5f-c11f97981b6b",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:1d30592b-1d9a-45cd-881f-e61285b91f9f",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:2b9930eb-55fa-4c8b-933c-dceb651c86cb",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Eoin Kelly",
+        "identities": [
+          {
+            "id": "person:driver:a439e8a0-849a-4053-a792-301233dbdf23",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:cf63d47a-c46b-4c7a-b67a-3687eafc1544",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:6a4d6858-7d2c-4e48-9a0e-ef0d60680361",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "Robert Smith",
+        "identities": [
+          {
+            "id": "person:driver:b5034ae8-a1f4-4c77-8b38-d26631490b50",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:6fc13c32-14c4-4778-9b44-d70bd84e83bc",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:cacd701f-ddfb-4a53-95f9-fc04ca792388",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Daniel Jones",
+        "identities": [
+          {
+            "id": "person:driver:b777749e-efc1-47ac-8d4a-56675ae2997b",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:cc489031-6e3f-4f5d-a3bc-f7884be5409c",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:d54446aa-c668-46cf-ac5e-ef92e1d3c0f6",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "John Roberts",
+        "identities": [
+          {
+            "id": "person:codriver:362f1dbd-a8e5-4455-9f9e-1a03f04073f1",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:68c9b163-e82e-45d4-8aeb-721e393ee31d",
+            "role": "co_driver"
+          },
+          {
+            "id": "person:codriver:d17ec52e-393d-4a91-99b7-5f73f4c8dc30",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Ryan Moore",
+        "identities": [
+          {
+            "id": "person:driver:58158273-5cee-4d36-b9dd-10434cc20672",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:02841557-4b06-4137-82b9-f0896b8cfd0f",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "David Young",
+        "identities": [
+          {
+            "id": "person:driver:00b32573-ba3a-44f8-8f2c-9f5dff3196c3",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:1c819403-d33d-4491-8128-167130e18abd",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "Bryn Jones",
+        "identities": [
+          {
+            "id": "person:driver:101f4970-1320-4b06-9ea1-814d5d2a1485",
+            "role": "driver"
+          },
+          {
+            "id": "person:driver:b50e5527-3a11-492f-a451-ccd44cff73c5",
+            "role": "driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "clarification",
+          "coDriver": "clarification"
+        }
+      },
+      {
+        "name": "Bart Maes",
+        "identities": [
+          {
+            "id": "person:driver:114d49b5-9021-4714-b96a-0cc414e3969c",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:7a946af9-a6cf-43cd-a43a-765148724ca4",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "Mark O'Leary",
+        "identities": [
+          {
+            "id": "person:driver:11773ea0-30f9-4dcb-9c20-d5c85a2b7c60",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:54f4fdf7-0da2-4370-a5d9-adb714d0363a",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "resolved"
+        }
+      },
+      {
+        "name": "Paul Sheard",
+        "identities": [
+          {
+            "id": "person:driver:118b0e24-7a04-4f29-b8e0-f83b30579820",
+            "role": "driver"
+          },
+          {
+            "id": "person:codriver:b156388a-a843-4739-baff-4f6f36168645",
+            "role": "co_driver"
+          }
+        ],
+        "behavior": {
+          "any": "clarification",
+          "driver": "resolved",
+          "coDriver": "resolved"
+        }
+      }
+    ]
+  },
+  "rawDbParity": {
+    "driver": {
+      "canonicalId": "person:driver:00120b7d-a5b8-45d0-a11f-3ce5c4e562b3",
+      "expectedRoleId": "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3",
+      "resolvedQueryIds": [
+        "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+      ],
+      "rawEntryIds": [
+        "d25f9668-5139-4d2a-8b3c-a55f8cc6024d"
+      ],
+      "rawSubEventIds": [
+        "4ac8b871-9e29-488f-b0da-617a802f1413"
+      ],
+      "matchesRawDb": true
+    },
+    "coDriver": {
+      "canonicalId": "person:codriver:0003ce6a-72c1-4856-beec-22866c68c358",
+      "expectedRoleId": "0003ce6a-72c1-4856-beec-22866c68c358",
+      "resolvedQueryIds": [
+        "0003ce6a-72c1-4856-beec-22866c68c358"
+      ],
+      "rawEntryIds": [
+        "00011b47-87fa-4b2f-a0c7-calina921eb9",
+        "9b842d96-a782-495e-91a1-021528d67cc2"
+      ],
+      "rawSubEventIds": [
+        "db3867ef-e331-4016-be0b-b99f475ec9d3",
+        "c87cd452-a101-454c-aafc-aaceef8f2174"
+      ],
+      "matchesRawDb": true
+    }
+  },
+  "performance": {
+    "totalIndexedEntities": 11243,
+    "personEntities": 8750,
+    "buildMicroseconds": 2002908,
+    "representationSizeEstimateBytes": 5403734,
+    "rssDeltaBytes": 55476224,
+    "personQueryMicroseconds": {
+      "count": 1108,
+      "average": 302878.26263537904,
+      "p50": 256217,
+      "p95": 530289,
+      "max": 695724
+    }
+  }
+}

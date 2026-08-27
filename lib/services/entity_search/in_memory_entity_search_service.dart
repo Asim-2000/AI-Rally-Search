@@ -4,6 +4,7 @@ import '../llm/entity_resolution/phonetic_matching_helper.dart';
 import '../llm/entity_resolution/pronunciation/algorithmic_pronunciation_encoder.dart';
 import 'entity_search_models.dart';
 import 'entity_search_service.dart';
+import 'entity_candidate_generator.dart';
 
 class _IndexedName {
   final String name;
@@ -35,17 +36,26 @@ class _IndexedEntity {
 
 class InMemoryEntitySearchService implements IEntitySearchService {
   final IEntitySearchDataSource dataSource;
-  List<_IndexedEntity> _index = const [];
+  final IEntityCandidateGenerator candidateGenerator;
+  Map<String, _IndexedEntity> _indexById = const {};
   @override
   EntitySearchIndexStats? indexStats;
   EntitySearchQueryStats? lastQueryStats;
   Future<EntitySearchIndexStats>? _initialLoad;
 
-  InMemoryEntitySearchService({required this.dataSource});
+  InMemoryEntitySearchService({
+    required this.dataSource,
+    IEntityCandidateGenerator? candidateGenerator,
+  }) : candidateGenerator =
+           candidateGenerator ?? InvertedIndexCandidateGenerator();
 
   /// Useful for deterministic unit tests and offline benchmarks.
-  InMemoryEntitySearchService.fromEntities(List<CanonicalSearchEntity> entities)
-    : dataSource = _StaticDataSource(entities) {
+  InMemoryEntitySearchService.fromEntities(
+    List<CanonicalSearchEntity> entities, {
+    IEntityCandidateGenerator? candidateGenerator,
+  }) : dataSource = _StaticDataSource(entities),
+       candidateGenerator =
+           candidateGenerator ?? InvertedIndexCandidateGenerator() {
     _replaceIndex(entities, Duration.zero);
   }
 
@@ -67,8 +77,9 @@ class InMemoryEntitySearchService implements IEntitySearchService {
         )
         .map(_IndexedEntity.new)
         .toList(growable: false);
-    _index = next;
-    final bytes = next.fold<int>(
+    _indexById = {for (final entity in next) entity.source.canonicalId: entity};
+    candidateGenerator.build(next.map((entity) => entity.source).toList());
+    final canonicalBytes = next.fold<int>(
       0,
       (sum, e) =>
           sum +
@@ -91,7 +102,9 @@ class InMemoryEntitySearchService implements IEntitySearchService {
     return indexStats = EntitySearchIndexStats(
       entityCount: next.length,
       buildTime: elapsed,
-      estimatedBytes: bytes,
+      estimatedBytes: canonicalBytes + candidateGenerator.estimatedBytes,
+      canonicalEstimatedBytes: canonicalBytes,
+      postingListEstimatedBytes: candidateGenerator.estimatedBytes,
     );
   }
 
@@ -116,6 +129,8 @@ class InMemoryEntitySearchService implements IEntitySearchService {
       );
       return const [];
     }
+    final generated = candidateGenerator.generate(request);
+    final scoringWatch = Stopwatch()..start();
     final normalized = _searchText(raw);
     final collapsed = normalized.replaceAll(' ', '');
     final tokens = normalized.split(' ').where((e) => e.isNotEmpty).toSet();
@@ -125,8 +140,10 @@ class InMemoryEntitySearchService implements IEntitySearchService {
     final results = <EntitySearchCandidate>[];
     var evaluated = 0;
 
-    for (final entity in _index) {
-      if (entity.source.entityType != request.entityType ||
+    for (final id in generated.canonicalIds) {
+      final entity = _indexById[id];
+      if (entity == null ||
+          entity.source.entityType != request.entityType ||
           !_roleAllowed(entity, request.personRole)) {
         continue;
       }
@@ -184,6 +201,7 @@ class InMemoryEntitySearchService implements IEntitySearchService {
     });
     final surviving = results.length;
     final returned = results.take(request.limit).toList(growable: false);
+    scoringWatch.stop();
     stopwatch.stop();
     lastQueryStats = EntitySearchQueryStats(
       entityType: request.entityType,
@@ -191,6 +209,11 @@ class InMemoryEntitySearchService implements IEntitySearchService {
       survivingCandidates: surviving,
       returnedCandidates: returned.length,
       latency: stopwatch.elapsed,
+      candidateGenerationLatency: generated.latency,
+      scoringLatency: scoringWatch.elapsed,
+      fullUniverseSize: generated.fullUniverseSize,
+      generatedCandidatePool: generated.canonicalIds.length,
+      usedFullScanEscape: generated.usedFullScanEscape,
     );
     return returned;
   }

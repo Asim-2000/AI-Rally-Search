@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ai_rally_search/services/database_service.dart';
-import 'package:ai_rally_search/models/entity_candidate.dart';
 import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/services/entity_search/controlled_fallback_entity_resolver.dart';
@@ -57,9 +56,23 @@ void main() {
     ];
     final results = <Map<String, Object?>>[];
     for (final item in cases) {
-      final candidates = await service.search(
-        EntitySearchRequest(rawMention: item.$1, entityType: item.$2, limit: 5),
+      final request = EntitySearchRequest(
+        rawMention: item.$1,
+        entityType: item.$2,
+        limit: 5,
       );
+      final generated = service.candidateGenerator.generate(request);
+      final candidates = await service.search(request);
+      final generationStats = service.lastQueryStats!;
+      final targetIds = allEntities
+          .where(
+            (entity) =>
+                entity.entityType == item.$2 &&
+                PhoneticMatchingHelper.normalize(entity.canonicalName)
+                    .contains(item.$3),
+          )
+          .map((entity) => entity.canonicalId)
+          .toSet();
       final query = _query(item.$1, item.$2);
       final legacy = await legacyResolver.resolve(query);
       final finalResult = await integrated.resolveControlled(
@@ -81,6 +94,12 @@ void main() {
         'type': item.$2.name,
         'legacyOutcome': _outcome(legacy),
         'newCandidateRank': targetRank < 0 ? null : targetRank + 1,
+        'candidatePoolSize': generationStats.generatedCandidatePool,
+        'fullUniverseSize': generationStats.fullUniverseSize,
+        'fullScanEscape': generationStats.usedFullScanEscape,
+        'canonicalTargetPresentInGeneratedPool': generated.canonicalIds.any(
+          targetIds.contains,
+        ),
         'finalResolverOutcome': _outcome(finalResult),
         'resolvedCanonicalName': resolved,
         'userVisibleBehavior': finalResult.requiresClarification

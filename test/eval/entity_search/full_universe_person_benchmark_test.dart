@@ -10,6 +10,7 @@ import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/services/database_service.dart';
 import 'package:ai_rally_search/services/entity_search/entity_search_lookup_adapter.dart';
+import 'package:ai_rally_search/services/entity_search/entity_candidate_generator.dart';
 import 'package:ai_rally_search/services/entity_search/entity_search_models.dart';
 import 'package:ai_rally_search/services/entity_search/in_memory_entity_search_service.dart';
 import 'package:ai_rally_search/services/entity_search/mysql_entity_search_data_source.dart';
@@ -39,6 +40,10 @@ void main() {
     final entities = await MySqlEntitySearchDataSource(database: db)
         .loadEntities();
     final service = InMemoryEntitySearchService.fromEntities(entities);
+    final fullScanService = InMemoryEntitySearchService.fromEntities(
+      entities,
+      candidateGenerator: FullScanCandidateGenerator(),
+    );
     buildWatch.stop();
     final rssAfter = ProcessInfo.currentRss;
     final people = entities
@@ -88,7 +93,22 @@ void main() {
     final metrics = <String, _Metrics>{
       for (final key in [...groups.keys, 'ALL_PERSON']) key: _Metrics(),
     };
+    final fullScanMetrics = <String, _Metrics>{
+      for (final key in [...groups.keys, 'ALL_PERSON']) key: _Metrics(),
+    };
     final latencies = <int>[];
+    final generationLatencies = <int>[];
+    final scoringLatencies = <int>[];
+    final generatedPools = <int>[];
+    final candidateRecall = <String, int>{
+      'pool': 0,
+      'top25': 0,
+      'top50': 0,
+      'top100': 0,
+      'top200': 0,
+    };
+    var fullScanEscapes = 0;
+    final differences = <Map<String, Object?>>[];
     for (final entry in selected.entries) {
       for (final target in entry.value) {
         for (final corruption in generator.generate(
@@ -96,27 +116,67 @@ void main() {
           target.canonicalId,
           person: true,
         )) {
-          final watch = Stopwatch()..start();
-          final candidates = await service.search(
-            EntitySearchRequest(
-              rawMention: corruption.value,
-              entityType: SearchEntityType.person,
-              personRole: switch (entry.key) {
-                'NULL_DRIVER' => PersonRole.driver,
-                'NULL_CODRIVER' => PersonRole.coDriver,
-                _ => PersonRole.any,
-              },
-              limit: 10,
-            ),
+          final request = EntitySearchRequest(
+            rawMention: corruption.value,
+            entityType: SearchEntityType.person,
+            personRole: switch (entry.key) {
+              'NULL_DRIVER' => PersonRole.driver,
+              'NULL_CODRIVER' => PersonRole.coDriver,
+              _ => PersonRole.any,
+            },
+            limit: 10,
           );
-          watch.stop();
-          latencies.add(watch.elapsedMicroseconds);
+          final generated = service.candidateGenerator.generate(request);
+          final candidates = await service.search(request);
+          final fullCandidates = await fullScanService.search(request);
+          final stats = service.lastQueryStats!;
+          latencies.add(stats.latency.inMicroseconds);
+          generationLatencies.add(
+            stats.candidateGenerationLatency.inMicroseconds,
+          );
+          scoringLatencies.add(stats.scoringLatency.inMicroseconds);
+          generatedPools.add(stats.generatedCandidatePool);
+          if (stats.usedFullScanEscape) fullScanEscapes++;
+          final generatedRank = generated.preRankedCanonicalIds.indexOf(
+            target.canonicalId,
+          );
+          if (generatedRank >= 0) {
+            candidateRecall['pool'] = candidateRecall['pool']! + 1;
+            if (generatedRank < 25) {
+              candidateRecall['top25'] = candidateRecall['top25']! + 1;
+            }
+            if (generatedRank < 50) {
+              candidateRecall['top50'] = candidateRecall['top50']! + 1;
+            }
+            if (generatedRank < 100) {
+              candidateRecall['top100'] = candidateRecall['top100']! + 1;
+            }
+            if (generatedRank < 200) {
+              candidateRecall['top200'] = candidateRecall['top200']! + 1;
+            }
+          }
           final index = candidates.indexWhere(
             (candidate) => candidate.canonicalId == target.canonicalId,
           );
           final rank = index < 0 ? null : index + 1;
+          final fullIndex = fullCandidates.indexWhere(
+            (candidate) => candidate.canonicalId == target.canonicalId,
+          );
+          final fullRank = fullIndex < 0 ? null : fullIndex + 1;
           metrics[entry.key]!.add(rank);
           metrics['ALL_PERSON']!.add(rank);
+          fullScanMetrics[entry.key]!.add(fullRank);
+          fullScanMetrics['ALL_PERSON']!.add(fullRank);
+          final indexedIds = candidates.map((c) => c.canonicalId).join('|');
+          final fullIds = fullCandidates.map((c) => c.canonicalId).join('|');
+          if (indexedIds != fullIds) {
+            differences.add({
+              'targetId': target.canonicalId,
+              'input': corruption.value,
+              'indexedRank': rank,
+              'fullScanRank': fullRank,
+            });
+          }
         }
       }
     }
@@ -140,6 +200,10 @@ void main() {
     final collisions = await _collisionAudit(people, resolver);
     final parity = await _rawParity(db, resolver, people);
     latencies.sort();
+    generationLatencies.sort();
+    scoringLatencies.sort();
+    generatedPools.sort();
+    final queryCount = metrics['ALL_PERSON']!.count;
     final report = {
       'seed': _seed,
       'sample': {
@@ -147,6 +211,20 @@ void main() {
       },
       'metrics': {
         for (final entry in metrics.entries) entry.key: entry.value.toMap(),
+      },
+      'fullScanMetrics': {
+        for (final entry in fullScanMetrics.entries)
+          entry.key: entry.value.toMap(),
+      },
+      'candidateGeneration': {
+        'pool': _distribution(generatedPools),
+        'candidateRecall': {
+          for (final entry in candidateRecall.entries)
+            entry.key: entry.value / queryCount,
+        },
+        'fullScanEscapeInvocations': fullScanEscapes,
+        'indexedVsFullScanDifferenceCount': differences.length,
+        'differences': differences,
       },
       'pawelMolgo': pawel,
       'sheaBreen': shea,
@@ -157,8 +235,13 @@ void main() {
         'personEntities': people.length,
         'buildMicroseconds': buildWatch.elapsedMicroseconds,
         'representationSizeEstimateBytes': service.indexStats?.estimatedBytes,
+        'canonicalRepresentationBytes':
+            service.indexStats?.canonicalEstimatedBytes,
+        'postingListBytes': service.indexStats?.postingListEstimatedBytes,
         'rssDeltaBytes': rssAfter - rssBefore,
         'personQueryMicroseconds': _distribution(latencies),
+        'candidateGenerationMicroseconds': _distribution(generationLatencies),
+        'scoringMicroseconds': _distribution(scoringLatencies),
       },
     };
     const path =

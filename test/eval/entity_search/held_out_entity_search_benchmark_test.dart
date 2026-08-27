@@ -11,6 +11,7 @@ import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/services/database_service.dart';
 import 'package:ai_rally_search/services/entity_search/entity_search_lookup_adapter.dart';
+import 'package:ai_rally_search/services/entity_search/entity_candidate_generator.dart';
 import 'package:ai_rally_search/services/entity_search/entity_search_models.dart';
 import 'package:ai_rally_search/services/entity_search/in_memory_entity_search_service.dart';
 import 'package:ai_rally_search/services/entity_search/mysql_entity_search_data_source.dart';
@@ -30,8 +31,14 @@ void main() {
     final database = DatabaseService();
     final source = MySqlEntitySearchDataSource(database: database);
     final rssBefore = ProcessInfo.currentRss;
+    final databaseLoadWatch = Stopwatch()..start();
     final all = await source.loadEntities();
+    databaseLoadWatch.stop();
     final service = InMemoryEntitySearchService.fromEntities(all);
+    final fullScanService = InMemoryEntitySearchService.fromEntities(
+      all,
+      candidateGenerator: FullScanCandidateGenerator(),
+    );
     final buildWatch = Stopwatch()..start();
     await service.rebuild();
     buildWatch.stop();
@@ -70,6 +77,13 @@ void main() {
     final evaluated = <int>[];
     final returned = <int>[];
     final latencyByType = <String, List<int>>{};
+    final generationLatencyByType = <String, List<int>>{};
+    final scoringLatencyByType = <String, List<int>>{};
+    final generatedPoolsByType = <String, List<int>>{};
+    final fullScanEscapesByType = <String, int>{};
+    final candidateRecallByType = <String, _CandidateRecall>{};
+    final overallCandidateRecall = _CandidateRecall();
+    final indexedVsFullScanDifferences = <Map<String, Object?>>[];
 
     for (final target in selected) {
       final corruptions = generator.generate(
@@ -83,13 +97,21 @@ void main() {
           (v) => v + 1,
           ifAbsent: () => 1,
         );
-        final newCandidates = await service.search(
-          EntitySearchRequest(
-            rawMention: corruption.value,
-            entityType: target.entityType,
-            limit: 10,
-          ),
+        final request = EntitySearchRequest(
+          rawMention: corruption.value,
+          entityType: target.entityType,
+          limit: 10,
         );
+        final generated = service.candidateGenerator.generate(request);
+        final generatedRank = generated.preRankedCanonicalIds.indexOf(
+          target.canonicalId,
+        );
+        overallCandidateRecall.add(generatedRank);
+        candidateRecallByType
+            .putIfAbsent(target.entityType.name, _CandidateRecall.new)
+            .add(generatedRank);
+        final newCandidates = await service.search(request);
+        final fullScanCandidates = await fullScanService.search(request);
         final stats = service.lastQueryStats!;
         pools.add(stats.survivingCandidates);
         evaluated.add(stats.rawCandidatesEvaluated);
@@ -97,14 +119,35 @@ void main() {
         latencyByType
             .putIfAbsent(target.entityType.name, () => [])
             .add(stats.latency.inMicroseconds);
+        generationLatencyByType
+            .putIfAbsent(target.entityType.name, () => [])
+            .add(stats.candidateGenerationLatency.inMicroseconds);
+        scoringLatencyByType
+            .putIfAbsent(target.entityType.name, () => [])
+            .add(stats.scoringLatency.inMicroseconds);
+        generatedPoolsByType
+            .putIfAbsent(target.entityType.name, () => [])
+            .add(stats.generatedCandidatePool);
+        if (stats.usedFullScanEscape) {
+          fullScanEscapesByType.update(
+            target.entityType.name,
+            (value) => value + 1,
+            ifAbsent: () => 1,
+          );
+        }
         final oldCandidates = await _oldSearch(
           old,
           target.entityType,
           corruption.value,
         );
         final newRank = _newRank(newCandidates, target.canonicalId);
+        final fullScanRank = _newRank(fullScanCandidates, target.canonicalId);
         final oldRank = _oldRank(oldCandidates, target);
-        for (final pair in [('NEW', newRank), ('OLD', oldRank)]) {
+        for (final pair in [
+          ('NEW', newRank),
+          ('FULL_SCAN', fullScanRank),
+          ('OLD', oldRank),
+        ]) {
           _record(metrics, pair.$1, 'overall', pair.$2);
           _record(metrics, pair.$1, 'type:${target.entityType.name}', pair.$2);
           _record(
@@ -113,6 +156,19 @@ void main() {
             'difficulty:${corruption.difficulty.name}',
             pair.$2,
           );
+        }
+        final indexedIds = newCandidates.map((c) => c.canonicalId).toList();
+        final fullIds = fullScanCandidates.map((c) => c.canonicalId).toList();
+        if (indexedIds.join('|') != fullIds.join('|')) {
+          indexedVsFullScanDifferences.add({
+            'targetId': target.canonicalId,
+            'input': corruption.value,
+            'type': target.entityType.name,
+            'indexedRank': newRank,
+            'fullScanRank': fullScanRank,
+            'indexedTop10': indexedIds,
+            'fullScanTop10': fullIds,
+          });
         }
         if (target.entityType == SearchEntityType.person) {
           final found = newCandidates
@@ -202,8 +258,35 @@ void main() {
           'maxRawEvaluated': evaluated.last,
         },
       ),
+      'candidateGeneration': {
+        'fullScanEscapeInvocations': fullScanEscapesByType,
+        'candidateRecall': {
+          'overall': overallCandidateRecall.toJson(),
+          'byType': {
+            for (final entry in candidateRecallByType.entries)
+              entry.key: entry.value.toJson(),
+          },
+        },
+        'indexedVsFullScanDifferenceCount': indexedVsFullScanDifferences.length,
+        'differences': indexedVsFullScanDifferences,
+        'byType': {
+          for (final type in generatedPoolsByType.keys)
+            type: {
+              'pool': _distribution(generatedPoolsByType[type]!..sort()),
+              'generationLatencyMicroseconds': _distribution(
+                generationLatencyByType[type]!..sort(),
+              ),
+              'scoringLatencyMicroseconds': _distribution(
+                scoringLatencyByType[type]!..sort(),
+              ),
+            },
+        },
+      },
       'memory': {
         'representationSizeEstimateBytes': service.indexStats?.estimatedBytes,
+        'canonicalRepresentationBytes':
+            service.indexStats?.canonicalEstimatedBytes,
+        'postingListBytes': service.indexStats?.postingListEstimatedBytes,
         'processRssBeforeBytes': rssBefore,
         'processRssAfterBytes': rssAfter,
         'processRssDeltaBytes': rssAfter - rssBefore,
@@ -211,6 +294,7 @@ void main() {
       },
       'performance': {
         'entityCount': service.indexStats?.entityCount,
+        'databaseLoadMicroseconds': databaseLoadWatch.elapsedMicroseconds,
         'measuredRebuildMicroseconds': buildWatch.elapsedMicroseconds,
         'queryLatencyByTypeMicroseconds': {
           for (final e in latencyByType.entries)
@@ -295,6 +379,34 @@ class _Metrics {
   };
 }
 
+class _CandidateRecall {
+  int total = 0;
+  int pool = 0;
+  int top25 = 0;
+  int top50 = 0;
+  int top100 = 0;
+  int top200 = 0;
+
+  void add(int zeroBasedRank) {
+    total++;
+    if (zeroBasedRank < 0) return;
+    pool++;
+    if (zeroBasedRank < 25) top25++;
+    if (zeroBasedRank < 50) top50++;
+    if (zeroBasedRank < 100) top100++;
+    if (zeroBasedRank < 200) top200++;
+  }
+
+  Map<String, Object> toJson() => {
+    'cases': total,
+    'pool': pool / total,
+    'top25': top25 / total,
+    'top50': top50 / total,
+    'top100': top100 / total,
+    'top200': top200 / total,
+  };
+}
+
 Map<String, Object> _distribution(
   List<int> sorted, {
   Map<String, Object> extras = const {},
@@ -322,8 +434,9 @@ Future<List<Map<String, Object?>>> _personNameAudit(
     SELECT account_id, 'co_driver' AS role, codriver_id AS profile_id, full_name FROM user_codriver_profile WHERE account_id IN ($quoted);
   ''');
   final grouped = <String, List<Map<String, dynamic>>>{};
-  for (final row in rows)
+  for (final row in rows) {
     grouped.putIfAbsent(row['account_id'].toString(), () => []).add(row);
+  }
   return grouped.entries.map((e) {
     final names = e.value
         .map((r) => r['full_name']?.toString())

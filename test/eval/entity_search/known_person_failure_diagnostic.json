@@ -3,79 +3,99 @@
     "input": "pawel malgo",
     "expectedCanonicalName": "Paweł Molgo",
     "queryNormalized": "pawel malgo",
-    "entityExists": false,
-    "matchingAccounts": [],
-    "rank": null,
-    "score": null,
-    "signals": null,
+    "entityExists": true,
+    "matchingAccounts": [
+      {
+        "canonicalId": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "canonicalDisplayName": "Paweł Molgo",
+        "canonicalNormalized": "pawel molgo",
+        "searchableNames": [
+          "Paweł Molgo"
+        ],
+        "normalizedSearchableNames": [
+          "pawel molgo"
+        ]
+      }
+    ],
+    "rank": 1,
+    "score": 0.8356861111111111,
+    "signals": {
+      "exact": 0.0,
+      "normalizedExact": 0.0,
+      "token": 0.5,
+      "ngram": 0.6861111111111111,
+      "lexical": 0.9266666666666666,
+      "phonetic": 0.9180555555555555,
+      "context": 0.0
+    },
     "strongestCompetitors": [
       {
-        "canonicalId": "f71bb120-b213-487c-abe0-e11d0e508ad5",
-        "canonicalName": "Niall Mcgonigle",
-        "score": 0.5096227106227106,
+        "canonicalId": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "canonicalName": "Paweł Molgo",
+        "score": 0.8356861111111111,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.11428571428571428,
-          "lexical": 0.6206349206349207,
-          "phonetic": 0.5427350427350427,
+          "token": 0.5,
+          "ngram": 0.6861111111111111,
+          "lexical": 0.9266666666666666,
+          "phonetic": 0.9180555555555555,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "7fbc61fb-cd17-489a-8bb4-7363384ab0ec",
-        "canonicalName": "Dave Marka",
-        "score": 0.508962962962963,
+        "canonicalId": "person:codriver:516fcdf0-b284-4622-a85e-980b690a5312",
+        "canonicalName": "Paweł Omlet",
+        "score": 0.7964833333333334,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.047058823529411764,
-          "lexical": 0.6148148148148148,
-          "phonetic": 0.5555555555555555,
+          "token": 0.5,
+          "ngram": 0.4027777777777778,
+          "lexical": 0.8825000000000001,
+          "phonetic": 0.8666666666666666,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "9073d92b-85af-4e86-b4b8-34975999f1a9",
-        "canonicalName": "O'Regan Aaron",
-        "score": 0.4995269360269361,
+        "canonicalId": "person:driver:7991d6c3-e5a7-4cb6-b413-70bc0bf47c1a",
+        "canonicalName": "Paweł Hoffman",
+        "score": 0.7767373015873017,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.0,
-          "lexical": 0.5045454545454545,
-          "phonetic": 0.6185185185185186,
+          "token": 0.5,
+          "ngram": 0.4,
+          "lexical": 0.8558333333333334,
+          "phonetic": 0.8526984126984127,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "5fee9200-6c74-478a-91d0-a0bdabc28f90",
-        "canonicalName": "Ronald Haug",
-        "score": 0.49424074074074076,
+        "canonicalId": "person:driver:6c30b7ae-ad58-4cf4-8100-a2c0f686800a",
+        "canonicalName": "Paweł Ważny",
+        "score": 0.7599111111111112,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.044444444444444446,
-          "lexical": 0.6,
-          "phonetic": 0.5314814814814816,
+          "token": 0.5,
+          "ngram": 0.4027777777777778,
+          "lexical": 0.8400000000000001,
+          "phonetic": 0.8222222222222222,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "5ea11dc3-c407-441b-b1ab-409c7baeb505",
-        "canonicalName": "Paul Barrett",
-        "score": 0.49226262626262624,
+        "canonicalId": "person:driver:ce7af879-5d40-4d29-a003-144188837d20",
+        "canonicalName": "Paweł Wysocki",
+        "score": 0.7159925925925927,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.042105263157894736,
-          "lexical": 0.5878787878787879,
-          "phonetic": 0.5555555555555555,
+          "token": 0.5,
+          "ngram": 0.36,
+          "lexical": 0.8200000000000001,
+          "phonetic": 0.6851851851851851,
           "context": 0.0
         }
       }
@@ -85,79 +105,110 @@
     "input": "shea brain",
     "expectedCanonicalName": "Shea Breen",
     "queryNormalized": "shea brain",
-    "entityExists": false,
-    "matchingAccounts": [],
-    "rank": null,
-    "score": null,
-    "signals": null,
+    "entityExists": true,
+    "matchingAccounts": [
+      {
+        "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+        "canonicalDisplayName": "Shea Breen",
+        "canonicalNormalized": "shea breen",
+        "searchableNames": [
+          "Shea Breen"
+        ],
+        "normalizedSearchableNames": [
+          "shea breen"
+        ]
+      },
+      {
+        "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+        "canonicalDisplayName": "Shea Breen",
+        "canonicalNormalized": "shea breen",
+        "searchableNames": [
+          "Shea Breen"
+        ],
+        "normalizedSearchableNames": [
+          "shea breen"
+        ]
+      }
+    ],
+    "rank": 1,
+    "score": 0.8441269841269841,
+    "signals": {
+      "exact": 0.0,
+      "normalizedExact": 0.0,
+      "token": 0.5,
+      "ngram": 0.5928571428571427,
+      "lexical": 0.9111111111111111,
+      "phonetic": 0.9428571428571428,
+      "context": 0.0
+    },
     "strongestCompetitors": [
       {
-        "canonicalId": "36ab72b7-60d3-4e6b-97e4-ae9cb4a054b2",
-        "canonicalName": "James Harrison",
-        "score": 0.5727562067562068,
+        "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+        "canonicalName": "Shea Breen",
+        "score": 0.8441269841269841,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.04000000000000001,
-          "lexical": 0.7097578347578347,
-          "phonetic": 0.576984126984127,
+          "token": 0.5,
+          "ngram": 0.5928571428571427,
+          "lexical": 0.9111111111111111,
+          "phonetic": 0.9428571428571428,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "e03d3db2-a698-49c7-b99d-26acbd7359bd",
-        "canonicalName": "Desi Henry",
-        "score": 0.558994708994709,
+        "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+        "canonicalName": "Shea Breen",
+        "score": 0.8441269841269841,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.5928571428571427,
+          "lexical": 0.9111111111111111,
+          "phonetic": 0.9428571428571428,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:driver:6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+        "canonicalName": "Shay Byrne",
+        "score": 0.7028253968253968,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
           "token": 0.0,
           "ngram": 0.05,
-          "lexical": 0.5370370370370371,
-          "phonetic": 0.7023809523809524,
+          "lexical": 0.8222222222222222,
+          "phonetic": 0.8285714285714285,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "1459af64-1767-43e9-9f2e-c76272d049a5",
-        "canonicalName": "Kasimir Barnes",
-        "score": 0.5504623524623525,
+        "canonicalId": "person:codriver:848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+        "canonicalName": "Shea Kelly",
+        "score": 0.6908148148148149,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.0,
-          "lexical": 0.6530321530321531,
-          "phonetic": 0.632967032967033,
+          "token": 0.5,
+          "ngram": 0.3214285714285714,
+          "lexical": 0.6296296296296297,
+          "phonetic": 0.8,
           "context": 0.0
         }
       },
       {
-        "canonicalId": "e9f6f527-765f-498c-b4fb-34602c90e1d4",
-        "canonicalName": "Haris Pinermay",
-        "score": 0.5402767602767603,
+        "canonicalId": "person:codriver:14ffd959-9498-42e8-9040-1cd7b159a25c",
+        "canonicalName": "Shane Byrne",
+        "score": 0.6863005291005292,
         "signals": {
           "exact": 0.0,
           "normalizedExact": 0.0,
           "token": 0.0,
-          "ngram": 0.04000000000000001,
-          "lexical": 0.6054131054131054,
-          "phonetic": 0.6468253968253969,
-          "context": 0.0
-        }
-      },
-      {
-        "canonicalId": "e494b937-5af3-4aac-838f-4cf0f790daa0",
-        "canonicalName": "Piers Daykin",
-        "score": 0.5396594516594517,
-        "signals": {
-          "exact": 0.0,
-          "normalizedExact": 0.0,
-          "token": 0.0,
-          "ngram": 0.044444444444444446,
-          "lexical": 0.6262626262626262,
-          "phonetic": 0.6380952380952382,
+          "ngram": 0.05,
+          "lexical": 0.8226455026455027,
+          "phonetic": 0.7663492063492063,
           "context": 0.0
         }
       }

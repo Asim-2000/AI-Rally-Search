@@ -93,11 +93,15 @@ class EntitySearchIndexStats {
   final int entityCount;
   final Duration buildTime;
   final int estimatedBytes;
+  final int canonicalEstimatedBytes;
+  final int postingListEstimatedBytes;
 
   const EntitySearchIndexStats({
     required this.entityCount,
     required this.buildTime,
     required this.estimatedBytes,
+    this.canonicalEstimatedBytes = 0,
+    this.postingListEstimatedBytes = 0,
   });
 }
 
@@ -107,6 +111,11 @@ class EntitySearchQueryStats {
   final int survivingCandidates;
   final int returnedCandidates;
   final Duration latency;
+  final Duration candidateGenerationLatency;
+  final Duration scoringLatency;
+  final int fullUniverseSize;
+  final int generatedCandidatePool;
+  final bool usedFullScanEscape;
 
   const EntitySearchQueryStats({
     required this.entityType,
@@ -114,5 +123,10 @@ class EntitySearchQueryStats {
     required this.survivingCandidates,
     required this.returnedCandidates,
     required this.latency,
+    this.candidateGenerationLatency = Duration.zero,
+    this.scoringLatency = Duration.zero,
+    this.fullUniverseSize = 0,
+    this.generatedCandidatePool = 0,
+    this.usedFullScanEscape = false,
   });
 }

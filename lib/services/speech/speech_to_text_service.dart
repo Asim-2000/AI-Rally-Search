@@ -1,9 +1,12 @@
 import '../../models/speech/speech_transcription_result.dart';
+import '../../models/speech/speech_transcription_context.dart';
 import '../../models/supported_language.dart';
 import '../../models/voice_state.dart';
 
 /// Provider-agnostic interface for speech-to-text recording and transcription services.
 abstract class ISpeechToTextService {
+  SpeechTranscriptionCapabilities get transcriptionCapabilities;
+
   /// Current active microphone interaction state.
   VoiceState get currentState;
 
@@ -42,6 +45,7 @@ abstract class ISpeechToTextService {
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
+    SpeechTranscriptionContext? context,
   });
 
   /// Directly transcribes in-memory audio bytes returning rich transcription result.
@@ -49,12 +53,14 @@ abstract class ISpeechToTextService {
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
+    SpeechTranscriptionContext? context,
   });
 
   /// Directly transcribes a local audio file using the configured STT provider.
   Future<String?> transcribeAudioFile(
     dynamic file, {
     required SupportedLanguage language,
+    SpeechTranscriptionContext? context,
   });
 
   /// Disposes underlying audio recorders and stream controllers.

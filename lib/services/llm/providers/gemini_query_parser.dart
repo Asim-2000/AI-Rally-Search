@@ -45,19 +45,7 @@ class GeminiQueryParser implements LlmQueryParser {
     // Prepare contextual user message
     final StringBuffer promptBuffer = StringBuffer();
     if (context != null) {
-      if (context.currentYear != null) {
-        promptBuffer.writeln('[Context: current year is ${context.currentYear}]');
-      }
-      if (context.activeRally != null) {
-        promptBuffer.writeln('[Context: active rally filter is "${context.activeRally}"]');
-      }
-      if (context.activeDriver != null) {
-        promptBuffer.writeln('[Context: active driver filter is "${context.activeDriver}"]');
-      }
-      if (context.locale != null || context.languageCode != null) {
-        final loc = context.locale ?? context.languageCode;
-        promptBuffer.writeln('[Context: app locale is "$loc"]');
-      }
+      promptBuffer.write(context.formatPromptContext());
     }
     promptBuffer.write(userQuery);
 

@@ -1,4 +1,5 @@
 import '../../models/entity_candidate.dart';
+import '../../models/result_referent_context.dart';
 import '../../models/search_query.dart';
 import '../../models/search_results.dart';
 import '../search_repository.dart';
@@ -48,6 +49,9 @@ class NaturalLanguageSearchResult {
   /// Deterministic human-readable explanation of what was understood.
   final String? interpretedSummary;
 
+  /// Derived result referents established by this search execution.
+  final ResultReferentContext referents;
+
   /// Time taken by EntityResolver in milliseconds.
   final int entityResolutionLatencyMs;
 
@@ -69,6 +73,7 @@ class NaturalLanguageSearchResult {
     this.resolutions = const {},
     this.error,
     this.interpretedSummary,
+    this.referents = ResultReferentContext.empty,
     this.entityResolutionLatencyMs = 0,
     this.dbLatencyMs = 0,
     this.totalLatencyMs = 0,
@@ -97,6 +102,7 @@ class NaturalLanguageSearchResult {
     required String clarificationQuestion,
     List<EntityCandidate> candidates = const [],
     Map<String, EntityResolution> resolutions = const {},
+    ResultReferentContext referents = ResultReferentContext.empty,
     int entityResolutionLatencyMs = 0,
     int totalLatencyMs = 0,
   }) {
@@ -108,6 +114,7 @@ class NaturalLanguageSearchResult {
       clarificationQuestion: clarificationQuestion,
       candidates: candidates,
       resolutions: resolutions,
+      referents: referents,
       entityResolutionLatencyMs: entityResolutionLatencyMs,
       totalLatencyMs: totalLatencyMs,
     );
@@ -119,6 +126,7 @@ class NaturalLanguageSearchResult {
     SearchQuery? parsedQuery,
     VoiceEntityRecoveryResult? voiceRecovery,
     required String error,
+    ResultReferentContext referents = ResultReferentContext.empty,
     int entityResolutionLatencyMs = 0,
     int totalLatencyMs = 0,
   }) {
@@ -128,6 +136,7 @@ class NaturalLanguageSearchResult {
       voiceRecovery: voiceRecovery,
       error: error,
       interpretedSummary: parseResult.interpretedSummary,
+      referents: referents,
       entityResolutionLatencyMs: entityResolutionLatencyMs,
       totalLatencyMs: totalLatencyMs,
     );
@@ -170,6 +179,7 @@ class NaturalLanguageSearchService {
       return NaturalLanguageSearchResult.failure(
         parseResult: failureResult,
         error: 'Search query cannot be empty',
+        referents: context?.referents ?? ResultReferentContext.empty,
         totalLatencyMs: overallStopwatch.elapsedMilliseconds,
       );
     }
@@ -192,6 +202,7 @@ class NaturalLanguageSearchService {
           parseResult: parseResult,
           voiceRecovery: recovery,
           clarificationQuestion: parseResult.clarificationQuestion ?? 'Please provide more details.',
+          referents: context?.referents ?? ResultReferentContext.empty,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
       }
@@ -203,6 +214,7 @@ class NaturalLanguageSearchService {
           parseResult: parseResult,
           voiceRecovery: recovery,
           error: parseResult.error ?? 'Unable to understand search query',
+          referents: context?.referents ?? ResultReferentContext.empty,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
       }
@@ -223,6 +235,7 @@ class NaturalLanguageSearchService {
           clarificationQuestion: resolutionResult.clarificationQuestion ?? 'Please clarify the entity.',
           candidates: resolutionResult.candidates,
           resolutions: resolutionResult.resolutions,
+          referents: context?.referents ?? ResultReferentContext.empty,
           entityResolutionLatencyMs: erStopwatch.elapsedMilliseconds,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
@@ -235,6 +248,7 @@ class NaturalLanguageSearchService {
           parsedQuery: parsedQuery,
           voiceRecovery: recovery,
           error: resolutionResult.error!,
+          referents: context?.referents ?? ResultReferentContext.empty,
           entityResolutionLatencyMs: erStopwatch.elapsedMilliseconds,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
@@ -251,6 +265,16 @@ class NaturalLanguageSearchService {
       // Deterministically generate summary from the resolved query
       final summary = QueryOutputValidator.generateInterpretedSummary(resolvedQuery);
 
+      // Deterministically derive referents from SearchResponse
+      final derivedReferents = ResultReferentContext.fromSearchResponse(
+        searchResponse,
+        previous: context?.referents ?? ResultReferentContext.empty,
+        queryRally: resolvedQuery.targetRallyName,
+        queryDriver: resolvedQuery.driverName,
+        queryRallies: resolvedQuery.targetRallyNames,
+        queryDrivers: resolvedQuery.driverNames,
+      );
+
       return NaturalLanguageSearchResult(
         parseResult: parseResult,
         parsedQuery: parsedQuery,
@@ -259,6 +283,7 @@ class NaturalLanguageSearchService {
         searchResponse: searchResponse,
         resolutions: resolutionResult.resolutions,
         interpretedSummary: summary,
+        referents: derivedReferents,
         entityResolutionLatencyMs: erStopwatch.elapsedMilliseconds,
         dbLatencyMs: dbStopwatch.elapsedMilliseconds,
         totalLatencyMs: overallStopwatch.elapsedMilliseconds,
@@ -269,6 +294,7 @@ class NaturalLanguageSearchService {
       return NaturalLanguageSearchResult.failure(
         parseResult: failureResult,
         error: 'Search failed: $e',
+        referents: context?.referents ?? ResultReferentContext.empty,
         totalLatencyMs: overallStopwatch.elapsedMilliseconds,
       );
     }

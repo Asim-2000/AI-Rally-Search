@@ -194,7 +194,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify TextField has RTL text direction
-      final textFieldFinder = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('Ask in plain English') == true);
+      final textFieldFinder = find.byType(TextField).first;
       expect(textFieldFinder, findsOneWidget);
       final textField = tester.widget<TextField>(textFieldFinder);
       expect(textField.textDirection, equals(TextDirection.rtl));
@@ -221,12 +221,12 @@ void main() {
       expect(find.byType(SnackBar), findsOneWidget);
 
       // Verify typed search continues to work seamlessly
-      final textFieldFinder = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('Ask in plain English') == true);
+      final textFieldFinder = find.byType(TextField).first;
       await tester.enterText(textFieldFinder, 'Moffett crashes 2025');
       await tester.pumpAndSettle();
 
-      final aiSearchButton = find.widgetWithText(FilledButton, 'AI Search');
-      await tester.tap(aiSearchButton);
+      final searchButton = find.widgetWithText(FilledButton, 'Search');
+      await tester.tap(searchButton);
       await tester.pumpAndSettle();
 
       // Typed search completed successfully

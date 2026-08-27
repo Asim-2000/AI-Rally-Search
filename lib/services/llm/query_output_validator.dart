@@ -78,14 +78,104 @@ class QueryOutputValidator {
     final String? clarificationQuestion =
         jsonMap['clarificationQuestion']?.toString() ?? jsonMap['clarification_question']?.toString();
 
-    // Guard against unnecessary clarification when explicit action, driver, rally, or geographic filters exist
-    final rawAction = jsonMap['actionType']?.toString() ?? jsonMap['action_type']?.toString();
-    final hasAction = rawAction != null && rawAction.trim().isNotEmpty && rawAction != 'null';
-    final hasDriver = jsonMap['driverName'] != null && jsonMap['driverName'].toString().trim().isNotEmpty && jsonMap['driverName'].toString() != 'null';
-    final hasRally = jsonMap['rallyName'] != null && jsonMap['rallyName'].toString().trim().isNotEmpty && jsonMap['rallyName'].toString() != 'null';
-    final hasCountry = jsonMap['country'] != null && jsonMap['country'].toString().trim().isNotEmpty && jsonMap['country'].toString() != 'null';
-    final hasCity = jsonMap['city'] != null && jsonMap['city'].toString().trim().isNotEmpty && jsonMap['city'].toString() != 'null';
-    final hasSpecificFilters = hasAction || hasDriver || hasRally || hasCountry || hasCity;
+    // 2. Multi-value string list extraction and item-by-item normalization
+    final rawActions = _extractRawList(jsonMap['actionTypes'] ?? jsonMap['action_types'] ?? jsonMap['actionType'] ?? jsonMap['action_type']);
+    final validatedActions = <String>{};
+    for (final act in rawActions) {
+      final normalized = normalizeActionType(act);
+      if (normalized != null) validatedActions.add(normalized);
+    }
+
+    final rawCountries = _extractRawList(jsonMap['countries'] ?? jsonMap['country']);
+    final validatedCountries = <String>{};
+    for (final c in rawCountries) {
+      final normalized = normalizeCountry(c);
+      if (normalized != null) validatedCountries.add(normalized);
+    }
+
+    final rawCities = _extractRawList(jsonMap['cities'] ?? jsonMap['city']);
+    final validatedCities = <String>{};
+    for (final city in rawCities) {
+      final s = _sanitizeString(city);
+      if (s != null && s.toUpperCase() != 'ALL') validatedCities.add(s);
+    }
+
+    final rawRallies = _extractRawList(jsonMap['rallyNames'] ?? jsonMap['rally_names'] ?? jsonMap['rallyName'] ?? jsonMap['rally_name']);
+    final validatedRallies = <String>{};
+    for (final r in rawRallies) {
+      final s = _sanitizeString(r);
+      if (s != null) validatedRallies.add(s);
+    }
+
+    final rawEvents = _extractRawList(jsonMap['eventNames'] ?? jsonMap['event_names'] ?? jsonMap['eventName'] ?? jsonMap['event_name']);
+    final validatedEvents = <String>{};
+    for (final ev in rawEvents) {
+      final s = _sanitizeString(ev);
+      if (s != null) validatedEvents.add(s);
+    }
+
+    final rawStages = _extractRawList(jsonMap['stageNames'] ?? jsonMap['stage_names'] ?? jsonMap['stageName'] ?? jsonMap['stage_name']);
+    final validatedStages = <String>{};
+    for (final st in rawStages) {
+      final s = _sanitizeString(st);
+      if (s != null) validatedStages.add(s);
+    }
+
+    final rawStageNumbers = _extractRawList(jsonMap['stageNumbers'] ?? jsonMap['stage_numbers'] ?? jsonMap['stageNumber'] ?? jsonMap['stage_number']);
+    final validatedStageNumbers = <String>{};
+    for (final sn in rawStageNumbers) {
+      final s = _sanitizeString(sn);
+      if (s != null) validatedStageNumbers.add(s);
+    }
+
+    final rawDrivers = _extractRawList(jsonMap['driverNames'] ?? jsonMap['driver_names'] ?? jsonMap['driverName'] ?? jsonMap['driver_name']);
+    final validatedDrivers = <String>{};
+    for (final d in rawDrivers) {
+      final s = _sanitizeString(d);
+      if (s != null) validatedDrivers.add(s);
+    }
+
+    final rawDriverIds = _extractRawList(jsonMap['driverIds'] ?? jsonMap['driver_ids'] ?? jsonMap['driverId'] ?? jsonMap['driver_id']);
+    final validatedDriverIds = <String>{};
+    for (final id in rawDriverIds) {
+      final s = _sanitizeString(id);
+      if (s != null) validatedDriverIds.add(s);
+    }
+
+    // 3. Year and Year-range validation
+    final rawYears = _extractRawList(jsonMap['years'] ?? jsonMap['year']);
+    final validatedYears = <int>{};
+    for (final yr in rawYears) {
+      final val = _validateYear(yr);
+      if (val != null) validatedYears.add(val);
+    }
+
+    final int? validatedYearFrom = _validateYear(jsonMap['yearFrom'] ?? jsonMap['year_from']);
+    final int? validatedYearTo = _validateYear(jsonMap['yearTo'] ?? jsonMap['year_to']);
+
+    // 4. Match Mode
+    final matchMode = MatchMode.fromString(jsonMap['driverMatchMode']?.toString() ?? jsonMap['driver_match_mode']?.toString());
+
+    // 5. Limit and Offset validation
+    final rawLimit = jsonMap['limit'];
+    final int validatedLimit = _validateLimit(rawLimit);
+
+    final rawOffset = jsonMap['offset'];
+    final int validatedOffset = _validateOffset(rawOffset);
+
+    // Guard against unnecessary clarification when explicit filters exist
+    final hasSpecificFilters = validatedActions.isNotEmpty ||
+        validatedDrivers.isNotEmpty ||
+        validatedDriverIds.isNotEmpty ||
+        validatedRallies.isNotEmpty ||
+        validatedEvents.isNotEmpty ||
+        validatedCountries.isNotEmpty ||
+        validatedCities.isNotEmpty ||
+        validatedStages.isNotEmpty ||
+        validatedStageNumbers.isNotEmpty ||
+        validatedYears.isNotEmpty ||
+        validatedYearFrom != null ||
+        validatedYearTo != null;
 
     if (requiresClarification && clarificationQuestion != null && clarificationQuestion.trim().isNotEmpty && !hasSpecificFilters) {
       return QueryParseResult.clarification(
@@ -98,7 +188,7 @@ class QueryOutputValidator {
       );
     }
 
-    // 2. Intent validation and normalization
+    // 6. Intent validation and normalization
     final rawIntent = jsonMap['intent']?.toString();
     if (rawIntent == null || rawIntent.trim().isEmpty) {
       return QueryParseResult.failure(
@@ -113,42 +203,22 @@ class QueryOutputValidator {
 
     final SearchIntent parsedIntent = _parseAndValidateIntent(rawIntent);
 
-    // 3. Action type validation (must be in canonical list or null)
-    final String? validatedAction = normalizeActionType(rawAction);
-
-    // 4. Year validation (must be a realistic rally motorsport year, e.g. 1950 - 2050)
-    final rawYear = jsonMap['year'];
-    final int? validatedYear = _validateYear(rawYear);
-
-    // 5. Limit and Offset validation
-    final rawLimit = jsonMap['limit'];
-    final int validatedLimit = _validateLimit(rawLimit);
-
-    final rawOffset = jsonMap['offset'];
-    final int validatedOffset = _validateOffset(rawOffset);
-
-    // 6. Text string sanitization (empty strings converted to null)
-    final rallyName = _sanitizeString(jsonMap['rallyName'] ?? jsonMap['rally_name']);
-    final eventName = _sanitizeString(jsonMap['eventName'] ?? jsonMap['event_name']);
-    final rawCountry = _sanitizeString(jsonMap['country']);
-    final country = normalizeCountry(rawCountry);
-    final city = _sanitizeString(jsonMap['city']);
-    final stageName = _sanitizeString(jsonMap['stageName'] ?? jsonMap['stage_name']);
-    final stageNumber = _sanitizeString(jsonMap['stageNumber'] ?? jsonMap['stage_number']);
-    final driverName = _sanitizeString(jsonMap['driverName'] ?? jsonMap['driver_name']);
-
     // Build canonical SearchQuery
     final searchQuery = SearchQuery(
       intent: parsedIntent,
-      rallyName: rallyName,
-      eventName: eventName,
-      country: country,
-      city: city,
-      stageName: stageName,
-      stageNumber: stageNumber,
-      driverName: driverName,
-      actionType: validatedAction,
-      year: validatedYear,
+      rallyNames: validatedRallies.toList(),
+      eventNames: validatedEvents.toList(),
+      countries: validatedCountries.toList(),
+      cities: validatedCities.toList(),
+      stageNames: validatedStages.toList(),
+      stageNumbers: validatedStageNumbers.toList(),
+      driverNames: validatedDrivers.toList(),
+      driverIds: validatedDriverIds.toList(),
+      actionTypes: validatedActions.toList(),
+      years: validatedYears.toList(),
+      yearFrom: validatedYearFrom,
+      yearTo: validatedYearTo,
+      driverMatchMode: matchMode,
       limit: validatedLimit,
       offset: validatedOffset,
     );
@@ -169,6 +239,18 @@ class QueryOutputValidator {
       rawResponse: rawResponse,
       metadata: metadata ?? {},
     );
+  }
+
+  /// Extracts dynamic list of items from list or single value
+  static List<dynamic> _extractRawList(dynamic raw) {
+    if (raw == null) return [];
+    if (raw is List) return raw;
+    if (raw is String) {
+      final s = raw.trim();
+      if (s.isEmpty || s.toLowerCase() == 'null' || s.toLowerCase() == 'none') return [];
+      return [s];
+    }
+    return [raw];
   }
 
   /// Extracts JSON from raw text, supporting markdown code fence wrapping (```json ... ```)
@@ -291,7 +373,6 @@ class QueryOutputValidator {
       return aliasMap[clean];
     }
 
-    // Unknown or invalid action type -> reject safely to null
     return null;
   }
 
@@ -370,6 +451,7 @@ class QueryOutputValidator {
       'irelnd': 'Ireland',
       'ie': 'Ireland',
       'irl': 'Ireland',
+      'roi': 'Ireland',
       'republic of ireland': 'Ireland',
       'united kingdom': 'United Kingdom',
       'uk': 'United Kingdom',
@@ -380,8 +462,8 @@ class QueryOutputValidator {
       'britain': 'United Kingdom',
       'britan': 'United Kingdom',
       'england': 'United Kingdom',
-      'scotland': 'United Kingdom',
-      'wales': 'United Kingdom',
+      'scotland': 'Scotland',
+      'wales': 'Wales',
       'portugal': 'Portugal',
       'portugl': 'Portugal',
       'pt': 'Portugal',
@@ -407,6 +489,8 @@ class QueryOutputValidator {
       'bel': 'Belgium',
       'spain': 'Spain',
       'spn': 'Spain',
+      'espana': 'Spain',
+      'españa': 'Spain',
       'es': 'Spain',
       'esp': 'Spain',
       'italy': 'Italy',
@@ -495,8 +579,8 @@ class QueryOutputValidator {
         parts.add('Getting rally leaderboard');
         break;
       case SearchIntent.searchVideoActions:
-        if (query.actionType != null) {
-          parts.add('Showing ${query.actionType} highlights');
+        if (query.actionTypes.isNotEmpty) {
+          parts.add('Showing ${query.actionTypes.join(', ')} highlights');
         } else {
           parts.add('Showing action highlights');
         }
@@ -513,12 +597,28 @@ class QueryOutputValidator {
     }
 
     final filters = <String>[];
-    if (query.driverName != null) filters.add('Driver: ${query.driverName}');
-    if (query.targetRallyName != null) filters.add('Rally: ${query.targetRallyName}');
-    if (query.country != null) filters.add('Country: ${query.country}');
-    if (query.city != null) filters.add('City: ${query.city}');
-    if (query.stageName != null) filters.add('Stage: ${query.stageName}');
-    if (query.year != null) filters.add('Year: ${query.year}');
+    if (query.driverNames.isNotEmpty) {
+      if (query.driverMatchMode == MatchMode.all) {
+        filters.add('Drivers: ${query.driverNames.join(' AND ')}');
+      } else {
+        filters.add('Drivers: ${query.driverNames.join(', ')}');
+      }
+    }
+    if (query.targetRallyNames.isNotEmpty) filters.add('Rallies: ${query.targetRallyNames.join(', ')}');
+    if (query.countries.isNotEmpty) filters.add('Countries: ${query.countries.join(', ')}');
+    if (query.cities.isNotEmpty) filters.add('Cities: ${query.cities.join(', ')}');
+    if (query.stageNames.isNotEmpty) filters.add('Stages: ${query.stageNames.join(', ')}');
+    if (query.stageNumbers.isNotEmpty) filters.add('Stage Numbers: ${query.stageNumbers.join(', ')}');
+
+    if (query.years.isNotEmpty) {
+      filters.add('Years: ${query.years.join(', ')}');
+    } else if (query.yearFrom != null && query.yearTo != null) {
+      filters.add('Years: ${query.yearFrom}–${query.yearTo}');
+    } else if (query.yearFrom != null) {
+      filters.add('Years: >= ${query.yearFrom}');
+    } else if (query.yearTo != null) {
+      filters.add('Years: <= ${query.yearTo}');
+    }
 
     if (filters.isEmpty) {
       return parts.join();

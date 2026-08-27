@@ -89,8 +89,8 @@ void main() {
         final messages = body['messages'] as List<dynamic>;
         final userMessage = messages.last['content'] as String;
 
-        expect(userMessage, contains('current year is 2026'));
-        expect(userMessage, contains('active rally filter is "Moonraker"'));
+        expect(userMessage, contains('current calendar year is 2026'));
+        expect(userMessage, contains('active rally is "Moonraker"'));
         contextChecked = true;
 
         return http.Response(

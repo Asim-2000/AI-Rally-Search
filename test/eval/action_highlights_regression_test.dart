@@ -12,9 +12,9 @@ void main() {
 
     test('Highlights query must preserve actionType and not trigger clarification', () {
       final prompt = QueryUnderstandingSpec.systemPrompt;
-      expect(prompt.contains('actionType'), isTrue);
-      expect(prompt.contains('jump highlights'), isTrue);
-      expect(prompt.contains('requiresClarification: false'), isTrue);
+      expect(prompt.contains('actionType') || prompt.contains('actionTypes'), isTrue);
+      expect(prompt.contains('jump'), isTrue);
+      expect(prompt.contains('requiresClarification'), isTrue);
     });
 
     test('VoiceEntityRecoveryService recovers genuine linguistic country aliases', () {

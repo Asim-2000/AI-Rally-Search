@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../models/conversational_search_session.dart';
 import '../models/entity_candidate.dart';
-
+import '../models/result_referent_context.dart';
 import '../models/search_intent.dart';
 import '../models/search_query.dart';
 import '../models/search_results.dart';
@@ -9,25 +10,39 @@ import '../models/supported_language.dart';
 import '../models/video_action.dart';
 import '../services/llm/entity_resolution/database_entity_resolver.dart';
 import '../services/llm/entity_resolution/entity_lookup_repository.dart';
-import '../services/llm/llm_provider_config.dart';
+import '../services/llm/follow_up_suggestion_engine.dart';
 import '../services/llm/llm_query_parser.dart';
 import '../services/llm/llm_query_parser_factory.dart';
 import '../services/llm/natural_language_search_service.dart';
 import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
 import '../widgets/action_player_modal.dart';
+import '../widgets/active_context_chips_bar.dart';
+import '../widgets/advanced_filters_sheet.dart';
+import '../widgets/clarification_card.dart';
 import '../widgets/driver_participation_card.dart';
 import '../widgets/driver_wins_leaderboard.dart';
 import '../widgets/rally_leaderboard.dart';
 import '../widgets/rally_result_card.dart';
+import '../widgets/suggested_follow_ups_bar.dart';
 import '../widgets/uploader_leaderboard.dart';
 import '../widgets/video_action_card.dart';
 import '../widgets/video_result_card.dart';
 import '../widgets/voice_search_button.dart';
-import '../models/voice_state.dart';
 import '../services/speech/speech_to_text_service.dart';
 import '../services/speech/speech_service_factory.dart';
 
+/// Phase 5E Continuous Conversational Search Screen.
+///
+/// Features:
+/// - Single prominent continuous search field supporting typed queries, voice transcripts,
+///   follow-ups, and refinements.
+/// - Active search context visible as compact, multi-value chips below search bar.
+/// - Clear distinction between inherited conversational context and current turn refinements.
+/// - Separate [ResultReferentContext] tracking database-derived referents (winners, rallies, drivers).
+/// - Inline disambiguation & clarification UI preserving resolved context.
+/// - Deterministic interpretation feedback and follow-up suggestion chips.
+/// - Advanced manual filters available via modal bottom sheet, synchronized bi-directionally.
 class GeneralSearchScreen extends StatefulWidget {
   final SearchQuery? initialQuery;
   final ISearchRepository? repository;
@@ -53,28 +68,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   late final NaturalLanguageSearchService _nlSearchService;
   late final ISpeechToTextService _speechService;
 
-  // Selected application / query language
+  // Selected language for speech and query understanding
   SupportedLanguage _selectedLanguage = SupportedLanguages.defaultLanguage;
 
-  // Search input controllers
-  final TextEditingController _nlController = TextEditingController();
+  // Single continuous search field controller
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _driverController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController();
 
-  // Natural language state
+  // Core Conversational Search Session
+  SearchConversationSession _session = SearchConversationSession.initial;
+
+  // Search & Clarification state
   String? _interpretedSummary;
   String? _clarificationQuestion;
   List<EntityCandidate> _clarificationCandidates = [];
-  bool _isNlMode = false;
-  String? _lastExecutedNlQuery;
   NaturalLanguageSearchResult? _lastNlResult;
-
-
-  SearchIntent _selectedIntent = SearchIntent.searchRallies;
-  String _selectedCountry = 'ALL';
-  String _selectedActionType = 'ALL';
-  int? _selectedYear;
 
   // Pagination state
   int _currentPage = 1;
@@ -82,114 +89,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   int _totalCount = 0;
 
   bool _isLoading = false;
+  String _loadingStatus = 'Searching...';
   String? _errorMessage;
   SearchResponse<dynamic>? _searchResponse;
-
-  final List<Map<String, dynamic>> _intentOptions = [
-    {
-      'intent': SearchIntent.searchRallies,
-      'label': 'Search Rallies',
-      'icon': Icons.flag_rounded,
-      'hint': 'Search rallies by name, country, city, or year...',
-    },
-    {
-      'intent': SearchIntent.searchDriverRallies,
-      'label': 'Driver Rallies',
-      'icon': Icons.directions_car_rounded,
-      'hint': 'Search rallies a driver participated in...',
-    },
-    {
-      'intent': SearchIntent.searchDriverWins,
-      'label': 'Driver Wins',
-      'icon': Icons.emoji_events_rounded,
-      'hint': 'Search rallies won by a driver...',
-    },
-    {
-      'intent': SearchIntent.getRallyTopFinishers,
-      'label': 'Rally Top Finishers',
-      'icon': Icons.leaderboard_rounded,
-      'hint': 'Rally name (e.g. Moonraker, Donegal)...',
-    },
-    {
-      'intent': SearchIntent.getRallyResults,
-      'label': 'Rally Winner',
-      'icon': Icons.military_tech_rounded,
-      'hint': 'Rally name for 1st place winner...',
-    },
-    {
-      'intent': SearchIntent.searchVideoActions,
-      'label': 'Action Highlights',
-      'icon': Icons.bolt_rounded,
-      'hint': 'Filter jumps, drifts, crashes in rallies...',
-    },
-    {
-      'intent': SearchIntent.searchDriverVideos,
-      'label': 'Driver Videos',
-      'icon': Icons.videocam_rounded,
-      'hint': 'Find videos featuring a specific driver...',
-    },
-    {
-      'intent': SearchIntent.getTopUploaders,
-      'label': 'Top Uploaders',
-      'icon': Icons.cloud_upload_rounded,
-      'hint': 'Filter top uploaders by rally or global...',
-    },
-    {
-      'intent': SearchIntent.getTopDriversByWins,
-      'label': 'Most Wins',
-      'icon': Icons.workspace_premium_rounded,
-      'hint': 'Rank drivers by total career victories...',
-    },
-  ];
-
-  final List<String> _actionOptions = [
-    'ALL',
-    'Jump',
-    'Drift',
-    'Crash',
-    'Spin',
-    'Start Line',
-    'Near Miss',
-    'Mechanical Failure',
-    'Offroad',
-    'Stuck',
-  ];
-
-  final List<Map<String, String>> _countryOptions = [
-    {'label': 'All Countries', 'value': 'ALL'},
-    {'label': 'Ireland (IE)', 'value': 'Ireland'},
-    {'label': 'United Kingdom (UK / GB)', 'value': 'United Kingdom'},
-    {'label': 'Portugal (PT)', 'value': 'Portugal'},
-    {'label': 'Austria (AT)', 'value': 'Austria'},
-    {'label': 'France (FR)', 'value': 'France'},
-    {'label': 'Norway (NO)', 'value': 'Norway'},
-    {'label': 'Poland (PL)', 'value': 'Poland'},
-    {'label': 'Belgium (BE)', 'value': 'Belgium'},
-    {'label': 'Spain (ES)', 'value': 'Spain'},
-    {'label': 'Italy (IT)', 'value': 'Italy'},
-    {'label': 'Latvia (LV)', 'value': 'Latvia'},
-    {'label': 'Czech Republic (CZ)', 'value': 'Czech Republic'},
-    {'label': 'Germany (DE)', 'value': 'Germany'},
-    {'label': 'Kenya (KE)', 'value': 'Kenya'},
-    {'label': 'Croatia (HR)', 'value': 'Croatia'},
-    {'label': 'Netherlands (NL)', 'value': 'Netherlands'},
-    {'label': 'New Zealand (NZ)', 'value': 'New Zealand'},
-    {'label': 'Lithuania (LT)', 'value': 'Lithuania'},
-    {'label': 'Slovakia (SK)', 'value': 'Slovakia'},
-    {'label': 'Qatar (QA)', 'value': 'Qatar'},
-    {'label': 'Pakistan (PK)', 'value': 'Pakistan'},
-    {'label': 'Barbados (BB)', 'value': 'Barbados'},
-  ];
-
-  final List<int?> _yearOptions = [
-    null,
-    2026,
-    2025,
-    2024,
-    2023,
-  ];
-
-  bool _showExtraFilters = false;
 
   @override
   void initState() {
@@ -207,38 +109,35 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     _speechService = widget.speechService ?? SpeechServiceFactory.create();
 
     if (widget.initialQuery != null) {
-      final q = widget.initialQuery!;
-      _selectedIntent = q.intent;
-      if (q.country != null) _selectedCountry = q.country!;
-      if (q.city != null) _cityController.text = q.city!;
-      if (q.year != null) _selectedYear = q.year;
-      if (q.driverName != null) _driverController.text = q.driverName!;
-      if (q.actionType != null) _selectedActionType = q.actionType!;
-      if (q.targetRallyName != null) _searchController.text = q.targetRallyName!;
+      _session = _session.copyWith(
+        activeQuery: widget.initialQuery!,
+      );
+      _executeDeterministicSearch(resetPage: true);
+    } else {
+      _executeDeterministicSearch(resetPage: true);
     }
-    _executeSearch(resetPage: true);
   }
 
   @override
   void dispose() {
     _speechService.dispose();
-    _nlController.dispose();
     _searchController.dispose();
-    _driverController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 
+  // ===========================================================================
+  // CONTINUOUS CONVERSATIONAL SEARCH EXECUTION
+  // ===========================================================================
+
   Future<void> _executeNaturalLanguageSearch() async {
-    final queryText = _nlController.text.trim();
+    final queryText = _searchController.text.trim();
     if (queryText.isEmpty) return;
 
-    // Prevent duplicate simultaneous requests
-    if (_isLoading && _lastExecutedNlQuery == queryText) return;
-    _lastExecutedNlQuery = queryText;
-
+    final nextRequestId = _session.activeRequestId + 1;
     setState(() {
+      _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
+      _loadingStatus = 'Understanding your search...';
       _errorMessage = null;
       _clarificationQuestion = null;
       _clarificationCandidates = [];
@@ -250,77 +149,267 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         currentYear: DateTime.now().year,
         locale: _selectedLanguage.localeCode,
         languageCode: _selectedLanguage.languageCode,
+        referents: _session.referents,
+        previousQuery: _session.activeQuery,
       );
+
       final result = await _nlSearchService.search(queryText, context: searchContext);
 
-      if (mounted) {
-        if (result.requiresClarification) {
-          setState(() {
-            _isLoading = false;
-            _clarificationQuestion = result.clarificationQuestion;
-            _clarificationCandidates = result.candidates;
-            _interpretedSummary = null;
-          });
-          return;
-        }
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
 
-        if (!result.isSuccess || result.query == null) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = result.error ?? 'Query parsing failed';
-            _clarificationCandidates = [];
-            _interpretedSummary = null;
-          });
-          return;
-        }
-
-        // Apply parsed query to filter controls so UI reflects what was understood
-        final q = result.query!;
-        _selectedIntent = q.intent;
-        _searchController.text = q.targetRallyName ?? '';
-        _driverController.text = q.driverName ?? '';
-        _cityController.text = q.city ?? '';
-
-        String resolvedCountry = 'ALL';
-        if (q.country != null) {
-          final match = _countryOptions.firstWhere(
-            (c) => c['value']!.toLowerCase() == q.country!.toLowerCase() ||
-                   c['label']!.toLowerCase().contains(q.country!.toLowerCase()),
-            orElse: () => {'value': 'ALL'},
-          );
-          resolvedCountry = match['value']!;
-        }
-        _selectedCountry = resolvedCountry;
-
-        _selectedActionType = q.actionType != null
-            ? (q.actionType![0].toUpperCase() + q.actionType!.substring(1))
-            : 'ALL';
-        _selectedYear = q.year;
-
-        final l10n = AppLocalizations.of(context);
-        final localizedSummary = _buildLocalizedInterpretedSummary(q, l10n);
-
+      if (result.requiresClarification) {
         setState(() {
-          _searchResponse = result.searchResponse;
-          _totalCount = result.totalCount;
-          _interpretedSummary = localizedSummary;
-          _lastNlResult = result;
-          _clarificationQuestion = null;
-          _clarificationCandidates = [];
-          _errorMessage = null;
           _isLoading = false;
+          _clarificationQuestion = result.clarificationQuestion;
+          _clarificationCandidates = result.candidates;
+          _interpretedSummary = null;
         });
+        return;
       }
-    } catch (e) {
-      if (mounted) {
+
+      if (!result.isSuccess || result.query == null) {
         setState(() {
-          _errorMessage = 'Natural language search failed: $e';
+          _isLoading = false;
+          _errorMessage = result.error ?? 'Query parsing failed';
           _clarificationCandidates = [];
           _interpretedSummary = null;
-          _isLoading = false;
         });
+        return;
       }
+
+      final parsedQuery = result.query!;
+      final l10n = AppLocalizations.of(context);
+      final localizedSummary = _buildLocalizedInterpretedSummary(parsedQuery, l10n);
+
+      // Determine which fields were inherited vs refined in this turn
+      final inherited = <String>{};
+      final refinements = <String>{};
+
+      if (parsedQuery.rallyNames.isNotEmpty) {
+        if (_session.activeQuery.rallyNames.isNotEmpty &&
+            _session.activeQuery.rallyNames.first == parsedQuery.rallyNames.first) {
+          inherited.add('rally');
+        } else {
+          refinements.add('rally');
+        }
+      }
+      if (parsedQuery.driverNames.isNotEmpty) {
+        if (_session.activeQuery.driverNames.isNotEmpty &&
+            _session.activeQuery.driverNames.first == parsedQuery.driverNames.first) {
+          inherited.add('driver');
+        } else {
+          refinements.add('driver');
+        }
+      }
+      if (parsedQuery.actionTypes.isNotEmpty) {
+        refinements.add('action');
+      }
+      if (parsedQuery.countries.isNotEmpty) {
+        if (_session.activeQuery.countries.isNotEmpty &&
+            _session.activeQuery.countries.first == parsedQuery.countries.first) {
+          inherited.add('country');
+        } else {
+          refinements.add('country');
+        }
+      }
+      if (parsedQuery.years.isNotEmpty) {
+        if (_session.activeQuery.years.isNotEmpty &&
+            _session.activeQuery.years.first == parsedQuery.years.first) {
+          inherited.add('year');
+        } else {
+          refinements.add('year');
+        }
+      }
+
+      final updatedSession = _session.recordTurn(
+        query: parsedQuery,
+        referents: result.referents,
+        title: queryText,
+        response: result.searchResponse,
+        interpretedSummary: localizedSummary,
+        inherited: inherited,
+        refinements: refinements,
+      );
+
+      setState(() {
+        _session = updatedSession;
+        _searchResponse = result.searchResponse;
+        _totalCount = result.totalCount;
+        _interpretedSummary = localizedSummary;
+        _lastNlResult = result;
+        _clarificationQuestion = null;
+        _clarificationCandidates = [];
+        _errorMessage = null;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+      setState(() {
+        _errorMessage = 'Natural language search failed: $e';
+        _clarificationCandidates = [];
+        _interpretedSummary = null;
+        _isLoading = false;
+      });
     }
+  }
+
+  Future<void> _executeDeterministicSearch({bool resetPage = false}) async {
+    if (resetPage) {
+      _currentPage = 1;
+    }
+
+    final nextRequestId = _session.activeRequestId + 1;
+    setState(() {
+      _session = _session.copyWith(activeRequestId: nextRequestId);
+      _isLoading = true;
+      _loadingStatus = 'Searching database...';
+      _errorMessage = null;
+    });
+
+    try {
+      final offset = (_currentPage - 1) * _pageSize;
+      final queryToExecute = _session.activeQuery.copyWith(
+        limit: _pageSize,
+        offset: offset,
+      );
+
+      final response = await _repository.search(queryToExecute);
+
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+
+      final updatedReferents = ResultReferentContext.fromSearchResponse(
+        response,
+        previous: _session.referents,
+        queryRally: queryToExecute.targetRallyName,
+        queryDriver: queryToExecute.driverName,
+        queryRallies: queryToExecute.targetRallyNames,
+        queryDrivers: queryToExecute.driverNames,
+      );
+
+      final l10n = AppLocalizations.of(context);
+      final summary = _buildLocalizedInterpretedSummary(queryToExecute, l10n);
+
+      setState(() {
+        _session = _session.copyWith(
+          activeQuery: queryToExecute,
+          referents: updatedReferents,
+        );
+        _searchResponse = response;
+        _totalCount = response.totalCount;
+        _interpretedSummary = summary;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+      setState(() {
+        _errorMessage = 'Search failed: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleRemoveFilter(String field, dynamic value) {
+    setState(() {
+      _session = _session.removeFilter(field: field, value: value);
+    });
+    _executeDeterministicSearch(resetPage: true);
+  }
+
+  void _handleRollbackHistory(int historyIndex) {
+    setState(() {
+      _session = _session.rollbackTo(historyIndex);
+    });
+    _executeDeterministicSearch(resetPage: true);
+  }
+
+  void _handleClearAll() {
+    setState(() {
+      _searchController.clear();
+      _session = _session.clearAll();
+      _interpretedSummary = null;
+      _clarificationQuestion = null;
+      _clarificationCandidates = [];
+      _lastNlResult = null;
+    });
+    _executeDeterministicSearch(resetPage: true);
+  }
+
+  void _onSelectCandidate(EntityCandidate candidate) {
+    setState(() {
+      _clarificationQuestion = null;
+      _clarificationCandidates = [];
+
+      SearchQuery updated = _session.activeQuery;
+      ResultReferentContext referents = _session.referents;
+
+      switch (candidate.type) {
+        case EntityType.rally:
+          final yr = candidate.metadata?['year'] as int?;
+          updated = updated.copyWith(
+            rallyNames: [candidate.canonicalName],
+            years: yr != null ? [yr] : updated.years,
+          );
+          referents = referents.copyWith(
+            activeRally: candidate.canonicalName,
+            activeRallies: [candidate.canonicalName],
+          );
+          break;
+        case EntityType.driver:
+          final driverId = candidate.id;
+          updated = updated.copyWith(
+            driverNames: [candidate.canonicalName],
+            driverIds: driverId.isNotEmpty ? [driverId] : updated.driverIds,
+          );
+          referents = referents.copyWith(
+            activeDriver: candidate.canonicalName,
+            activeDriverId: driverId,
+            activeDrivers: [candidate.canonicalName],
+          );
+          break;
+        case EntityType.city:
+          updated = updated.copyWith(cities: [candidate.canonicalName]);
+          break;
+        case EntityType.stage:
+          updated = updated.copyWith(stageNames: [candidate.canonicalName]);
+          break;
+        case EntityType.uploader:
+          updated = updated.copyWith(uploaders: [candidate.canonicalName]);
+          break;
+      }
+
+      _session = _session.copyWith(
+        activeQuery: updated,
+        referents: referents,
+      );
+    });
+    _executeDeterministicSearch(resetPage: true);
+  }
+
+  void _handleSuggestionSelected(FollowUpSuggestion suggestion) {
+    if (suggestion.targetQuery != null) {
+      setState(() {
+        _session = _session.copyWith(
+          activeQuery: suggestion.targetQuery!,
+        );
+      });
+      _executeDeterministicSearch(resetPage: true);
+    } else if (suggestion.queryText != null) {
+      _searchController.text = suggestion.queryText!;
+      _executeNaturalLanguageSearch();
+    }
+  }
+
+  void _openAdvancedFilters() {
+    AdvancedFiltersSheet.show(
+      context,
+      session: _session,
+      onApply: (updatedQuery) {
+        setState(() {
+          _session = _session.copyWith(activeQuery: updatedQuery);
+        });
+        _executeDeterministicSearch(resetPage: true);
+      },
+    );
   }
 
   String _buildLocalizedInterpretedSummary(SearchQuery query, AppLocalizations? l10n) {
@@ -329,7 +418,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
     final parts = <String>[];
 
-    // Localized intent headline
     switch (query.intent) {
       case SearchIntent.searchRallies:
         parts.add(l10n.intentSearchRallies);
@@ -347,9 +435,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         parts.add(l10n.intentGetRallyTopFinishers);
         break;
       case SearchIntent.searchVideoActions:
-        if (query.actionType != null) {
-          final localizedAction = _getLocalizedActionName(query.actionType!, l10n);
-          parts.add('${l10n.intentSearchVideoActions} ($localizedAction)');
+        if (query.actionTypes.isNotEmpty) {
+          final actionsStr = query.actionTypes.map((a) => _getLocalizedActionName(a, l10n)).join(', ');
+          parts.add('${l10n.intentSearchVideoActions} ($actionsStr)');
         } else {
           parts.add(l10n.intentSearchVideoActions);
         }
@@ -366,12 +454,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     final filters = <String>[];
-    if (query.driverName != null) filters.add('${l10n.filterDriver}: ${query.driverName}');
-    if (query.targetRallyName != null) filters.add('${l10n.filterRally}: ${query.targetRallyName}');
-    if (query.country != null) filters.add('${l10n.filterCountry}: ${query.country}');
-    if (query.city != null) filters.add('${l10n.filterCity}: ${query.city}');
-    if (query.stageName != null) filters.add('${l10n.filterStage}: ${query.stageName}');
-    if (query.year != null) filters.add('${l10n.filterYear}: ${query.year}');
+    if (query.driverNames.isNotEmpty) filters.add('${l10n.filterDriver}: ${query.driverNames.join(', ')}');
+    if (query.rallyNames.isNotEmpty) filters.add('${l10n.filterRally}: ${query.rallyNames.join(', ')}');
+    if (query.countries.isNotEmpty) filters.add('${l10n.filterCountry}: ${query.countries.join(', ')}');
+    if (query.cities.isNotEmpty) filters.add('${l10n.filterCity}: ${query.cities.join(', ')}');
+    if (query.stageNames.isNotEmpty) filters.add('${l10n.filterStage}: ${query.stageNames.join(', ')}');
+    if (query.years.isNotEmpty) filters.add('${l10n.filterYear}: ${query.years.join(', ')}');
 
     if (filters.isEmpty) {
       return parts.join();
@@ -395,34 +483,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       case 'stuck': return l10n.actionStuck;
       default: return actionType;
     }
-  }
-
-  void _onSelectCandidate(EntityCandidate candidate) {
-    setState(() {
-      _clarificationQuestion = null;
-      _clarificationCandidates = [];
-
-      switch (candidate.type) {
-        case EntityType.rally:
-          _searchController.text = candidate.canonicalName;
-          final year = candidate.metadata?['year'] as int?;
-          if (year != null) _selectedYear = year;
-          break;
-        case EntityType.driver:
-          _driverController.text = candidate.canonicalName;
-          break;
-        case EntityType.stage:
-          // Stage resolved
-          break;
-        case EntityType.city:
-          _cityController.text = candidate.canonicalName;
-          break;
-        case EntityType.uploader:
-          _searchController.text = candidate.canonicalName;
-          break;
-      }
-    });
-    _executeSearch(resetPage: true);
   }
 
   void _showTelemetryDialog(BuildContext context, NaturalLanguageSearchResult result) {
@@ -530,62 +590,30 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Entity Resolution Comparison (Parsed vs Resolved)
-              if (result.parsedQuery != null || result.resolvedQuery != null) ...[
-                const Text('🏷️ Entity Resolution (Parsed vs Resolved)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 4),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (result.parsedQuery?.targetRallyName != null || result.resolvedQuery?.targetRallyName != null) ...[
-                        Text(
-                          'Rally: "${result.parsedQuery?.targetRallyName ?? ''}" → "${result.resolvedQuery?.targetRallyName ?? ''}"',
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                        ),
-                      ],
-                      if (result.parsedQuery?.driverName != null || result.resolvedQuery?.driverName != null) ...[
-                        Text(
-                          'Driver: "${result.parsedQuery?.driverName ?? ''}" → "${result.resolvedQuery?.driverName ?? ''}" (ID: ${result.resolvedQuery?.driverId ?? 'none'})',
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                        ),
-                      ],
-                      if (result.parsedQuery?.stageName != null || result.resolvedQuery?.stageName != null) ...[
-                        Text(
-                          'Stage: "${result.parsedQuery?.stageName ?? ''}" → "${result.resolvedQuery?.stageName ?? ''}"',
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                        ),
-                      ],
-                      if (result.parsedQuery?.city != null || result.resolvedQuery?.city != null) ...[
-                        Text(
-                          'City: "${result.parsedQuery?.city ?? ''}" → "${result.resolvedQuery?.city ?? ''}"',
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-
-              // Pillar 3: Correctness Checks
-              const Text('🛡️ Structural Correctness', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              // Referents Context
+              const Text('🧠 Result-Derived Referent Context', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
-              _buildCorrectnessItem('Schema Valid JSON', true),
-              _buildCorrectnessItem('Intent Enum Valid', result.query != null),
-              _buildCorrectnessItem('Canonical Action Filter', result.query?.actionType == null || result.query!.actionType!.isNotEmpty),
-              _buildCorrectnessItem('Database Execution Safe', result.error == null),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Active Rally: ${result.referents.activeRally ?? 'none'}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                    Text('Active Driver: ${result.referents.activeDriver ?? 'none'}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                    Text('Last Winner: ${result.referents.lastWinner ?? 'none'}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                  ],
+                ),
+              ),
               const SizedBox(height: 12),
 
               // Structured SearchQuery
               if (result.query != null) ...[
-                const Text('🔍 Structured Query JSON (Resolved)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text('🔍 Structured Query JSON', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 4),
                 Container(
                   width: double.infinity,
@@ -613,105 +641,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     );
   }
 
-  Widget _buildCorrectnessItem(String label, bool isValid) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Icon(
-            isValid ? Icons.check_circle_rounded : Icons.cancel_rounded,
-            size: 14,
-            color: isValid ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  SearchQuery _buildCurrentQuery({int page = 1}) {
-    final offset = (page - 1) * _pageSize;
-    final rawSearch = _searchController.text.trim().isEmpty ? null : _searchController.text.trim();
-    final rawDriver = _driverController.text.trim().isEmpty ? null : _driverController.text.trim();
-    final rawCity = _cityController.text.trim().isEmpty ? null : _cityController.text.trim();
-    final rawCountry = _selectedCountry == 'ALL' ? null : _selectedCountry;
-    final rawAction = _selectedActionType == 'ALL' ? null : _selectedActionType.toLowerCase();
-
-    return SearchQuery(
-      intent: _selectedIntent,
-      rallyName: rawSearch,
-      eventName: rawSearch,
-      driverName: rawDriver,
-      city: rawCity,
-      country: rawCountry,
-      actionType: rawAction,
-      year: _selectedYear,
-      limit: _pageSize,
-      offset: offset,
-    );
-  }
-
-  Future<void> _executeSearch({bool resetPage = false}) async {
-    if (resetPage) {
-      _currentPage = 1;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final query = _buildCurrentQuery(page: _currentPage);
-      final response = await _repository.search(query);
-
-      if (mounted) {
-        setState(() {
-          _searchResponse = response;
-          _totalCount = response.totalCount;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Search failed: $e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _clearFilters() {
-    setState(() {
-      _nlController.clear();
-      _searchController.clear();
-      _driverController.clear();
-      _cityController.clear();
-      _selectedCountry = 'ALL';
-      _selectedActionType = 'ALL';
-      _selectedYear = null;
-      _interpretedSummary = null;
-      _clarificationQuestion = null;
-      _lastExecutedNlQuery = null;
-    });
-    _executeSearch(resetPage: true);
-  }
-
-  Map<String, dynamic> get _currentIntentConfig {
-    return _intentOptions.firstWhere(
-      (opt) => opt['intent'] == _selectedIntent,
-      orElse: () => _intentOptions.first,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final totalPages = (_totalCount / _pageSize).ceil();
-    final intentConfig = _currentIntentConfig;
+    final suggestions = FollowUpSuggestionEngine.generate(_session, response: _searchResponse);
 
     return Scaffold(
       appBar: AppBar(
@@ -771,24 +706,27 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             ),
           ),
           const SizedBox(width: 4),
+
+          // Advanced Filter Button
           IconButton(
-            tooltip: 'Clear Filters',
-            icon: const Icon(Icons.filter_alt_off_rounded),
-            onPressed: _clearFilters,
+            tooltip: 'Advanced Filters',
+            icon: const Icon(Icons.tune_rounded),
+            onPressed: _openAdvancedFilters,
           ),
+
+          // Reset Session Button
           IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => _executeSearch(),
+            tooltip: 'Reset Session',
+            icon: const Icon(Icons.restart_alt_rounded),
+            onPressed: _handleClearAll,
           ),
         ],
-
       ),
       body: Column(
         children: [
-          // Filter Panel
+          // 1. Prominent Continuous Search Bar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
               border: Border(
@@ -797,146 +735,23 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 ),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Row(
               children: [
-                // Natural Language AI Search Bar
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _nlController,
-                        textDirection: _selectedLanguage.isRtl ? TextDirection.rtl : TextDirection.ltr,
-                        textAlign: _selectedLanguage.isRtl ? TextAlign.right : TextAlign.left,
-                        decoration: InputDecoration(
-                          hintText: 'Ask in plain English (e.g. "Show jumps featuring Moffett in 2025")...',
-                          hintStyle: const TextStyle(fontSize: 13),
-                          prefixIcon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF1E88E5), size: 20),
-                          suffixIcon: _nlController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 18),
-                                  onPressed: () {
-                                    _nlController.clear();
-                                    setState(() {});
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 1.5),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark ? Colors.blue.withValues(alpha: 0.4) : Colors.blue.withValues(alpha: 0.3),
-                            ),
-                          ),
-                        ),
-                        onSubmitted: (_) => _executeNaturalLanguageSearch(),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    VoiceSearchButton(
-                      speechService: _speechService,
-                      selectedLanguage: _selectedLanguage,
-                      onTranscriptReceived: (transcript) {
-                        setState(() {
-                          _nlController.text = transcript;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: _executeNaturalLanguageSearch,
-                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                      label: const Text('AI Search'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Search Intent Selector (Dropdown)
-                DropdownButtonFormField<SearchIntent>(
-                  value: _selectedIntent,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: 'Search Query Intent',
-                    prefixIcon: Icon(intentConfig['icon'] as IconData, size: 20, color: theme.colorScheme.primary),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
-                    ),
-                  ),
-                  items: _intentOptions.map((opt) {
-                    return DropdownMenuItem<SearchIntent>(
-                      value: opt['intent'] as SearchIntent,
-                      child: Row(
-                        children: [
-                          Icon(opt['icon'] as IconData, size: 16, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              opt['label'] as String,
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _selectedIntent = val);
-                      _executeSearch(resetPage: true);
-                    }
-                  },
-                ),
-                const SizedBox(height: 10),
-
-                // Primary Search / Rally input
-                if (_selectedIntent != SearchIntent.getTopDriversByWins)
-                  TextField(
-                    controller: _selectedIntent == SearchIntent.searchDriverRallies ||
-                            _selectedIntent == SearchIntent.searchDriverWins ||
-                            _selectedIntent == SearchIntent.searchDriverVideos
-                        ? _driverController
-                        : _searchController,
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    textDirection: _selectedLanguage.isRtl ? TextDirection.rtl : TextDirection.ltr,
+                    textAlign: _selectedLanguage.isRtl ? TextAlign.right : TextAlign.left,
                     decoration: InputDecoration(
-                      hintText: intentConfig['hint'] as String,
-                      prefixIcon: Icon(
-                        _selectedIntent == SearchIntent.searchDriverRallies ||
-                                _selectedIntent == SearchIntent.searchDriverWins ||
-                                _selectedIntent == SearchIntent.searchDriverVideos
-                            ? Icons.person_rounded
-                            : Icons.search_rounded,
-                      ),
-                      suffixIcon: (_selectedIntent == SearchIntent.searchDriverRallies ||
-                                  _selectedIntent == SearchIntent.searchDriverWins ||
-                                  _selectedIntent == SearchIntent.searchDriverVideos
-                              ? _driverController.text.isNotEmpty
-                              : _searchController.text.isNotEmpty)
+                      hintText: 'Search rallies, drivers, jumps, or ask a question...',
+                      hintStyle: const TextStyle(fontSize: 13),
+                      prefixIcon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF1E88E5), size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear_rounded, size: 18),
                               onPressed: () {
-                                if (_selectedIntent == SearchIntent.searchDriverRallies ||
-                                    _selectedIntent == SearchIntent.searchDriverWins ||
-                                    _selectedIntent == SearchIntent.searchDriverVideos) {
-                                  _driverController.clear();
-                                } else {
-                                  _searchController.clear();
-                                }
-                                _executeSearch(resetPage: true);
+                                _searchController.clear();
+                                setState(() {});
                               },
                             )
                           : null,
@@ -945,261 +760,64 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                        borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 1.5),
                       ),
-                    ),
-                    onSubmitted: (_) => _executeSearch(resetPage: true),
-                  ),
-
-                // Contextual Filter Row (Country, Year, Action Type)
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    // Country filter
-                    Expanded(
-                      flex: 6,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedCountry,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          labelText: 'Country',
-                          prefixIcon: const Icon(Icons.public_rounded, size: 18),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
-                          ),
-                        ),
-                        items: _countryOptions.map((c) {
-                          return DropdownMenuItem(
-                            value: c['value'],
-                            child: Text(
-                              c['label']!,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12.5),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedCountry = val);
-                            _executeSearch(resetPage: true);
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Year Filter
-                    Expanded(
-                      flex: 4,
-                      child: DropdownButtonFormField<int?>(
-                        value: _selectedYear,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          labelText: 'Year',
-                          prefixIcon: const Icon(Icons.calendar_month_rounded, size: 18),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
-                          ),
-                        ),
-                        items: _yearOptions.map((yr) {
-                          return DropdownMenuItem(
-                            value: yr,
-                            child: Text(
-                              yr == null ? 'All Years' : '$yr',
-                              style: const TextStyle(fontSize: 12.5),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          setState(() => _selectedYear = val);
-                          _executeSearch(resetPage: true);
-                        },
-                      ),
-                    ),
-
-                    // Action Type (if Video Actions selected)
-                    if (_selectedIntent == SearchIntent.searchVideoActions) ...[
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 5,
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedActionType,
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: 'Action',
-                            prefixIcon: const Icon(Icons.bolt_rounded, size: 18),
-                            filled: true,
-                            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
-                            ),
-                          ),
-                          items: _actionOptions.map((act) {
-                            return DropdownMenuItem(
-                              value: act,
-                              child: Text(act, style: const TextStyle(fontSize: 12.5)),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() => _selectedActionType = val);
-                              _executeSearch(resetPage: true);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-
-                // City filter expander
-                if (_showExtraFilters) ...[
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _cityController,
-                    decoration: InputDecoration(
-                      labelText: 'City (e.g. Letterkenny, Fafe, Newtown)',
-                      prefixIcon: const Icon(Icons.location_city_rounded, size: 18),
-                      filled: true,
-                      fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
+                      enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
-                      ),
-                    ),
-                    onSubmitted: (_) => _executeSearch(resetPage: true),
-                  ),
-                ],
-
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () => setState(() => _showExtraFilters = !_showExtraFilters),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _showExtraFilters ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                              size: 18,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _showExtraFilters ? 'Fewer Filters' : 'City Filter',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.blue.withValues(alpha: 0.4) : Colors.blue.withValues(alpha: 0.3),
                         ),
                       ),
                     ),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: () => _executeSearch(resetPage: true),
-                      icon: const Icon(Icons.search_rounded, size: 18),
-                      label: const Text('Search'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ],
+                    onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                VoiceSearchButton(
+                  speechService: _speechService,
+                  selectedLanguage: _selectedLanguage,
+                  onTranscriptReceived: (transcript) {
+                    setState(() {
+                      _searchController.text = transcript;
+                    });
+                    _executeNaturalLanguageSearch();
+                  },
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  onPressed: _executeNaturalLanguageSearch,
+                  icon: const Icon(Icons.search_rounded, size: 18),
+                  label: const Text('Search'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Clarification Question Banner & Candidate Selection
+          // 2. Active Search Context & Refinement Chips Bar
+          ActiveContextChipsBar(
+            session: _session,
+            onRemoveFilter: _handleRemoveFilter,
+            onRollbackHistory: _handleRollbackHistory,
+            onClearAll: _handleClearAll,
+          ),
+
+          // 3. Inline Clarification Card (if disambiguation required)
           if (_clarificationQuestion != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: Colors.amber.withValues(alpha: 0.15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.help_outline_rounded, color: Colors.amber, size: 22),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Clarification Needed',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _clarificationQuestion!,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        onPressed: () => setState(() {
-                          _clarificationQuestion = null;
-                          _clarificationCandidates = [];
-                        }),
-                      ),
-                    ],
-                  ),
-                  if (_clarificationCandidates.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Suggested options:',
-                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.amber),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _clarificationCandidates.map((candidate) {
-                        final typeIcon = candidate.type == EntityType.driver
-                            ? Icons.person_rounded
-                            : (candidate.type == EntityType.rally
-                                ? Icons.flag_rounded
-                                : (candidate.type == EntityType.stage
-                                    ? Icons.alt_route_rounded
-                                    : Icons.location_city_rounded));
-                        return ActionChip(
-                          avatar: Icon(typeIcon, size: 16, color: theme.colorScheme.primary),
-                          label: Text(
-                            candidate.subtitle != null
-                                ? '${candidate.canonicalName} (${candidate.subtitle})'
-                                : candidate.canonicalName,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                          ),
-                          onPressed: () => _onSelectCandidate(candidate),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ],
-              ),
+            ClarificationCard(
+              question: _clarificationQuestion!,
+              candidates: _clarificationCandidates,
+              onCandidateSelected: _onSelectCandidate,
+              onDismiss: () => setState(() {
+                _clarificationQuestion = null;
+                _clarificationCandidates = [];
+              }),
             ),
 
-          // Interpreted Query Banner
+          // 4. Interpreted Natural-Language Feedback Bar + Telemetry
           if (_interpretedSummary != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1258,20 +876,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(width: 6),
-                  InkWell(
-                    onTap: () => setState(() => _interpretedSummary = null),
-                    borderRadius: BorderRadius.circular(12),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.close_rounded, size: 16),
-                    ),
-                  ),
                 ],
               ),
             ),
 
-          // Count bar
+          // 5. Results Count & Header Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: isDark ? const Color(0xFF141414) : Colors.grey.shade100,
@@ -1294,7 +903,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                             color: theme.colorScheme.primary,
                           ),
                         ),
-                        TextSpan(text: ' ${_resultTypeLabel(_selectedIntent)}'),
+                        TextSpan(text: ' ${_resultTypeLabel(_session.activeQuery.intent)}'),
                       ],
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -1315,12 +924,19 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             ),
           ),
 
-          // Dynamic Result View Dispatcher
+          // 6. Dynamic Result View Dispatcher
           Expanded(
             child: _buildDynamicResultsView(context),
           ),
 
-          // Pagination Footer
+          // 7. Contextual Suggested Follow-ups
+          if (!_isLoading && _searchResponse != null && _searchResponse!.results.isNotEmpty)
+            SuggestedFollowUpsBar(
+              suggestions: suggestions,
+              onSuggestionSelected: _handleSuggestionSelected,
+            ),
+
+          // 8. Pagination Footer
           if (_totalCount > _pageSize) _buildPaginationFooter(totalPages),
         ],
       ),
@@ -1351,13 +967,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   Widget _buildDynamicResultsView(BuildContext context) {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Executing deterministic search...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(_loadingStatus, style: const TextStyle(fontSize: 13, color: Colors.grey)),
           ],
         ),
       );
@@ -1379,7 +995,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () => _executeSearch(),
+                onPressed: () => _executeDeterministicSearch(),
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Retry'),
               ),
@@ -1401,15 +1017,32 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               const Text('No search results found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               const Text(
-                'Try broadening your search query or resetting filters.',
+                'Active search context is preserved. Try removing a filter or searching for another event.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 20),
-              OutlinedButton.icon(
-                onPressed: _clearFilters,
-                icon: const Icon(Icons.clear_all_rounded),
-                label: const Text('Reset Filters'),
+              Wrap(
+                spacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _handleClearAll,
+                    icon: const Icon(Icons.clear_all_rounded),
+                    label: const Text('Reset Session'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _session = _session.copyWith(
+                          activeQuery: const SearchQuery(intent: SearchIntent.searchRallies),
+                        );
+                      });
+                      _executeDeterministicSearch(resetPage: true);
+                    },
+                    icon: const Icon(Icons.flag_rounded),
+                    label: const Text('Show All Rallies'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1428,12 +1061,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           itemBuilder: (ctx, idx) => RallyResultCard(
             rally: rallies[idx],
             onTap: () {
-              // Drilldown to top finishers
+              // Drilldown to top finishers and set referent
               setState(() {
-                _selectedIntent = SearchIntent.getRallyTopFinishers;
-                _searchController.text = rallies[idx].eventName;
+                _session = _session.copyWith(
+                  activeQuery: _session.activeQuery.copyWith(
+                    intent: SearchIntent.getRallyTopFinishers,
+                    rallyName: rallies[idx].eventName,
+                  ),
+                  referents: _session.referents.copyWith(
+                    activeRally: rallies[idx].eventName,
+                    lastSelectedRally: rallies[idx].eventName,
+                  ),
+                );
               });
-              _executeSearch(resetPage: true);
+              _executeDeterministicSearch(resetPage: true);
             },
           ),
         );
@@ -1454,7 +1095,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           padding: const EdgeInsets.all(12),
           child: RallyLeaderboard(
             results: finishers,
-            rallyName: _searchController.text.trim().isNotEmpty ? _searchController.text.trim() : null,
+            rallyName: _session.activeQuery.targetRallyName,
           ),
         );
 
@@ -1483,7 +1124,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           padding: const EdgeInsets.all(12),
           child: UploaderLeaderboard(
             uploaders: uploaders,
-            rallyName: _searchController.text.trim().isNotEmpty ? _searchController.text.trim() : null,
+            rallyName: _session.activeQuery.targetRallyName,
           ),
         );
 
@@ -1496,10 +1137,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             onDriverTap: (d) {
               // Drilldown to driver's won rallies
               setState(() {
-                _selectedIntent = SearchIntent.searchDriverWins;
-                _driverController.text = d.driverName;
+                _session = _session.copyWith(
+                  activeQuery: _session.activeQuery.copyWith(
+                    intent: SearchIntent.searchDriverWins,
+                    driverName: d.driverName,
+                  ),
+                  referents: _session.referents.copyWith(
+                    activeDriver: d.driverName,
+                    lastSelectedDriver: d.driverName,
+                  ),
+                );
               });
-              _executeSearch(resetPage: true);
+              _executeDeterministicSearch(resetPage: true);
             },
           ),
         );
@@ -1528,7 +1177,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               onPressed: _currentPage > 1 && !_isLoading
                   ? () {
                       setState(() => _currentPage--);
-                      _executeSearch();
+                      _executeDeterministicSearch();
                     }
                   : null,
               icon: const Icon(Icons.chevron_left_rounded, size: 18),
@@ -1550,7 +1199,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               onPressed: _currentPage < totalPages && !_isLoading
                   ? () {
                       setState(() => _currentPage++);
-                      _executeSearch();
+                      _executeDeterministicSearch();
                     }
                   : null,
               icon: const Icon(Icons.chevron_right_rounded, size: 18),

@@ -1,0 +1,3826 @@
+{
+  "timestamp": "2026-08-27T01:53:38.877980",
+  "benchmark_type": "synthetic",
+  "model_name": "whisper-1",
+  "total_samples": 38,
+  "evaluated_samples": 38,
+  "missing_audio_samples": 0,
+  "summary": {
+    "avg_wer": 0.21129207050259682,
+    "raw_entity_accuracy": 0.9671052631578947,
+    "recovered_entity_accuracy": 0.9671052631578947,
+    "intent_accuracy": 1.0,
+    "filter_f1": 0.93765664160401,
+    "semantic_exact_match": 0.7894736842105263,
+    "raw_semantic_success": 0.42105263157894735,
+    "post_recovery_semantic_success": 0.9210526315789473,
+    "search_semantic_success": 0.9210526315789473,
+    "false_positive_entity_resolution_rate": 0.0,
+    "stt_latency": {
+      "p50": 1099,
+      "p90": 1971,
+      "p95": 2169,
+      "p99": 5911
+    },
+    "e2e_latency": {
+      "p50": 3316,
+      "p90": 5154,
+      "p95": 6711,
+      "p99": 8013
+    }
+  },
+  "failure_attributions": {
+    "NONE": 35,
+    "STT_LANGUAGE": 0,
+    "STT_WORD_ERROR": 0,
+    "STT_ENTITY_ERROR": 0,
+    "STT_NUMBER_ERROR": 0,
+    "PRE_LLM_RECOVERY": 0,
+    "LLM_INTENT": 0,
+    "LLM_FILTER": 1,
+    "ENTITY_RETRIEVAL": 0,
+    "ENTITY_SCORING": 0,
+    "AMBIGUITY_POLICY": 2,
+    "DATABASE": 0,
+    "OTHER": 0
+  },
+  "entity_resolution_breakdown": {
+    "AUTO_RESOLVED_CORRECT": 36,
+    "AUTO_RESOLVED_INCORRECT": 0,
+    "CLARIFICATION_REQUIRED_CORRECTLY": 0,
+    "UNNECESSARY_CLARIFICATION": 2,
+    "NO_MATCH": 0
+  },
+  "samples": [
+    {
+      "id": "synth-en-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/en_01.mp3",
+      "language": "en",
+      "locale": "en-GB",
+      "expected_transcript": "Show rallies in Ireland in 2025.",
+      "actual_transcript": "show rallies in ireland in 2025",
+      "normalized_transcript": "show rallies in Ireland in 2025",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 2169,
+      "llm_parse_latency_ms": 1299,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 386,
+      "total_latency_ms": 3920,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-en-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/en_02.mp3",
+      "language": "en",
+      "locale": "en-GB",
+      "expected_transcript": "Show jump highlights featuring Josh Moffett from Moonraker in 2025.",
+      "actual_transcript": "show jump highlights featuring josh moffett from moonraker in 2025",
+      "normalized_transcript": "show jump highlights featuring josh moffett from moonraker in 2025",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1205,
+      "llm_parse_latency_ms": 1634,
+      "entity_resolution_latency_ms": 126,
+      "db_latency_ms": 134,
+      "total_latency_ms": 3152,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "moonraker"
+        ],
+        "rallyName": "moonraker",
+        "driverNames": [
+          "josh moffett"
+        ],
+        "driverName": "josh moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-de-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/de_01.mp3",
+      "language": "de",
+      "locale": "de-DE",
+      "expected_transcript": "Zeige Rallyes in Irland im Jahr 2025.",
+      "actual_transcript": "Zeige Release in Irland im Jahr 2025",
+      "normalized_transcript": "Zeige Release in Ireland im Jahr 2025",
+      "recovery_mappings": {
+        "Irland": "Ireland"
+      },
+      "wer": 0.14285714285714285,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1066,
+      "llm_parse_latency_ms": 3538,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 83,
+      "total_latency_ms": 4691,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-de-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/de_02.mp3",
+      "language": "de",
+      "locale": "de-DE",
+      "expected_transcript": "Zeige Sprung-Highlights mit Josh Moffett von der Moonraker im Jahr 2025.",
+      "actual_transcript": "Zeige Sprung-Highlights mit Josh Moffett von der Moonraker im Jahr 2025.",
+      "normalized_transcript": "Zeige Sprung-Highlights mit Josh Moffett von der Moonraker im Jahr 2025.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 712,
+      "llm_parse_latency_ms": 1653,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 262,
+      "total_latency_ms": 2635,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-fr-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/fr_01.mp3",
+      "language": "fr",
+      "locale": "fr-FR",
+      "expected_transcript": "Montrez les rallyes en Irlande en 2025.",
+      "actual_transcript": "Montrez les rallies en Irlande en 2025.",
+      "normalized_transcript": "Montrez les rallies en Ireland en 2025.",
+      "recovery_mappings": {
+        "Irlande": "Ireland"
+      },
+      "wer": 0.14285714285714285,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1829,
+      "llm_parse_latency_ms": 1855,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 83,
+      "total_latency_ms": 3835,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-fr-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/fr_02.mp3",
+      "language": "fr",
+      "locale": "fr-FR",
+      "expected_transcript": "Montrez les meilleurs sauts de Josh Moffett au Moonraker en 2025.",
+      "actual_transcript": "Montrez les meilleurs sauts de Josh Moffett au Moonraker en 2025.",
+      "normalized_transcript": "Montrez les meilleurs sauts de Josh Moffett au Moonraker en 2025.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1224,
+      "llm_parse_latency_ms": 1897,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 132,
+      "total_latency_ms": 3257,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-es-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/es_01.mp3",
+      "language": "es",
+      "locale": "es-ES",
+      "expected_transcript": "Mostrar rallies en Irlanda en 2025.",
+      "actual_transcript": "mostrar rallies en irlanda en 2025",
+      "normalized_transcript": "mostrar rallies en Ireland en 2025",
+      "recovery_mappings": {
+        "irlanda": "Ireland"
+      },
+      "wer": 0.0,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1093,
+      "llm_parse_latency_ms": 1590,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 80,
+      "total_latency_ms": 2769,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-es-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/es_02.mp3",
+      "language": "es",
+      "locale": "es-ES",
+      "expected_transcript": "Mostrar momentos destacados de saltos con Josh Moffett de Moonraker en 2025.",
+      "actual_transcript": "mostrar momentos destacados de saltos con Josh Moffett de Moonraker en 2025.",
+      "normalized_transcript": "mostrar momentos destacados de saltos con Josh Moffett de Moonraker en 2025.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1092,
+      "llm_parse_latency_ms": 1984,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 142,
+      "total_latency_ms": 3226,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-it-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/it_01.mp3",
+      "language": "it",
+      "locale": "it-IT",
+      "expected_transcript": "Mostra i rally in Irlanda nel 2025.",
+      "actual_transcript": "Mostrarelli in Irlanda nel 2025",
+      "normalized_transcript": "Mostrarelli in Ireland nel 2025",
+      "recovery_mappings": {
+        "Irlanda": "Ireland"
+      },
+      "wer": 0.42857142857142855,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 743,
+      "llm_parse_latency_ms": 2051,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 80,
+      "total_latency_ms": 2932,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-it-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/it_02.mp3",
+      "language": "it",
+      "locale": "it-IT",
+      "expected_transcript": "Mostra i salti migliori di Josh Moffett al Moonraker nel 2025.",
+      "actual_transcript": "Mostra i salti migliori di Josh Moffett al Moonraker nel 2025",
+      "normalized_transcript": "Mostra i salti migliori di Josh Moffett al Moonraker nel 2025",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 973,
+      "llm_parse_latency_ms": 1634,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 137,
+      "total_latency_ms": 2755,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-pt-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/pt_01.mp3",
+      "language": "pt",
+      "locale": "pt-PT",
+      "expected_transcript": "Mostrar ralis na Irlanda em 2025.",
+      "actual_transcript": "Mostrar ralis na Irlanda em 2025",
+      "normalized_transcript": "Mostrar ralis na Ireland em 2025",
+      "recovery_mappings": {
+        "Irlanda": "Ireland"
+      },
+      "wer": 0.0,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 692,
+      "llm_parse_latency_ms": 1032,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 71,
+      "total_latency_ms": 1801,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-pt-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/pt_02.mp3",
+      "language": "pt",
+      "locale": "pt-PT",
+      "expected_transcript": "Mostrar destaques de saltos com Josh Moffett no Moonraker em 2025.",
+      "actual_transcript": "Mostrar destaques de saltos com Josh Moffett no Moonraker em 2025",
+      "normalized_transcript": "Mostrar destaques de saltos com Josh Moffett no Moonraker em 2025",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1241,
+      "llm_parse_latency_ms": 2272,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 232,
+      "total_latency_ms": 3818,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-nl-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/nl_01.mp3",
+      "language": "nl",
+      "locale": "nl-NL",
+      "expected_transcript": "Toon rally's in Ierland in 2025.",
+      "actual_transcript": "TUNE RALLYS IN IERLAND IN 2025",
+      "normalized_transcript": "TUNE RALLYS IN Ireland IN 2025",
+      "recovery_mappings": {
+        "IERLAND": "Ireland"
+      },
+      "wer": 0.16666666666666666,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1948,
+      "llm_parse_latency_ms": 1866,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 230,
+      "total_latency_ms": 4053,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-nl-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/nl_02.mp3",
+      "language": "nl",
+      "locale": "nl-NL",
+      "expected_transcript": "Toon spronghoogtepunten met Josh Moffett van Moonraker in 2025.",
+      "actual_transcript": "Doen spronghoogtepunten met Josh Moffett van Moonraker in 2025.",
+      "normalized_transcript": "Doen sprong hoogtepunten met Josh Moffett van Moonraker in 2025.",
+      "recovery_mappings": {
+        "spronghoogtepunten": "sprong hoogtepunten"
+      },
+      "wer": 0.1111111111111111,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 944,
+      "llm_parse_latency_ms": 1664,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 145,
+      "total_latency_ms": 2755,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-pl-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/pl_01.mp3",
+      "language": "pl",
+      "locale": "pl-PL",
+      "expected_transcript": "Pokaż rajdy w Irlandii w 2025 roku.",
+      "actual_transcript": "Pokaż rajdy w Irlandii w 2005 roku",
+      "normalized_transcript": "Pokaż rajdy w Ireland w 2005 roku",
+      "recovery_mappings": {
+        "Irlandii": "Ireland"
+      },
+      "wer": 0.14285714285714285,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 0.5,
+      "filter_f1": 0.6666666666666666,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 547,
+      "llm_parse_latency_ms": 1662,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 80,
+      "total_latency_ms": 2459,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2005
+        ],
+        "year": 2005,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2005
+        ],
+        "year": 2005,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-pl-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/pl_02.mp3",
+      "language": "pl",
+      "locale": "pl-PL",
+      "expected_transcript": "Pokaż najciekawsze skoki z udziałem Josha Moffetta z Moonraker w 2025 roku.",
+      "actual_transcript": "Pokaż najciekawsze skoki z udziałem Josha Moffetta z Moonraker w 2025 roku.",
+      "normalized_transcript": "Pokaż najciekawsze skoki z udziałem Josha Moffetta z Moonraker w 2025 roku.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.3333333333333333,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1156,
+      "llm_parse_latency_ms": 1647,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 132,
+      "total_latency_ms": 3104,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-nb-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/nb_01.mp3",
+      "language": "nb",
+      "locale": "nb-NO",
+      "expected_transcript": "Vis rallyer i Irland i 2025.",
+      "actual_transcript": "Vi sralia i irland i 225.",
+      "normalized_transcript": "Vi sralia i Ireland i 225.",
+      "recovery_mappings": {
+        "irland": "Ireland"
+      },
+      "wer": 0.5,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1227,
+      "llm_parse_latency_ms": 3207,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 75,
+      "total_latency_ms": 4581,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-nb-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/nb_02.mp3",
+      "language": "nb",
+      "locale": "nb-NO",
+      "expected_transcript": "Vis hopphøydepunkter med Josh Moffett fra Moonraker i 2025.",
+      "actual_transcript": "Vis hopp høydepunkter med Josh Moffett fra Moonraker i 2025.",
+      "normalized_transcript": "Vis hopp høydepunkter med Josh Moffett fra Moonraker i 2025.",
+      "recovery_mappings": {},
+      "wer": 0.2222222222222222,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1971,
+      "llm_parse_latency_ms": 1825,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 132,
+      "total_latency_ms": 3933,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-lv-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/lv_01.mp3",
+      "language": "lv",
+      "locale": "lv-LV",
+      "expected_transcript": "Rādīt rallijus Īrijā 2025. gadā.",
+      "actual_transcript": "Rādīt Rālijas īrijā 2015.",
+      "normalized_transcript": "Rādīt Rālijas Ireland 2015.",
+      "recovery_mappings": {
+        "īrijā": "Ireland"
+      },
+      "wer": 0.6,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 0.5,
+      "filter_f1": 0.6666666666666666,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 5911,
+      "llm_parse_latency_ms": 1870,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 70,
+      "total_latency_ms": 8013,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2015
+        ],
+        "year": 2015,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2015
+        ],
+        "year": 2015,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-lv-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/lv_02.mp3",
+      "language": "lv",
+      "locale": "lv-LV",
+      "expected_transcript": "Rādīt labākos lēcienus ar Josh Moffett no Moonraker 2025. gadā.",
+      "actual_transcript": "Rādīt labākos lēcienas ar Josh Moffett no Moonraker 2215 gadā",
+      "normalized_transcript": "Rādīt labākos lēcienas ar Josh Moffett no Moonraker 2025 gadā",
+      "recovery_mappings": {
+        "2215": "2025"
+      },
+      "wer": 0.2,
+      "eer": 0.2857142857142857,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": false,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": false,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 816,
+      "llm_parse_latency_ms": 2159,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 134,
+      "total_latency_ms": 3268,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-cs-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/cs_01.mp3",
+      "language": "cs",
+      "locale": "cs-CZ",
+      "expected_transcript": "Ukaž rally v Irsku v roce 2025.",
+      "actual_transcript": "Ukaždali v Irsku v roce 2025.",
+      "normalized_transcript": "Ukaždali v Ireland v roce 2025.",
+      "recovery_mappings": {
+        "Irsku": "Ireland"
+      },
+      "wer": 0.2857142857142857,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 831,
+      "llm_parse_latency_ms": 2309,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 84,
+      "total_latency_ms": 3387,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-cs-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/cs_02.mp3",
+      "language": "cs",
+      "locale": "cs-CZ",
+      "expected_transcript": "Ukaž nejlepší skoky s Joshem Moffettem z Moonraker v roce 2025.",
+      "actual_transcript": "Ukaž nejlepší skoky s Joshem Moffettem z Moonraker v roce 2025.",
+      "normalized_transcript": "Ukaž nejlepší skoky s Joshem Moffettem z Moonraker v roce 2025.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.3333333333333333,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 867,
+      "llm_parse_latency_ms": 1746,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 151,
+      "total_latency_ms": 2930,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-hr-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/hr_01.mp3",
+      "language": "hr",
+      "locale": "hr-HR",
+      "expected_transcript": "Prikaži relije u Irskoj u 2025. godini.",
+      "actual_transcript": "Prikaži Relije u Irskoj u 2025. godini.",
+      "normalized_transcript": "Prikaži Relije u Ireland u 2025. godini.",
+      "recovery_mappings": {
+        "Irskoj": "Ireland"
+      },
+      "wer": 0.0,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 2006,
+      "llm_parse_latency_ms": 1975,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 78,
+      "total_latency_ms": 4194,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-hr-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/hr_02.mp3",
+      "language": "hr",
+      "locale": "hr-HR",
+      "expected_transcript": "Prikaži najbolje skokove s Joshem Moffettom s Moonrakera 2025. godine.",
+      "actual_transcript": "Prikaži najbolje skokove s Joshem Moffettom s Moonraker-a 2025. godine.",
+      "normalized_transcript": "Prikaži najbolje skokove s Joshem Moffettom s Moonraker-a 2025. godine.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.3333333333333333,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1208,
+      "llm_parse_latency_ms": 1809,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 132,
+      "total_latency_ms": 3316,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-lt-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/lt_01.mp3",
+      "language": "lt",
+      "locale": "lt-LT",
+      "expected_transcript": "Rodyti ralius Airijoje 2025 metais.",
+      "actual_transcript": "Rodyt ralius airijoje 25 metais",
+      "normalized_transcript": "Rodyt ralius Ireland 2025 metais",
+      "recovery_mappings": {
+        "airijoje": "Ireland",
+        "25": "2025"
+      },
+      "wer": 0.4,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1171,
+      "llm_parse_latency_ms": 1646,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 87,
+      "total_latency_ms": 2973,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-lt-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/lt_02.mp3",
+      "language": "lt",
+      "locale": "lt-LT",
+      "expected_transcript": "Rodyti geriausius šuolius su Josh Moffett iš Moonraker 2025 metais.",
+      "actual_transcript": "Rodėti geriausius šuolius su Josh Moffett iš Moonraker dvutmysčiui dvizdžiais bet metais",
+      "normalized_transcript": "Rodėti geriausius šuolius su Josh Moffett iš Moonraker dvutmysčiui dvizdžiais bet metais",
+      "recovery_mappings": {},
+      "wer": 0.4,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 0.75,
+      "filter_f1": 0.8571428571428571,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": false,
+      "search_semantic_success": false,
+      "entity_resolution_outcome": "UNNECESSARY_CLARIFICATION",
+      "entity_resolution_succeeded": false,
+      "db_execution_succeeded": false,
+      "returned_row_count": 0,
+      "failure_attribution": "AMBIGUITY_POLICY",
+      "stt_latency_ms": 1493,
+      "llm_parse_latency_ms": 2570,
+      "entity_resolution_latency_ms": 50,
+      "db_latency_ms": 0,
+      "total_latency_ms": 4298,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-sk-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/sk_01.mp3",
+      "language": "sk",
+      "locale": "sk-SK",
+      "expected_transcript": "Ukáž rely v Írsku v roku 2025.",
+      "actual_transcript": "ukáži relíf írsku v roku 2025.",
+      "normalized_transcript": "ukáži relíf Ireland v roku 2025.",
+      "recovery_mappings": {
+        "írsku": "Ireland"
+      },
+      "wer": 0.42857142857142855,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1099,
+      "llm_parse_latency_ms": 1770,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 85,
+      "total_latency_ms": 3103,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-sk-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/sk_02.mp3",
+      "language": "sk",
+      "locale": "sk-SK",
+      "expected_transcript": "Ukáž najlepšie skoky s Joshom Moffettom z Moonraker v roku 2025.",
+      "actual_transcript": "Ukáž najlepšie skoky s Joshom Moffettom z Moonraker v roku 2025.",
+      "normalized_transcript": "Ukáž najlepšie skoky s Joshom Moffettom z Moonraker v roku 2025.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.3333333333333333,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 740,
+      "llm_parse_latency_ms": 1737,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 322,
+      "total_latency_ms": 2963,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-ur-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/ur_01.mp3",
+      "language": "ur",
+      "locale": "ur-PK",
+      "expected_transcript": "2025 میں آئرلینڈ کی ریلیاں دکھائیں۔",
+      "actual_transcript": "ڈوہاز اور ییسٹر پائز میں آئرلینڈ کی ریلیاں دکھائیں",
+      "normalized_transcript": "ڈوہاز اور ییسٹر پائز میں Ireland کی ریلیاں دکھائیں",
+      "recovery_mappings": {
+        "آئرلینڈ": "Ireland"
+      },
+      "wer": 0.8333333333333334,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 0.5,
+      "filter_recall": 0.5,
+      "filter_f1": 0.5,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1457,
+      "llm_parse_latency_ms": 3253,
+      "entity_resolution_latency_ms": 346,
+      "db_latency_ms": 72,
+      "total_latency_ms": 5300,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "cities": [
+          "ڈوہاز",
+          "ییسٹر پائز"
+        ],
+        "city": "ڈوہاز",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "cities": [
+          "ڈوہاز",
+          "ییسٹر پائز"
+        ],
+        "city": "ڈوہاز",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-ur-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/ur_02.mp3",
+      "language": "ur",
+      "locale": "ur-PK",
+      "expected_transcript": "2025 میں Moonraker سے Josh Moffett کی جمپس کے ہائی لائٹس دکھائیں۔",
+      "actual_transcript": "دو ہزن یو س پائیث میں مونریکر سے جوش موفٹ کی جمپس کے ہائی لائٹس دکھائیں",
+      "normalized_transcript": "دو ہزن یو س پائیث میں مونریکر سے جوش موفٹ کی جمپس کے ہائی لائٹس دکھائیں",
+      "recovery_mappings": {},
+      "wer": 0.75,
+      "eer": 0.8571428571428571,
+      "raw_driver_preserved": false,
+      "raw_rally_preserved": false,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": false,
+      "recovered_rally_preserved": false,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 0.75,
+      "filter_f1": 0.8571428571428571,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": false,
+      "search_semantic_success": false,
+      "entity_resolution_outcome": "UNNECESSARY_CLARIFICATION",
+      "entity_resolution_succeeded": false,
+      "db_execution_succeeded": false,
+      "returned_row_count": 0,
+      "failure_attribution": "AMBIGUITY_POLICY",
+      "stt_latency_ms": 884,
+      "llm_parse_latency_ms": 5600,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 0,
+      "total_latency_ms": 6748,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-ar-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/ar_01.mp3",
+      "language": "ar",
+      "locale": "ar-QA",
+      "expected_transcript": "أظهر الراليات في أيرلندا في عام 2025.",
+      "actual_transcript": "أظهر الراليات في أيرلندا في عام 2029",
+      "normalized_transcript": "أظهر الراليات في Ireland في عام 2025",
+      "recovery_mappings": {
+        "أيرلندا": "Ireland",
+        "2029": "2025"
+      },
+      "wer": 0.14285714285714285,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 836,
+      "llm_parse_latency_ms": 1665,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 71,
+      "total_latency_ms": 2731,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-ar-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/ar_02.mp3",
+      "language": "ar",
+      "locale": "ar-QA",
+      "expected_transcript": "أظهر لقطات القفزات المميزة لـ Josh Moffett من Moonraker في 2025.",
+      "actual_transcript": "أظهر لقطات القفزات المميزة لجوش موفت من مون ريكر في عين ٢٥٢",
+      "normalized_transcript": "أظهر لقطات القفزات المميزة لجوش موفت من مون ريكر في عين ٢٥٢",
+      "recovery_mappings": {},
+      "wer": 0.6363636363636364,
+      "eer": 0.8571428571428571,
+      "raw_driver_preserved": false,
+      "raw_rally_preserved": false,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": false,
+      "recovered_rally_preserved": false,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 0.75,
+      "filter_recall": 0.75,
+      "filter_f1": 0.75,
+      "exact_semantic_match": false,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1521,
+      "llm_parse_latency_ms": 3223,
+      "entity_resolution_latency_ms": 115,
+      "db_latency_ms": 140,
+      "total_latency_ms": 5154,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "cities": [
+          "Ain 252"
+        ],
+        "city": "Ain 252",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "cities": [
+          "Ain 252"
+        ],
+        "city": "Ain 252",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "eventNames": [
+          "Moonraker"
+        ],
+        "eventName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-sw-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/sw_01.mp3",
+      "language": "sw",
+      "locale": "sw-KE",
+      "expected_transcript": "Onyesha rali nchini Ayalandi mwaka wa 2025.",
+      "actual_transcript": "Onyesha, rali nchini ayalandi mwaka wa dwari dwendifemv.",
+      "normalized_transcript": "Onyesha, rali nchini Ireland mwaka wa dwari dwendifemv.",
+      "recovery_mappings": {
+        "ayalandi": "Ireland"
+      },
+      "wer": 0.2857142857142857,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 0.5,
+      "filter_f1": 0.6666666666666666,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 35,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 768,
+      "llm_parse_latency_ms": 2595,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 84,
+      "total_latency_ms": 3519,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-sw-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/sw_02.mp3",
+      "language": "sw",
+      "locale": "sw-KE",
+      "expected_transcript": "Onyesha matukio makuu ya miruko ya Josh Moffett kutoka Moonraker mwaka wa 2025.",
+      "actual_transcript": "Onyesha matukio makuu ya miruko ya Josh Moffett kutoka Moonraker mwaka wa dwebi dwentindifim.",
+      "normalized_transcript": "Onyesha matukio makuu ya miruko ya Josh Moffett kutoka Moonraker mwaka wa dwebi dwentindifim.",
+      "recovery_mappings": {},
+      "wer": 0.15384615384615385,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 794,
+      "llm_parse_latency_ms": 2503,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 157,
+      "total_latency_ms": 3461,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-cy-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/cy_01.mp3",
+      "language": "cy",
+      "locale": "cy-GB",
+      "expected_transcript": "Dangos ralïau yn Iwerddon yn 2025.",
+      "actual_transcript": "Dangos Raleighi Iwerddon yn 2025",
+      "normalized_transcript": "Dangos Raleighi Ireland yn 2025",
+      "recovery_mappings": {
+        "Iwerddon": "Ireland"
+      },
+      "wer": 0.3333333333333333,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 626,
+      "llm_parse_latency_ms": 1650,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 75,
+      "total_latency_ms": 2424,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-cy-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/cy_02.mp3",
+      "language": "cy",
+      "locale": "cy-GB",
+      "expected_transcript": "Dangos uchafbwyntiau neidiau gyda Josh Moffett o Moonraker yn 2025.",
+      "actual_transcript": "Dangos uchafbwyntiau neidiau gyda Josh Moffett o Moonraker yn 2025.",
+      "normalized_transcript": "Dangos uchafbwyntiau neidiau gyda Josh Moffett o Moonraker yn 2025.",
+      "recovery_mappings": {},
+      "wer": 0.0,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 1243,
+      "llm_parse_latency_ms": 1621,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 228,
+      "total_latency_ms": 3098,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-ga-01",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/ga_01.mp3",
+      "language": "ga",
+      "locale": "ga-IE",
+      "expected_transcript": "Taispeáin railíthe in Éirinn in 2025.",
+      "actual_transcript": "Taespaen, Rhaelitha, and Éirinn in 2025",
+      "normalized_transcript": "Taespaen, Rhaelitha, and Ireland in 2025",
+      "recovery_mappings": {
+        "Éirinn": "Ireland"
+      },
+      "wer": 0.5,
+      "eer": 0.0,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 0.5,
+      "filter_f1": 0.6666666666666666,
+      "exact_semantic_match": false,
+      "raw_semantic_success": false,
+      "post_recovery_semantic_success": false,
+      "search_semantic_success": false,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 24,
+      "failure_attribution": "LLM_FILTER",
+      "stt_latency_ms": 928,
+      "llm_parse_latency_ms": 5695,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 82,
+      "total_latency_ms": 6711,
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "country": "Ireland",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Taespaen",
+          "Rhaelitha",
+          "Ireland"
+        ],
+        "country": "Taespaen",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Taespaen",
+          "Rhaelitha",
+          "Ireland"
+        ],
+        "country": "Taespaen",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    },
+    {
+      "id": "synth-ga-02",
+      "benchmark_type": "synthetic",
+      "audio_file": "test/eval/audio/synthetic/ga_02.mp3",
+      "language": "ga",
+      "locale": "ga-IE",
+      "expected_transcript": "Taispeáin buaicphointí léimeanna le Josh Moffett ó Moonraker in 2025.",
+      "actual_transcript": "Táisbein buaicphointí léimeanna le Josh Moffett on Moonraker in 2025.",
+      "normalized_transcript": "Táisbein buaicphointí léimeanna le Josh Moffett on Moonraker in 2025.",
+      "recovery_mappings": {},
+      "wer": 0.2222222222222222,
+      "eer": 0.14285714285714285,
+      "raw_driver_preserved": true,
+      "raw_rally_preserved": true,
+      "raw_stage_preserved": true,
+      "raw_action_preserved": true,
+      "recovered_driver_preserved": true,
+      "recovered_rally_preserved": true,
+      "recovered_stage_preserved": true,
+      "recovered_action_preserved": true,
+      "intent_matched": true,
+      "filter_precision": 1.0,
+      "filter_recall": 1.0,
+      "filter_f1": 1.0,
+      "exact_semantic_match": true,
+      "raw_semantic_success": true,
+      "post_recovery_semantic_success": true,
+      "search_semantic_success": true,
+      "entity_resolution_outcome": "AUTO_RESOLVED_CORRECT",
+      "entity_resolution_succeeded": true,
+      "db_execution_succeeded": true,
+      "returned_row_count": 0,
+      "failure_attribution": "NONE",
+      "stt_latency_ms": 2249,
+      "llm_parse_latency_ms": 1827,
+      "entity_resolution_latency_ms": 0,
+      "db_latency_ms": 150,
+      "total_latency_ms": 4231,
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "parsed_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "rallyName": "Moonraker",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "resolved_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [
+          2025
+        ],
+        "year": 2025,
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "rallyName": "Moonraker Forestry Rally 2025",
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventName": "Moonraker Forestry Rally 2025",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverName": "Josh Moffett",
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "driverId": "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "actionTypes": [
+          "jump"
+        ],
+        "actionType": "jump",
+        "driverMatchMode": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "error_message": null,
+      "audio_missing": false
+    }
+  ]
+}

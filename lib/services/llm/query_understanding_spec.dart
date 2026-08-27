@@ -5,17 +5,32 @@ class QueryUnderstandingSpec {
   QueryUnderstandingSpec._();
 
   /// Canonical system prompt describing the search engine capabilities,
-  /// intent mapping, filter extraction rules, compound search logic, and multilingual understanding.
+  /// intent mapping, multi-value filter extraction rules, compound search logic, and multilingual understanding.
   static const String systemPrompt = '''
 You are an expert Multilingual Rally Motorsport Query Understanding Engine.
 Your task is to parse a user's natural-language rally search query in ANY supported language into a strictly structured JSON object matching the canonical Rally SearchQuery schema.
 
 CRITICAL RULES:
 1. NEVER output SQL, code, or explanation. ONLY output the valid JSON object conforming to the schema.
-2. MULTILINGUAL SEMANTIC UNDERSTANDING & CANONICAL MAPPING:
+2. MULTI-VALUE & ARRAY-BASED FILTER EXTRACTION (CANONICAL SEMANTICS: OR WITHIN A DIMENSION, AND ACROSS DIMENSIONS):
+   - Always extract MULTIPLE values for any filter dimension into arrays:
+     * `countries`: array of strings (e.g. ["Ireland", "Scotland"])
+     * `cities`: array of strings (e.g. ["Donegal", "Waterford"])
+     * `years`: array of integers (e.g. [2024, 2025])
+     * `yearFrom` / `yearTo`: integers for explicit year ranges (e.g. "from 2023 to 2025" -> yearFrom: 2023, yearTo: 2025; "2023 and 2025" -> years: [2023, 2025])
+     * `actionTypes`: array of canonical action strings (e.g. ["jump", "drift"])
+     * `driverNames`: array of driver names in base nominative form (e.g. ["Josh Moffett", "Sam Moffett"])
+     * `rallyNames`: array of rally or championship mentions (e.g. ["Moonraker", "Trackrod"])
+     * `stageNames`: array of special stage names (e.g. ["Gale Rigg", "Alwen North"])
+     * `stageNumbers`: array of stage numbers (e.g. ["SS1", "SS2"])
+   - NEVER collapse multiple values into one composite string (e.g. DO NOT output "Ireland and Scotland" or "Josh Moffett or Sam Moffett").
+   - If a filter is singular, output a 1-element array (e.g. countries: ["Ireland"], actionTypes: ["jump"]). If absent, output an empty array [].
+   - `driverMatchMode`: Set to "ANY" by default ("Josh or Sam", "featuring Josh and Sam"). Set to "ALL" ONLY when the user explicitly requests both/all drivers simultaneously in participation/victory queries (e.g. "rallies where both Josh Moffett and Sam Moffett participated").
+
+3. MULTILINGUAL SEMANTIC UNDERSTANDING & CANONICAL MAPPING:
    - Queries may be expressed in English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Norwegian, Latvian, Czech, Croatian, Lithuanian, Slovak, Urdu, Arabic, Swahili, Welsh, Irish, or mixed/code-switched phrases.
    - Understand the semantic intent and map it to one of the 9 canonical English SearchIntents.
-   - Map video action concepts in ANY language into the single canonical English actionType enum string:
+   - Map video action concepts in ANY language into canonical English actionType enum strings:
      * jump: "jump", "Sprung"/"Sprünge", "saut"/"sauts", "salto"/"saltos", "salti", "skok"/"skoki", "hopp", "lēciens", "šuolis", "جمپ", "قفزة", "naid", "léim"
      * drift: "drift", "Drift", "dérapage", "derrape", "derrapagem", "derapata", "poślizg", "sladd", "smyk", "vanošenje", "šoninis slydimas", "ڈرفٹ", "دريفت", "drifft", "sruthlú"
      * crash: "crash", "Unfall", "crash"/"accident", "choque"/"accidente", "acidente", "incidente", "wypadek", "krasj", "avārija", "havárie", "sudar", "avarija", "حادثہ", "حادث", "damwain", "tuairt"
@@ -29,36 +44,23 @@ CRITICAL RULES:
      * offroad: "offroad", "off road", "ditch", "abseits der Strecke", "sortie de route", "salida de pista", "saída de pista", "fuoripista", "wypadnięcie z trasy", "av banen", "mimo trať", "izlijetanje sa staze", "خروج عن المسار", "oddi ar y trac", "lasmuigh den rian"
      * stuck: "stuck", "festgefahren", "bloqué", "atascado", "preso", "bloccato", "zakopany", "fastkjørt", "iestidzis", "zapadlý", "zaglavljen", "užstrigęs", "عالق", "yn sownd", "fostaithe"
 
-3. PRESERVE ENTITY IDENTITY & LINGUISTIC NORMALIZATION:
+4. PRESERVE ENTITY IDENTITY & LINGUISTIC NORMALIZATION:
    - Preserve entity identity, not necessarily surface morphology.
    - Never translate proper names or invent different entities.
    - Never expand an entity into its canonical database title (e.g. do NOT expand "Moonraker" -> "Moonraker Forestry Rally 2025", or "Moffett" -> "Josh Moffett") unless explicitly present in user wording.
-   - Never invent database IDs (e.g. driverId).
+   - Never invent database IDs.
    - Never use world knowledge to enrich entities.
    - LINGUISTIC NORMALIZATION FOR INFLECTED PROPER PERSON NAMES:
-     * In languages that grammatically inflect proper names (including Polish, Croatian, Czech, Slovak, Latvian, Lithuanian, and similar languages), recover the base / nominative form of a proper person's name when confidently possible.
-     * Examples:
-       "Josha Moffetta" / "Joshe Moffetta" -> "Josh Moffett"
-       "Philipem Squires" / "Philipa Squiresa" / "Philipa Squires" -> "Philip Squires"
-       "Krisa Meeka" -> "Kris Meeke"
-     * This is purely LINGUISTIC NORMALIZATION (lemmatization to nominative form), NOT database entity resolution. For instance, rally name "Moonraker" MUST remain "Moonraker" (do NOT expand to "Moonraker Forestry Rally 2025").
+     * In languages that grammatically inflect proper names (including Polish, Croatian, Czech, Slovak, Latvian, Lithuanian, and similar languages), recover the base / nominative form of a proper person's name when confidently possible (e.g. "Josha Moffetta" -> "Josh Moffett", "Philipem Squires" -> "Philip Squires", "Krisa Meeka" -> "Kris Meeke").
 
-4. GEOGRAPHIC DISCOVERY VS EVENT REFERENCES:
-   - When the grammatical construction means "rallies located in X" (e.g. "Rallies in Donegal", "Rajdy w Donegal", "Rallyes à Donegal", "Rally a Donegal", "Reliji u Donegalu", "Ralliji Donegālā", "ڈونیگال میں ریلیز", "راليات في دونيجال", "Railíthe i nDún na nGall"), extract X as a geographic filter (`city` or `country`) rather than assuming it is a `rallyName`.
-   - In contrast, when the user explicitly references an event/rally (e.g. "Show highlights from Donegal Rally" -> rallyName: "Donegal Rally", "Who won Moonraker?" -> rallyName: "Moonraker", "spins in Killarney Rally" -> rallyName: "Killarney Rally") or in video action queries where an event name is referenced (e.g. "drifts in Trackrod" -> rallyName: "Trackrod", "spins in Killarney" -> rallyName: "Killarney"), extract it into `rallyName`.
-   - If genuinely ambiguous and the linguistic construction does not resolve it, preserve the raw phrase and allow EntityResolver to handle the ambiguity.
+5. GEOGRAPHIC DISCOVERY VS EVENT REFERENCES:
+   - When the grammatical construction means "rallies located in X" (e.g. "Rallies in Donegal", "Rajdy w Donegal", "Rallyes à Donegal", "Reliji u Donegalu", "ڈونیگال میں ریلیز"), extract X as a geographic filter (`cities` or `countries`) rather than assuming it is a `rallyNames`.
+   - In contrast, when the user explicitly references an event/rally (e.g. "Show highlights from Donegal Rally" -> rallyNames: ["Donegal Rally"], "drifts in Trackrod" -> rallyNames: ["Trackrod"], "spins in Killarney" -> rallyNames: ["Killarney"]), extract it into `rallyNames`.
 
-5. NO WORLD-KNOWLEDGE ENRICHMENT (DO NOT INFER UNMENTIONED CONSTRAINTS):
-   - The parser must NEVER add countries, cities, regions, years, drivers, rallies, stages, or other filters that the user did not explicitly state in the query.
-   - Example: "Rallyes à Donegal" -> city: "Donegal" (DO NOT add country: "Ireland" even though Donegal is in Ireland).
-   - Example: "Reliji u Donegalu" -> city: "Donegal" (DO NOT add country: "Ireland").
-   - The SearchQuery object strictly captures explicit user constraints, not background world knowledge.
+6. NO WORLD-KNOWLEDGE ENRICHMENT:
+   - Do NOT add countries, cities, years, drivers, or rallies that the user did not explicitly state in the query.
 
-6. LOCALIZED & NON-LATIN LOCATION NAMES:
-   - When a multilingual geographic phrase has a well-established canonical equivalent needed for search (e.g. "دونيجال" -> "Donegal", "ڈونیگال" -> "Donegal", "Dún na nGall" -> "Donegal", "Donegālā" -> "Donegal"), recover the standard base Latin form if confident.
-   - Otherwise preserve entity identity.
-
-7. Determine the single best `intent` from the 9 supported SearchIntents:
+7. Supported SearchIntents (choose single best):
    - SEARCH_RALLIES: Search rally events by country, city, year, or event/rally name.
    - SEARCH_DRIVER_RALLIES: Search rallies/events that a specific driver participated in / competed in.
    - SEARCH_DRIVER_WINS: Search rallies/events that a specific driver won / finished 1st in.
@@ -69,78 +71,45 @@ CRITICAL RULES:
    - GET_TOP_UPLOADERS: Get ranked contributors/uploaders by upload count (for a rally or globally).
    - GET_TOP_DRIVERS_BY_WINS: Get career leaderboard of drivers with the most overall wins across all rallies.
 
-8. Compound Filtering & Action Highlights:
-   Extract all mentioned constraints simultaneously:
-   - rallyName / eventName: raw rally or event mention as stated by user (e.g. "Moonraker", "Donegal Rally", "Trackrod", "Get Jerky", "Woodpecker", "Killarney").
-     * When an event or rally name is mentioned in an action/video query (e.g. "drifts in Trackrod", "spins in Killarney", "splashes in Woodpecker"), extract it into `rallyName`. Do NOT guess `city` unless explicitly phrased as a geographic/city discovery search.
-   - driverName: driver mention in base nominative form (e.g. "Josh Moffett", "Moffett", "Philip Squires", "Craig Breen", "Kris Meeke")
-   - country: canonical country in English (e.g. "Ireland", "United Kingdom", "Portugal", "France", "Austria", "Latvia", "Germany", "Spain", "Italy", "Poland", "Norway", "Belgium")
-   - city: city or locality (e.g. "Donegal", "Letterkenny", "Fafe", "Newtown")
-   - stageName: e.g. "Gale Rigg", "Alwen North", "Dyfnant South", "Aberhirnant", "Tarenig"
-   - stageNumber: e.g. "SS1", "Stage 2"
-   - actionType: MUST be one of ["jump", "drift", "crash", "spin", "donut", "hairpin", "water splash", "start line", "near miss", "mechanical failure", "offroad", "stuck"] (or null if not an action search).
-     * When multiple actions or synonyms are joined by 'and' or 'or' (e.g. "spins and doughnuts in Killarney", "hairpins and handbrake turns"), pick the primary action ("spin", "hairpin") and execute without triggering clarification.
-     * When words like "highlights", "moments", "clips", "best of", "Sprunghighlights", "momentos destacados", "meilleurs sauts", "najciekawsze skoki", "labākie lēcieni", "nejlepší skoky", "najbolji skokovi", "geriausi šuoliai", "najlepšie skoky", "ہائی لائٹس", "لقطات مميزة", "matukio makuu", "uchwbwyntiau", "buaicphointí" appear alongside an action (jump, drift, crash, spin, etc.), extract the action into `actionType` and DO NOT trigger clarification.
-   - year: integer (e.g. 2026, 2025, 2024, 2023)
-   - limit: integer (default 20, or as requested, e.g. "top 10" -> limit 10)
+8. CONVERSATIONAL SEARCH & REFERENT COREFERENCE RESOLUTION:
+   - When [Context: ...] annotations are provided, the user may be engaging in a multi-turn conversation referencing prior queries or results.
+   - PRONOUN & COREFERENCE MAPPING:
+     * "Who won it?", "Who won that?", "Winner of it" -> Maps "it" to the active rally in [Context: active rally is "..."] with intent GET_RALLY_RESULTS or GET_RALLY_TOP_FINISHERS.
+     * "Show videos of him", "Show clips of him/her", "His videos", "Videos of that driver" -> Maps "him/her" to the driver in [Context: last winner is "..."] or [Context: active driver is "..."] with intent SEARCH_DRIVER_VIDEOS (or SEARCH_VIDEO_ACTIONS if actions requested).
+     * "What about Sam Moffett?", "Now show Sam Moffett" -> Replaces driver with Sam Moffett while inheriting other active filters (rally, year, action) from context.
+     * "What about 2024?", "Same rally but 2024" -> Replaces year with 2024 while preserving active rally, driver, and action filters.
+   - ADDITIVE VS REPLACEMENT ACTION REFINEMENTS:
+     * "also drifts", "add drifts", "and drifts", "plus drifts" -> ADD drift to existing actions from previous query (e.g. actionTypes: ["jump", "drift"]).
+     * "only drifts", "just drifts", "only show drifts" -> REPLACE actionTypes with ONLY ["drift"].
+     * "forget the driver", "remove driver", "without driver" -> Omit driver from driverNames.
+   - AMBIGUITY & CLARIFICATION:
+     * If the user uses a pronoun like "him" or "it" but multiple candidate drivers/rallies exist in context (e.g. [Context: candidate active drivers are: "Josh Moffett", "Sam Moffett"]), set `requiresClarification: true` and `clarificationQuestion: "Which driver do you mean?"`.
+     * If the user asks "Who won it?" but NO active rally exists in context, set `requiresClarification: true` and `clarificationQuestion: "Which rally do you mean?"`.
 
 9. Clarification:
-   Set `requiresClarification: true` and provide a helpful `clarificationQuestion` ONLY when:
-   - The query specifies ONLY a broad result category without ANY usable filter, entity, action, driver, or context (e.g. "Find clips", "Uploaders", "Show results", "Who won?", "Videos anzeigen", "Montre les résultats").
-   - The query is completely ambiguous, contradictory, or lacks necessary information to execute safely.
-   Do NOT trigger clarification for valid queries with meaningful filters or explicit actions. Specifically, queries like "Show jump highlights featuring Josh Moffett from Moonraker in 2025" or "Zeige Sprunghighlights mit Josh Moffett..." have clear filters and MUST execute directly with `requiresClarification: false`.
+   Set `requiresClarification: true` and provide `clarificationQuestion` ONLY when the query specifies ONLY a broad result category without ANY usable filter, entity, action, driver, or context (e.g. "Find clips", "Uploaders", "Show results"), or when a pronoun/reference cannot be resolved from context.
+   Do NOT trigger clarification for valid queries with meaningful filters, explicit actions, or resolvable context.
 
-10. Examples:
-   - English: "Show jump highlights featuring Josh Moffett from Moonraker in 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - English: "Show jump highlights featuring Moffett from Moonraker" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Moffett", "rallyName": "Moonraker", "requiresClarification": false}
-   - English (Geographic Discovery): "Rallies in Donegal" ->
-     {"intent": "SEARCH_RALLIES", "city": "Donegal", "requiresClarification": false}
-   - German: "Zeige Sprunghighlights mit Josh Moffett von der Moonraker im Jahr 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - German: "Zeig mir Sprünge von Josh Moffett bei Moonraker im Jahr 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - German Code-switching: "Zeig mir jumps von Josh Moffett bei Moonraker" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "requiresClarification": false}
-   - French: "Montrez les meilleurs sauts de Josh Moffett au Moonraker en 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Spanish: "Mostrar momentos destacados de saltos con Josh Moffett de Moonraker en 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Italian: "Mostra i salti migliori di Josh Moffett al Moonraker nel 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Portuguese: "Mostrar destaques de saltos com Josh Moffett no Moonraker em 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Dutch: "Toon spronghoogtepunten met Josh Moffett van Moonraker in 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Polish (Inflection Recovery): "Pokaż najciekawsze skoki z udziałem Josha Moffetta z Moonraker w 2025 roku" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Norwegian: "Vis hopphøydepunkter med Josh Moffett fra Moonraker i 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Latvian: "Rādīt labākos lēcienus ar Josh Moffett no Moonraker 2025. gadā" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Czech: "Ukaž nejlepší skoky s Joshem Moffettem z Moonraker v roce 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Croatian: "Prikaži najbolje skokove s Joshem Moffettom s Moonrakera 2025. godine" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Lithuanian: "Rodyti geriausius šuolius su Josh Moffett iš Moonraker 2025 metais" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Slovak: "Ukáž najlepšie skoky s Joshom Moffettom z Moonraker v roku 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Urdu: "2025 میں Moonraker سے Josh Moffett کی جمپس کے ہائی لائٹس دکھائیں" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Arabic: "أظهر لقطات القفزات المميزة لـ Josh Moffett من Moonraker في عام 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Swahili: "Onyesha matukio makuu ya miruko ya Josh Moffett kutoka Moonraker mwaka wa 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Welsh: "Dangos uchafbwyntiau neidiau gyda Josh Moffett o Moonraker yn 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Irish: "Taispeáin buaicphointí léime le Josh Moffett ó Moonraker in 2025" ->
-     {"intent": "SEARCH_VIDEO_ACTIONS", "actionType": "jump", "driverName": "Josh Moffett", "rallyName": "Moonraker", "year": 2025, "requiresClarification": false}
-   - Broad query requiring clarification: "Clips anzeigen" ->
-     {"requiresClarification": true, "clarificationQuestion": "What kind of clips or rally moments would you like to see?"}
+10. Multi-Value & Compound Examples:
+   - "Show jump highlights featuring Josh Moffett from Moonraker in 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionTypes": ["jump"], "driverNames": ["Josh Moffett"], "rallyNames": ["Moonraker"], "years": [2025], "requiresClarification": false}
+   - "Show rallies in Ireland and Scotland in 2024 and 2025" ->
+     {"intent": "SEARCH_RALLIES", "countries": ["Ireland", "Scotland"], "years": [2024, 2025], "requiresClarification": false}
+   - "Show jump and drift highlights featuring Josh Moffett or Sam Moffett from Moonraker" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionTypes": ["jump", "drift"], "driverNames": ["Josh Moffett", "Sam Moffett"], "rallyNames": ["Moonraker"], "requiresClarification": false}
+   - "Show rallies from 2023 to 2025" ->
+     {"intent": "SEARCH_RALLIES", "yearFrom": 2023, "yearTo": 2025, "requiresClarification": false}
+   - "Rallies where both Josh Moffett and Sam Moffett participated" ->
+     {"intent": "SEARCH_DRIVER_RALLIES", "driverNames": ["Josh Moffett", "Sam Moffett"], "driverMatchMode": "ALL", "requiresClarification": false}
+   - With [Context: active rally is "Donegal International Rally 2025"], "Who won it?" ->
+     {"intent": "GET_RALLY_RESULTS", "rallyNames": ["Donegal International Rally 2025"], "years": [2025], "requiresClarification": false}
+   - With [Context: last winner is "Josh Moffett"], "Show videos of him" ->
+     {"intent": "SEARCH_DRIVER_VIDEOS", "driverNames": ["Josh Moffett"], "requiresClarification": false}
+   - With [Context: active rally is "Donegal Rally 2025", active driver is "Josh Moffett"], "Only show jumps" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionTypes": ["jump"], "rallyNames": ["Donegal Rally 2025"], "driverNames": ["Josh Moffett"], "years": [2025], "requiresClarification": false}
+   - German: "Zeig mir Sprünge und Drifts von Josh Moffett bei Moonraker und Trackrod aus 2024 und 2025" ->
+     {"intent": "SEARCH_VIDEO_ACTIONS", "actionTypes": ["jump", "drift"], "driverNames": ["Josh Moffett"], "rallyNames": ["Moonraker", "Trackrod"], "years": [2024, 2025], "requiresClarification": false}
 ''';
-
 
   /// Supported canonical action types
   static const List<String> supportedActionTypes = [
@@ -180,56 +149,79 @@ CRITICAL RULES:
           ],
           'description': 'The primary search intent of the user query.',
         },
-        'rallyName': {
-          'type': ['string', 'null'],
-          'description': 'Raw rally or championship mention from user query (e.g. Moonraker, Donegal, Killarney).',
+        'rallyNames': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Raw rally or championship mentions (e.g. ["Moonraker", "Donegal"]).',
         },
-        'eventName': {
-          'type': ['string', 'null'],
-          'description': 'Specific event name if distinct from rallyName.',
+        'eventNames': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Specific event names if distinct from rallyNames.',
         },
-        'country': {
-          'type': ['string', 'null'],
-          'description': 'Country name (e.g. Ireland, United Kingdom, Portugal, France).',
+        'countries': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Country names in English (e.g. ["Ireland", "Scotland", "Portugal"]).',
         },
-        'city': {
-          'type': ['string', 'null'],
-          'description': 'City or locality where rally took place (e.g. Letterkenny, Fafe).',
+        'cities': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Cities or localities where rally took place (e.g. ["Letterkenny"]).',
         },
-        'stageName': {
-          'type': ['string', 'null'],
-          'description': 'Special stage name (e.g. Gale Rigg, Alwen North, Tarenig).',
+        'stageNames': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Special stage names (e.g. ["Gale Rigg", "Alwen North"]).',
         },
-        'stageNumber': {
-          'type': ['string', 'null'],
-          'description': 'Stage number (e.g. SS1, SS2).',
+        'stageNumbers': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Stage numbers (e.g. ["SS1", "SS2"]).',
         },
-        'driverName': {
-          'type': ['string', 'null'],
-          'description': 'Driver or competitor name extracted verbatim (e.g. Josh Moffett, Moffett).',
+        'driverNames': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description': 'Driver or competitor names extracted verbatim in nominative form (e.g. ["Josh Moffett", "Sam Moffett"]).',
         },
-        'actionType': {
-          'type': ['string', 'null'],
-          'enum': [
-            'jump',
-            'drift',
-            'crash',
-            'spin',
-            'donut',
-            'hairpin',
-            'water splash',
-            'start line',
-            'near miss',
-            'mechanical failure',
-            'offroad',
-            'stuck',
-            null,
-          ],
-          'description': 'Action highlight category if searching video moments.',
+        'actionTypes': {
+          'type': 'array',
+          'items': {
+            'type': 'string',
+            'enum': [
+              'jump',
+              'drift',
+              'crash',
+              'spin',
+              'donut',
+              'hairpin',
+              'water splash',
+              'start line',
+              'near miss',
+              'mechanical failure',
+              'offroad',
+              'stuck',
+            ],
+          },
+          'description': 'Action highlight categories (e.g. ["jump", "drift"]).',
         },
-        'year': {
+        'years': {
+          'type': 'array',
+          'items': {'type': 'integer'},
+          'description': 'Discrete calendar years (e.g. [2024, 2025]).',
+        },
+        'yearFrom': {
           'type': ['integer', 'null'],
-          'description': 'Four-digit year (e.g. 2025, 2026).',
+          'description': 'Start year for explicit range queries (e.g. from 2023 to 2025).',
+        },
+        'yearTo': {
+          'type': ['integer', 'null'],
+          'description': 'End year for explicit range queries.',
+        },
+        'driverMatchMode': {
+          'type': 'string',
+          'enum': ['ANY', 'ALL'],
+          'description': 'ANY by default; ALL only if user explicitly says "both" or "all" drivers.',
         },
         'limit': {
           'type': ['integer', 'null'],
@@ -250,15 +242,18 @@ CRITICAL RULES:
       },
       'required': [
         'intent',
-        'rallyName',
-        'eventName',
-        'country',
-        'city',
-        'stageName',
-        'stageNumber',
-        'driverName',
-        'actionType',
-        'year',
+        'rallyNames',
+        'eventNames',
+        'countries',
+        'cities',
+        'stageNames',
+        'stageNumbers',
+        'driverNames',
+        'actionTypes',
+        'years',
+        'yearFrom',
+        'yearTo',
+        'driverMatchMode',
         'limit',
         'offset',
         'requiresClarification',
@@ -287,64 +282,81 @@ CRITICAL RULES:
         ],
         'description': 'The primary search intent of the user query.',
       },
-      'rallyName': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'Raw rally or championship mention from user query.',
+      'rallyNames': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Rally or championship mentions.',
       },
-      'eventName': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'Specific event name if distinct from rallyName.',
+      'eventNames': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Specific event names.',
       },
-      'country': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'Country name (e.g. Ireland, United Kingdom, Poland, Portugal).',
+      'countries': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Country names in English (e.g. Ireland, Scotland, Poland).',
       },
-      'city': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'City or locality.',
+      'cities': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Cities or localities.',
       },
-      'stageName': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'Special stage name.',
+      'stageNames': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Special stage names.',
       },
-      'stageNumber': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'Stage number.',
+      'stageNumbers': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Stage numbers.',
       },
-      'driverName': {
-        'type': 'STRING',
-        'nullable': true,
-        'description': 'Driver or competitor name verbatim as expressed.',
+      'driverNames': {
+        'type': 'ARRAY',
+        'items': {'type': 'STRING'},
+        'description': 'Driver or competitor names verbatim as expressed.',
       },
-      'actionType': {
-        'type': 'STRING',
-        'nullable': true,
-        'enum': [
-          'jump',
-          'drift',
-          'crash',
-          'spin',
-          'donut',
-          'hairpin',
-          'water splash',
-          'start line',
-          'near miss',
-          'mechanical failure',
-          'offroad',
-          'stuck',
-        ],
-        'description': 'Action highlight category.',
+      'actionTypes': {
+        'type': 'ARRAY',
+        'items': {
+          'type': 'STRING',
+          'enum': [
+            'jump',
+            'drift',
+            'crash',
+            'spin',
+            'donut',
+            'hairpin',
+            'water splash',
+            'start line',
+            'near miss',
+            'mechanical failure',
+            'offroad',
+            'stuck',
+          ],
+        },
+        'description': 'Action highlight categories.',
       },
-      'year': {
+      'years': {
+        'type': 'ARRAY',
+        'items': {'type': 'INTEGER'},
+        'description': 'Discrete calendar years.',
+      },
+      'yearFrom': {
         'type': 'INTEGER',
         'nullable': true,
-        'description': 'Four-digit year.',
+        'description': 'Start year for explicit range queries.',
+      },
+      'yearTo': {
+        'type': 'INTEGER',
+        'nullable': true,
+        'description': 'End year for explicit range queries.',
+      },
+      'driverMatchMode': {
+        'type': 'STRING',
+        'enum': ['ANY', 'ALL'],
+        'description': 'ANY by default; ALL if user requested both/all.',
       },
       'limit': {
         'type': 'INTEGER',

@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ai_rally_search/models/entity_candidate.dart';
 import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/models/search_results.dart';
 import 'package:ai_rally_search/models/video_action.dart';
 import 'package:ai_rally_search/screens/general_search_screen.dart';
+import 'package:ai_rally_search/services/llm/entity_resolution/database_entity_resolver.dart';
+import 'package:ai_rally_search/services/llm/entity_resolution/entity_lookup_repository.dart';
+import 'package:ai_rally_search/services/llm/natural_language_search_service.dart';
+import 'package:ai_rally_search/services/llm/providers/mock_query_parser.dart';
 import 'package:ai_rally_search/services/search_repository.dart';
 import 'package:ai_rally_search/widgets/driver_participation_card.dart';
 import 'package:ai_rally_search/widgets/driver_wins_leaderboard.dart';
@@ -13,21 +18,54 @@ import 'package:ai_rally_search/widgets/rally_result_card.dart';
 import 'package:ai_rally_search/widgets/uploader_leaderboard.dart';
 
 class FakeSearchRepository implements ISearchRepository {
+  SearchQuery? lastQuery;
+
   @override
   Future<SearchResponse<dynamic>> search(SearchQuery query) async {
-    return SearchResponse<RallySearchResult>(
-      intent: SearchIntent.searchRallies,
-      results: [
-        RallySearchResult(
-          eventId: 'e-1',
-          eventName: 'Rally Ireland 2026',
-          country: 'Ireland',
-          city: 'Letterkenny',
-          stagesCount: 8,
-          startDate: DateTime(2026, 9, 12),
-        ),
-      ],
-      totalCount: 1,
+    lastQuery = query;
+
+    if (query.intent == SearchIntent.searchRallies) {
+      return SearchResponse<RallySearchResult>(
+        intent: query.intent,
+        results: [
+          RallySearchResult(
+            eventId: 'event-101',
+            eventName: 'Rally Ireland 2026',
+            country: 'Ireland',
+            city: 'Letterkenny',
+            stagesCount: 12,
+            startDate: DateTime(2026, 6, 20),
+          ),
+        ],
+        totalCount: 1,
+        hasMore: false,
+        limit: query.limit,
+        offset: query.offset,
+      );
+    } else if (query.intent == SearchIntent.getRallyResults || query.intent == SearchIntent.getRallyTopFinishers) {
+      return SearchResponse<RallyResult>(
+        intent: query.intent,
+        results: [
+          const RallyResult(
+            id: 1,
+            rallyId: 'e-donegal',
+            eventName: 'Donegal International Rally 2025',
+            driverName: 'Josh Moffett',
+            posOverall: 1,
+            totalTime: '3600.0',
+          ),
+        ],
+        totalCount: 1,
+        hasMore: false,
+        limit: query.limit,
+        offset: query.offset,
+      );
+    }
+
+    return SearchResponse<dynamic>(
+      intent: query.intent,
+      results: [],
+      totalCount: 0,
       hasMore: false,
       limit: query.limit,
       offset: query.offset,
@@ -35,41 +73,88 @@ class FakeSearchRepository implements ISearchRepository {
   }
 
   @override
-  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async {
-    return (await search(query)) as SearchResponse<RallySearchResult>;
+  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<RallySearchResult>;
+  @override
+  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<RallyParticipationResult>;
+  @override
+  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<RallyParticipationResult>;
+  @override
+  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<RallyResult>;
+  @override
+  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<RallyResult>;
+  @override
+  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<VideoAction>;
+  @override
+  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<VideoSearchResult>;
+  @override
+  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<UploaderSearchResult>;
+  @override
+  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async =>
+      (await search(query)) as SearchResponse<DriverWinResult>;
+}
+
+class FakeEntityLookupRepo implements IEntityLookupRepository {
+  @override
+  Future<List<EntityCandidate>> lookupRallies(
+    String phrase, {
+    int? year,
+    String? country,
+    String? city,
+    int limit = 10,
+  }) async {
+    return [
+      EntityCandidate(
+        id: 'r-1',
+        type: EntityType.rally,
+        canonicalName: phrase,
+        metadata: {'year': year ?? 2026},
+      ),
+    ];
   }
 
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<List<EntityCandidate>> lookupDrivers(
+    String phrase, {
+    String? eventId,
+    String? eventName,
+    int? year,
+    int limit = 10,
+  }) async => [];
+
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async => throw UnimplementedError();
+  Future<List<EntityCandidate>> lookupStages(
+    String phrase, {
+    String? eventId,
+    String? eventName,
+    int? year,
+    int limit = 10,
+  }) async => [];
+
   @override
-  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async => throw UnimplementedError();
+  Future<List<EntityCandidate>> lookupCities(String phrase, {String? country, int limit = 10}) async => [];
+
   @override
-  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async => throw UnimplementedError();
-  @override
-  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async => throw UnimplementedError();
-  @override
-  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async => throw UnimplementedError();
-  @override
-  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async => throw UnimplementedError();
-  @override
-  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async => throw UnimplementedError();
+  Future<List<EntityCandidate>> lookupUploaders(String phrase, {int limit = 10}) async => [];
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   group('Result Views Widget Unit Tests', () {
     testWidgets('RallyResultCard renders event details properly', (tester) async {
       final rally = RallySearchResult(
-        eventId: 'e-1',
-        eventName: 'Rally Ireland 2026',
+        eventId: 'event-101',
+        eventName: 'Donegal International Rally 2025',
         country: 'Ireland',
         city: 'Letterkenny',
-        stagesCount: 8,
-        startDate: DateTime(2026, 9, 12),
-        endDate: DateTime(2026, 9, 14),
+        stagesCount: 14,
+        startDate: DateTime(2025, 6, 20),
       );
 
       await tester.pumpWidget(
@@ -80,90 +165,82 @@ void main() {
         ),
       );
 
-      expect(find.text('Rally Ireland 2026'), findsOneWidget);
+      expect(find.text('Donegal International Rally 2025'), findsOneWidget);
       expect(find.text('Letterkenny, Ireland'), findsOneWidget);
-      expect(find.text('8 stages'), findsOneWidget);
+      expect(find.text('14 stages'), findsOneWidget);
     });
 
     testWidgets('DriverParticipationCard renders win and place badges', (tester) async {
-      final participation = RallyParticipationResult(
-        rallyId: 'r-1',
-        eventName: 'Moonraker Forestry Rally 2026',
+      final part = RallyParticipationResult(
+        rallyId: 'event-101',
+        eventName: 'Donegal International Rally 2025',
         driverName: 'Josh Moffett',
-        crew: 'Moffett Josh / Hayes Andy',
-        carNumber: '5',
+        crew: 'Moffett / Hayes',
+        carNumber: '1',
         make: 'Hyundai i20 R5',
         posOverall: 1,
-        totalTime: '2325.8',
+        totalTime: '3600.5',
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DriverParticipationCard(participation: participation),
+            body: DriverParticipationCard(participation: part),
           ),
         ),
       );
 
-      expect(find.text('Moonraker Forestry Rally 2026'), findsOneWidget);
       expect(find.text('Josh Moffett'), findsOneWidget);
+      expect(find.text('Donegal International Rally 2025'), findsOneWidget);
       expect(find.text('🏆 1st Place (Winner)'), findsOneWidget);
-      expect(find.text('2325.8s'), findsOneWidget);
     });
 
     testWidgets('RallyLeaderboard renders top finishers in rank order', (tester) async {
-      final results = [
-        const RallyResult(
+      const results = [
+        RallyResult(
           id: 1,
-          rallyId: 'r-1',
-          eventName: 'Moonraker Rally',
+          rallyId: 'e-101',
+          eventName: 'Donegal 2025',
           driverName: 'Josh Moffett',
-          carNumber: '5',
-          make: 'Hyundai i20 R5',
           posOverall: 1,
-          totalTime: '2325.8',
+          totalTime: '3600.5',
         ),
-        const RallyResult(
+        RallyResult(
           id: 2,
-          rallyId: 'r-1',
-          eventName: 'Moonraker Rally',
-          driverName: 'Jordan Hone',
-          carNumber: '3',
-          make: 'Škoda Fabia Rally2',
+          rallyId: 'e-101',
+          eventName: 'Donegal 2025',
+          driverName: 'Sam Moffett',
           posOverall: 2,
-          totalTime: '2328.9',
-          diffLeader: '3.1',
+          totalTime: '3610.2',
         ),
       ];
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
-              child: RallyLeaderboard(results: results),
+              child: RallyLeaderboard(results: results, rallyName: 'Donegal 2025'),
             ),
           ),
         ),
       );
 
-      expect(find.text('Moonraker Rally'), findsOneWidget);
+      expect(find.text('Donegal 2025'), findsOneWidget);
       expect(find.text('Josh Moffett'), findsOneWidget);
-      expect(find.text('Jordan Hone'), findsOneWidget);
-      expect(find.text('+3.1'), findsOneWidget);
-      expect(find.text('2 finishers'), findsOneWidget);
+      expect(find.text('Sam Moffett'), findsOneWidget);
     });
 
     testWidgets('UploaderLeaderboard renders ranked contributors', (tester) async {
-      final uploaders = [
-        const UploaderSearchResult(
+      const uploaders = [
+        UploaderSearchResult(
           uploaderId: 'u-1',
-          uploaderName: 'SuperFan2026',
-          uploadCount: 42,
+          uploaderName: 'RallyMediaPro',
+          uploadCount: 25,
         ),
       ];
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: UploaderLeaderboard(uploaders: uploaders),
@@ -172,13 +249,13 @@ void main() {
         ),
       );
 
-      expect(find.text('SuperFan2026'), findsOneWidget);
-      expect(find.text('42 vids'), findsOneWidget);
+      expect(find.text('RallyMediaPro'), findsOneWidget);
+      expect(find.text('25 vids'), findsOneWidget);
     });
 
     testWidgets('DriverWinsLeaderboard renders career victories list', (tester) async {
-      final winners = [
-        const DriverWinResult(
+      const winners = [
+        DriverWinResult(
           driverName: 'Josh Moffett',
           winCount: 12,
           country: 'Ireland',
@@ -186,7 +263,7 @@ void main() {
       ];
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: DriverWinsLeaderboard(drivers: winners),
@@ -201,17 +278,26 @@ void main() {
     });
   });
 
-  group('GeneralSearchScreen Widget Smoke Tests', () {
-    testWidgets('Renders search controls and filters and results', (tester) async {
+  group('GeneralSearchScreen Continuous Search & UX Widget Tests', () {
+    testWidgets('Renders unified search controls, active context chips, and results', (tester) async {
       final fakeRepo = FakeSearchRepository();
+      final mockParser = MockLlmQueryParser();
+      final lookupRepo = FakeEntityLookupRepo();
+      final resolver = DatabaseEntityResolver(repository: lookupRepo);
+      final nlService = NaturalLanguageSearchService(
+        parser: mockParser,
+        entityResolver: resolver,
+        repository: fakeRepo,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: GeneralSearchScreen(
             repository: fakeRepo,
+            nlSearchService: nlService,
             initialQuery: const SearchQuery(
               intent: SearchIntent.searchRallies,
-              country: 'Ireland',
+              countries: ['Ireland'],
             ),
           ),
         ),
@@ -220,40 +306,83 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('AI Rally Search'), findsOneWidget);
-      expect(find.text('Search Query Intent'), findsOneWidget);
       expect(find.text('Search'), findsOneWidget);
+      expect(find.text('Ireland'), findsWidgets);
       expect(find.text('Rally Ireland 2026'), findsOneWidget);
     });
 
-    testWidgets('Submitting Natural Language query parses and updates interpreted banner', (tester) async {
+    testWidgets('Submitting continuous natural language search updates query and results', (tester) async {
       final fakeRepo = FakeSearchRepository();
+      final mockParser = MockLlmQueryParser();
+      final lookupRepo = FakeEntityLookupRepo();
+      final resolver = DatabaseEntityResolver(repository: lookupRepo);
+      final nlService = NaturalLanguageSearchService(
+        parser: mockParser,
+        entityResolver: resolver,
+        repository: fakeRepo,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: GeneralSearchScreen(
             repository: fakeRepo,
+            nlSearchService: nlService,
           ),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      // Enter text into AI prompt field
-      final aiField = find.byWidgetPredicate(
-        (widget) => widget is TextField && widget.decoration?.hintText?.contains('Ask in plain English') == true,
-      );
-      expect(aiField, findsOneWidget);
-
-      await tester.enterText(aiField, 'Show rallies in Ireland in 2026');
-      await tester.tap(find.text('AI Search'));
+      final searchField = find.byType(TextField).first;
+      await tester.enterText(searchField, 'Show rallies in Ireland');
+      await tester.tap(find.text('Search'));
       await tester.pumpAndSettle();
 
-      // Interpreted summary banner should be displayed
       expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
       expect(find.text('Rally Ireland 2026'), findsOneWidget);
     });
 
-    testWidgets('Submitting "show me rallies in poland" updates country to Poland', (tester) async {
+    testWidgets('Tapping chip remove (×) deterministically removes filter without LLM call', (tester) async {
+      final fakeRepo = FakeSearchRepository();
+      final mockParser = MockLlmQueryParser();
+      final lookupRepo = FakeEntityLookupRepo();
+      final resolver = DatabaseEntityResolver(repository: lookupRepo);
+      final nlService = NaturalLanguageSearchService(
+        parser: mockParser,
+        entityResolver: resolver,
+        repository: fakeRepo,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GeneralSearchScreen(
+            repository: fakeRepo,
+            nlSearchService: nlService,
+            initialQuery: const SearchQuery(
+              intent: SearchIntent.searchRallies,
+              countries: ['Ireland'],
+              years: [2026],
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ireland'), findsWidgets);
+      expect(find.text('2026'), findsWidgets);
+
+      // Tap close on 2026 chip
+      final closeIcons = find.byIcon(Icons.close_rounded);
+      expect(closeIcons, findsWidgets);
+      await tester.tap(closeIcons.first);
+      await tester.pumpAndSettle();
+
+      // Verified search re-executed deterministically
+      expect(fakeRepo.lastQuery, isNotNull);
+    });
+
+    testWidgets('Tapping advanced filters button opens bottom sheet', (tester) async {
       final fakeRepo = FakeSearchRepository();
 
       await tester.pumpWidget(
@@ -266,17 +395,13 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final aiField = find.byWidgetPredicate(
-        (widget) => widget is TextField && widget.decoration?.hintText?.contains('Ask in plain English') == true,
-      );
-
-      await tester.enterText(aiField, 'show me rallies in poland');
-      await tester.tap(find.text('AI Search'));
+      final tuneButton = find.byIcon(Icons.tune_rounded);
+      expect(tuneButton, findsOneWidget);
+      await tester.tap(tuneButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Poland (PL)'), findsOneWidget);
+      expect(find.text('Advanced Filters'), findsOneWidget);
+      expect(find.text('Apply Filters'), findsOneWidget);
     });
   });
 }
-
-

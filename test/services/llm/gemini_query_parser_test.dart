@@ -93,8 +93,8 @@ void main() {
         final contents = body['contents'] as List<dynamic>;
         final userText = contents.first['parts'].first['text'] as String;
 
-        expect(userText, contains('current year is 2026'));
-        expect(userText, contains('active rally filter is "Donegal"'));
+        expect(userText, contains('current calendar year is 2026'));
+        expect(userText, contains('active rally is "Donegal"'));
         contextPassed = true;
 
         const mockResponse = '{"candidates":[{"content":{"parts":[{"text":"{\\"intent\\":\\"SEARCH_RALLIES\\",\\"year\\":2026}"}]}}]}';

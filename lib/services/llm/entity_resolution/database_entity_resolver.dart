@@ -10,6 +10,7 @@ import 'phonetic_matching_helper.dart';
 ///
 /// Converts raw/corrupted LLM extracted entity phrases into canonical database UUIDs
 /// using candidate retrieval and phonetic ranking.
+/// Supports multi-entity list resolution independently per dimension while preserving partial resolutions.
 class DatabaseEntityResolver implements EntityResolver {
   final IEntityLookupRepository _repository;
   final double minConfidenceThreshold;
@@ -38,139 +39,201 @@ class DatabaseEntityResolver implements EntityResolver {
     SearchQuery workingQuery = query;
     final resolutions = <String, EntityResolution>{};
 
-    EntityCandidate? resolvedRallyCandidate;
+    EntityCandidate? primaryResolvedRally;
+    final resolvedRallies = <String>[];
+    final resolvedDrivers = <String>[];
+    final resolvedDriverIds = <String>[];
+    final resolvedStages = <String>[];
+    final resolvedStageNumbers = <String>[];
+    final resolvedCities = <String>[];
 
     // =========================================================================
-    // STEP 1: RESOLVE RALLY / EVENT
+    // STEP 1: RESOLVE RALLIES / EVENTS
     // =========================================================================
-    final rawRally = query.targetRallyName;
-    if (rawRally != null && rawRally.trim().isNotEmpty) {
+    final rawRallies = query.targetRallyNames;
+    if (rawRallies.isNotEmpty) {
       final isVideoSearch = query.intent == SearchIntent.searchVideoActions || query.intent == SearchIntent.searchDriverVideos;
-      final rallyRes = await _resolveRally(
-        rawRally.trim(),
-        year: query.year,
-        country: query.country,
-        city: query.city,
-        isVideoSearch: isVideoSearch,
-      );
+      for (final rawRally in rawRallies) {
+        if (rawRally.trim().isEmpty) continue;
+        final rallyRes = await _resolveRally(
+          rawRally.trim(),
+          year: query.years.length == 1 ? query.years.first : null,
+          years: query.years,
+          country: query.countries.length == 1 ? query.countries.first : null,
+          countries: query.countries,
+          city: query.cities.length == 1 ? query.cities.first : null,
+          isVideoSearch: isVideoSearch,
+        );
 
-      resolutions['rally'] = rallyRes;
+        resolutions['rally:$rawRally'] = rallyRes;
+        if (rawRallies.length == 1) {
+          resolutions['rally'] = rallyRes;
+        }
 
-      if (rallyRes.isAmbiguous) {
-        // Deterministic Policy: Distinguish REQUIRED vs OPTIONAL / low-confidence hallucinated entities
-        // If intent is SEARCH_RALLIES (which searches rallies by country/year/city) and a strongly valid country exists,
-        // and an unrecognized noisy rally phrase has low confidence (< 0.40), do NOT block the search with clarification.
-        final hasStrongCountry = query.country != null && query.country!.trim().isNotEmpty && query.country!.toUpperCase() != 'ALL';
-        final isBroadRalliesIntent = query.intent == SearchIntent.searchRallies;
-        final isLowConfidenceNoise = rallyRes.confidence < 0.40;
+        if (rallyRes.isAmbiguous) {
+          // Deterministic Policy: Distinguish REQUIRED vs OPTIONAL / low-confidence hallucinated entities
+          final hasStrongCountry = query.countries.isNotEmpty;
+          final isBroadRalliesIntent = query.intent == SearchIntent.searchRallies;
+          final isLowConfidenceNoise = rallyRes.confidence < 0.40;
 
-        if (!(isBroadRalliesIntent && hasStrongCountry && isLowConfidenceNoise)) {
-          return EntityResolutionResult.clarification(
-            parsedQuery: query,
-            clarificationQuestion: 'Which rally event do you mean?',
-            candidates: rallyRes.candidateOptions,
-            resolutions: resolutions,
-          );
+          if (!(isBroadRalliesIntent && hasStrongCountry && isLowConfidenceNoise)) {
+            return EntityResolutionResult.clarification(
+              parsedQuery: query,
+              clarificationQuestion: rawRallies.length > 1
+                  ? 'Which rally event named "${rawRally.trim()}" do you mean?'
+                  : (rallyRes.strategy == 'multi_year_ambiguity'
+                      ? 'Which year or edition of "${rawRally.trim()}" are you looking for?'
+                      : 'Which rally event named "${rawRally.trim()}" do you mean?'),
+              candidates: rallyRes.candidateOptions,
+              resolutions: resolutions,
+            );
+          }
+        }
+
+        if (rallyRes.resolvedCandidate != null) {
+          primaryResolvedRally ??= rallyRes.resolvedCandidate;
+          resolvedRallies.add(rallyRes.resolvedCandidate!.canonicalName);
+        } else {
+          resolvedRallies.add(rawRally.trim());
         }
       }
 
-      if (rallyRes.resolvedCandidate != null) {
-        resolvedRallyCandidate = rallyRes.resolvedCandidate;
-        workingQuery = workingQuery.copyWith(
-          rallyName: resolvedRallyCandidate!.canonicalName,
-          eventName: resolvedRallyCandidate.canonicalName,
-        );
-      }
+      workingQuery = workingQuery.copyWith(
+        rallyNames: resolvedRallies,
+        eventNames: resolvedRallies,
+      );
     }
 
     // =========================================================================
-    // STEP 2: RESOLVE STAGE WITHIN EVENT
+    // STEP 2: RESOLVE STAGES USING RALLY CONTEXT
     // =========================================================================
-    final rawStage = query.stageName;
-    if (rawStage != null && rawStage.trim().isNotEmpty) {
-      final stageRes = await _resolveStage(
-        rawStage.trim(),
-        eventId: resolvedRallyCandidate?.id,
-        eventName: resolvedRallyCandidate?.canonicalName ?? query.targetRallyName,
+    final rawStages = query.stageNames;
+    if (rawStages.isNotEmpty) {
+      for (final rawStage in rawStages) {
+        if (rawStage.trim().isEmpty) continue;
+        final stageRes = await _resolveStage(
+          rawStage.trim(),
+          eventId: primaryResolvedRally?.id,
+          eventName: primaryResolvedRally?.canonicalName ?? query.targetRallyName,
+        );
+
+        resolutions['stage:$rawStage'] = stageRes;
+        if (rawStages.length == 1) {
+          resolutions['stage'] = stageRes;
+        }
+
+        if (stageRes.isAmbiguous) {
+          return EntityResolutionResult.clarification(
+            parsedQuery: query,
+            clarificationQuestion: 'Which stage named "${rawStage.trim()}" do you mean?',
+            candidates: stageRes.candidateOptions,
+            resolutions: resolutions,
+          );
+        }
+
+        if (stageRes.resolvedCandidate != null) {
+          resolvedStages.add(stageRes.resolvedCandidate!.canonicalName);
+          final stageNum = stageRes.resolvedCandidate!.metadata?['stageNumber']?.toString();
+          if (stageNum != null && stageNum.isNotEmpty) {
+            resolvedStageNumbers.add(stageNum);
+          }
+        } else {
+          resolvedStages.add(rawStage.trim());
+        }
+      }
+
+      workingQuery = workingQuery.copyWith(
+        stageNames: resolvedStages,
+        stageNumbers: resolvedStageNumbers.isNotEmpty ? resolvedStageNumbers : workingQuery.stageNumbers,
       );
-
-      resolutions['stage'] = stageRes;
-
-      if (stageRes.isAmbiguous) {
-        return EntityResolutionResult.clarification(
-          parsedQuery: query,
-          clarificationQuestion: 'Which stage do you mean?',
-          candidates: stageRes.candidateOptions,
-          resolutions: resolutions,
-        );
-      }
-
-      if (stageRes.resolvedCandidate != null) {
-        workingQuery = workingQuery.copyWith(
-          stageName: stageRes.resolvedCandidate!.canonicalName,
-          stageNumber: stageRes.resolvedCandidate!.metadata?['stageNumber']?.toString() ?? workingQuery.stageNumber,
-        );
-      }
     }
 
     // =========================================================================
-    // STEP 3: RESOLVE DRIVER USING EVENT / YEAR CONTEXT
+    // STEP 3: RESOLVE DRIVERS USING EVENT / YEAR CONTEXT
     // =========================================================================
-    final rawDriver = query.driverName;
-    if (rawDriver != null && rawDriver.trim().isNotEmpty) {
-      final driverRes = await _resolveDriver(
-        rawDriver.trim(),
-        eventId: resolvedRallyCandidate?.id,
-        eventName: resolvedRallyCandidate?.canonicalName ?? query.targetRallyName,
-        year: query.year,
+    final rawDrivers = query.driverNames;
+    if (rawDrivers.isNotEmpty) {
+      for (final rawDriver in rawDrivers) {
+        if (rawDriver.trim().isEmpty) continue;
+        final driverRes = await _resolveDriver(
+          rawDriver.trim(),
+          eventId: primaryResolvedRally?.id,
+          eventName: primaryResolvedRally?.canonicalName ?? query.targetRallyName,
+          year: query.years.length == 1 ? query.years.first : null,
+          years: query.years,
+        );
+
+        resolutions['driver:$rawDriver'] = driverRes;
+        if (rawDrivers.length == 1) {
+          resolutions['driver'] = driverRes;
+        }
+
+        if (driverRes.isAmbiguous) {
+          // Preserve already-resolved entities into workingQuery before prompting clarification
+          final updatedWorkingQuery = workingQuery.copyWith(
+            driverIds: resolvedDriverIds,
+            driverNames: resolvedDrivers.isNotEmpty ? resolvedDrivers : workingQuery.driverNames,
+          );
+
+          return EntityResolutionResult.clarification(
+            parsedQuery: query,
+            clarificationQuestion: 'Which driver named "${rawDriver.trim()}" do you mean?',
+            candidates: driverRes.candidateOptions,
+            resolutions: resolutions,
+          );
+        }
+
+        if (driverRes.resolvedCandidate != null) {
+          resolvedDriverIds.add(driverRes.resolvedCandidate!.id);
+          resolvedDrivers.add(driverRes.resolvedCandidate!.canonicalName);
+        } else {
+          resolvedDrivers.add(rawDriver.trim());
+        }
+      }
+
+      workingQuery = workingQuery.copyWith(
+        driverIds: resolvedDriverIds,
+        driverNames: resolvedDrivers,
       );
-
-      resolutions['driver'] = driverRes;
-
-      if (driverRes.isAmbiguous) {
-        return EntityResolutionResult.clarification(
-          parsedQuery: query,
-          clarificationQuestion: 'Which driver named "${rawDriver.trim()}" do you mean?',
-          candidates: driverRes.candidateOptions,
-          resolutions: resolutions,
-        );
-      }
-
-      if (driverRes.resolvedCandidate != null) {
-        workingQuery = workingQuery.copyWith(
-          driverId: driverRes.resolvedCandidate!.id,
-          driverName: driverRes.resolvedCandidate!.canonicalName,
-        );
-      }
     }
 
     // =========================================================================
-    // STEP 4: RESOLVE CITY / LOCATION & CHECK FOR LOCATION AMBIGUITY
+    // STEP 4: RESOLVE CITIES / LOCATIONS
     // =========================================================================
-    final rawCity = query.city;
-    if (rawCity != null && rawCity.trim().isNotEmpty && rawCity.toUpperCase() != 'ALL') {
-      final cityRes = await _resolveCity(
-        rawCity.trim(),
-        country: query.country,
-        targetRallyName: resolvedRallyCandidate?.canonicalName ?? query.targetRallyName,
+    final rawCities = query.cities;
+    if (rawCities.isNotEmpty) {
+      for (final rawCity in rawCities) {
+        if (rawCity.trim().isEmpty || rawCity.toUpperCase() == 'ALL') continue;
+        final cityRes = await _resolveCity(
+          rawCity.trim(),
+          country: query.countries.length == 1 ? query.countries.first : null,
+          targetRallyName: primaryResolvedRally?.canonicalName ?? query.targetRallyName,
+        );
+
+        resolutions['city:$rawCity'] = cityRes;
+        if (rawCities.length == 1) {
+          resolutions['city'] = cityRes;
+        }
+
+        if (cityRes.isAmbiguous) {
+          return EntityResolutionResult.clarification(
+            parsedQuery: query,
+            clarificationQuestion: 'Which location named "${rawCity.trim()}" do you mean?',
+            candidates: cityRes.candidateOptions,
+            resolutions: resolutions,
+          );
+        }
+
+        if (cityRes.resolvedCandidate != null) {
+          resolvedCities.add(cityRes.resolvedCandidate!.canonicalName);
+        } else {
+          resolvedCities.add(rawCity.trim());
+        }
+      }
+
+      workingQuery = workingQuery.copyWith(
+        cities: resolvedCities,
       );
-
-      resolutions['city'] = cityRes;
-
-      if (cityRes.isAmbiguous) {
-        return EntityResolutionResult.clarification(
-          parsedQuery: query,
-          clarificationQuestion: 'Which location named "${rawCity.trim()}" do you mean?',
-          candidates: cityRes.candidateOptions,
-          resolutions: resolutions,
-        );
-      }
-
-      if (cityRes.resolvedCandidate != null) {
-        workingQuery = workingQuery.copyWith(
-          city: cityRes.resolvedCandidate!.canonicalName,
-        );
-      }
     }
 
     return EntityResolutionResult(
@@ -187,18 +250,24 @@ class DatabaseEntityResolver implements EntityResolver {
   Future<EntityResolution> _resolveRally(
     String phrase, {
     int? year,
+    List<int>? years,
     String? country,
+    List<String>? countries,
     String? city,
     bool isVideoSearch = false,
   }) async {
-    final cacheKey = 'rally:${phrase.toLowerCase()}:${year ?? ''}:${country ?? ''}:${city ?? ''}:$isVideoSearch';
+    final effectiveYear = year ?? (years != null && years.length == 1 ? years.first : null);
+    final effectiveCountry = country ?? (countries != null && countries.length == 1 ? countries.first : null);
+    final yearsKey = (years != null && years.isNotEmpty) ? years.join(',') : (effectiveYear?.toString() ?? '');
+    final countriesKey = (countries != null && countries.isNotEmpty) ? countries.join(',') : (effectiveCountry ?? '');
+    final cacheKey = 'rally:${phrase.toLowerCase()}:$yearsKey:$countriesKey:${city ?? ''}:$isVideoSearch';
     final cached = _getFromCache(cacheKey);
     if (cached != null) return cached;
 
     final candidates = await _repository.lookupRallies(
       phrase,
-      year: year,
-      country: country,
+      year: effectiveYear,
+      country: effectiveCountry,
       city: city,
       limit: 10,
     );
@@ -215,13 +284,14 @@ class DatabaseEntityResolver implements EntityResolver {
     }
 
     // Score and rank candidates
-    final scored = _scoreCandidates(phrase, candidates, year: year);
+    final scored = _scoreCandidates(phrase, candidates, year: effectiveYear, years: years);
 
     // Check for multi-edition ambiguity:
     // If user provided no year and multiple editions of the same rally exist (e.g. 2025, 2026),
     // trigger clarification for general rally queries, but allow video action highlights to resolve
     // to the most recent active edition.
-    if (year == null && scored.length > 1) {
+    final hasExplicitYears = (effectiveYear != null) || (years != null && years.isNotEmpty);
+    if (!hasExplicitYears && scored.length > 1) {
       final topName = _normalizeName(scored[0].canonicalName);
       final secondName = _normalizeName(scored[1].canonicalName);
 
@@ -259,8 +329,11 @@ class DatabaseEntityResolver implements EntityResolver {
     String? eventId,
     String? eventName,
     int? year,
+    List<int>? years,
   }) async {
-    final cacheKey = 'driver:${phrase.toLowerCase()}:${eventId ?? ''}:${eventName ?? ''}:${year ?? ''}';
+    final effectiveYear = year ?? (years != null && years.length == 1 ? years.first : null);
+    final yearsKey = (years != null && years.isNotEmpty) ? years.join(',') : (effectiveYear?.toString() ?? '');
+    final cacheKey = 'driver:${phrase.toLowerCase()}:${eventId ?? ''}:${eventName ?? ''}:$yearsKey';
     final cached = _getFromCache(cacheKey);
     if (cached != null) return cached;
 
@@ -268,7 +341,7 @@ class DatabaseEntityResolver implements EntityResolver {
       phrase,
       eventId: eventId,
       eventName: eventName,
-      year: year,
+      year: effectiveYear,
       limit: 10,
     );
 
@@ -410,12 +483,15 @@ class DatabaseEntityResolver implements EntityResolver {
     String phrase,
     List<EntityCandidate> candidates, {
     int? year,
+    List<int>? years,
   }) {
     final scored = <EntityCandidate>[];
+    final effectiveYears = (years != null && years.isNotEmpty) ? years : (year != null ? [year] : const <int>[]);
 
     for (final c in candidates) {
       final candidateYear = c.metadata?['year'] as int?;
       final inContext = c.metadata?['inContext'] as bool? ?? false;
+      final yearMatch = candidateYear != null && effectiveYears.contains(candidateYear);
 
       final baseScore = PhoneticMatchingHelper.computeCompositeScore(
         queryPhrase: phrase,
@@ -425,7 +501,7 @@ class DatabaseEntityResolver implements EntityResolver {
       final score = PhoneticMatchingHelper.computeCompositeScore(
         queryPhrase: phrase,
         candidateName: c.canonicalName,
-        queryYear: year,
+        queryYear: yearMatch ? candidateYear : (effectiveYears.isNotEmpty ? effectiveYears.first : year),
         candidateYear: candidateYear,
         inContext: inContext,
       );

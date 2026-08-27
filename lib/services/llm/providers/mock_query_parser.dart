@@ -84,6 +84,42 @@ class MockLlmQueryParser implements LlmQueryParser {
       );
     }
 
+    // Check for conversational pronoun / missing referent clarification conditions
+    if (normalized.contains('who won it') || normalized.contains('who won that') || normalized == 'who won?') {
+      final activeRally = context?.activeRally ?? context?.referents.activeRally;
+      if (activeRally == null || activeRally.isEmpty) {
+        stopwatch.stop();
+        return QueryParseResult.clarification(
+          clarificationQuestion: 'Which rally do you want to see the winner for?',
+          provider: LlmProvider.mock,
+          model: 'mock-parser-v1',
+          latencyMs: stopwatch.elapsedMilliseconds,
+        );
+      }
+    }
+
+    if (normalized.contains('videos of him') || normalized.contains('show videos of him') || normalized.contains('clips of him') || normalized.contains('his videos')) {
+      if (context != null && context.referents.lastWinner == null && context.referents.activeDrivers.length > 1) {
+        stopwatch.stop();
+        return QueryParseResult.clarification(
+          clarificationQuestion: 'Which driver do you mean?',
+          provider: LlmProvider.mock,
+          model: 'mock-parser-v1',
+          latencyMs: stopwatch.elapsedMilliseconds,
+        );
+      }
+      final driver = context?.referents.lastWinner ?? context?.referents.activeDriver ?? context?.activeDriver;
+      if (driver == null || driver.isEmpty) {
+        stopwatch.stop();
+        return QueryParseResult.clarification(
+          clarificationQuestion: 'Which driver do you want to see videos of?',
+          provider: LlmProvider.mock,
+          model: 'mock-parser-v1',
+          latencyMs: stopwatch.elapsedMilliseconds,
+        );
+      }
+    }
+
     // Deterministic pattern matching covering canonical queries and compound filters
     final parsedQuery = _parseRuleBased(normalized, userQuery, context);
 
@@ -279,6 +315,55 @@ class MockLlmQueryParser implements LlmQueryParser {
       intent = SearchIntent.searchRallies;
     }
 
+    // Context-aware referent resolution and pronoun mapping
+    if (context != null) {
+      if (lower.contains('who won') || lower.contains('winner of it') || lower.contains('who won it') || lower.contains('who won that')) {
+        rallyName ??= context.activeRally ?? context.referents.activeRally ?? context.previousQuery?.rallyName;
+        year ??= context.previousQuery?.year;
+        intent = SearchIntent.getRallyResults;
+      } else if (lower.contains('videos of him') || lower.contains('show videos of him') || lower.contains('clips of him') || lower.contains('his videos')) {
+        driverName ??= context.referents.lastWinner ?? context.referents.activeDriver ?? context.activeDriver;
+        intent = SearchIntent.searchDriverVideos;
+      }
+
+      if (lower.contains('only show jumps') || lower.contains('only jumps') || lower.contains('just jumps')) {
+        actionType = 'jump';
+        rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
+        driverName ??= context.referents.activeDriver ?? context.referents.lastWinner ?? context.previousQuery?.driverName;
+        year ??= context.previousQuery?.year;
+        country ??= context.previousQuery?.country;
+        intent = SearchIntent.searchVideoActions;
+      } else if (lower.contains('only drifts') || lower.contains('only show drifts')) {
+        actionType = 'drift';
+        rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
+        driverName ??= context.referents.activeDriver ?? context.referents.lastWinner ?? context.previousQuery?.driverName;
+        year ??= context.previousQuery?.year;
+        intent = SearchIntent.searchVideoActions;
+      }
+
+      if (lower.contains('forget the driver') || lower.contains('remove driver')) {
+        driverName = null;
+        rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
+        year ??= context.previousQuery?.year;
+      }
+
+      if (lower.contains('what about 2024') || lower.contains('in 2024') && rallyName == null) {
+        rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
+        driverName ??= context.referents.activeDriver ?? context.previousQuery?.driverName;
+      }
+    }
+
+    // Handle additive action filter
+    List<String> actionTypes = actionType != null ? [actionType] : [];
+    if (context != null && (lower.contains('also drift') || lower.contains('add drift') || lower.contains('and drift'))) {
+      actionTypes = List<String>.from(context.previousQuery?.actionTypes ?? []);
+      if (!actionTypes.contains('drift')) actionTypes.add('drift');
+      rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
+      driverName ??= context.referents.activeDriver ?? context.referents.lastWinner ?? context.previousQuery?.driverName;
+      year ??= context.previousQuery?.year;
+      intent = SearchIntent.searchVideoActions;
+    }
+
     return SearchQuery(
       intent: intent,
       rallyName: rallyName,
@@ -287,7 +372,7 @@ class MockLlmQueryParser implements LlmQueryParser {
       city: city,
       stageName: stageName,
       driverName: driverName,
-      actionType: actionType,
+      actionTypes: actionTypes,
       year: year,
       limit: limit,
     );

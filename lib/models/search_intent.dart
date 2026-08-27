@@ -27,6 +27,30 @@ enum SearchIntent {
   /// Get ranked leaderboard of drivers with most career wins
   getTopDriversByWins;
 
+  /// Human readable display name for UI dropdowns and chips
+  String get displayName {
+    switch (this) {
+      case SearchIntent.searchRallies:
+        return 'Search Rallies';
+      case SearchIntent.searchDriverRallies:
+        return 'Driver Participations';
+      case SearchIntent.searchDriverWins:
+        return 'Driver Wins';
+      case SearchIntent.getRallyResults:
+        return 'Rally Winner';
+      case SearchIntent.getRallyTopFinishers:
+        return 'Rally Top Finishers';
+      case SearchIntent.searchVideoActions:
+        return 'Action Highlights';
+      case SearchIntent.searchDriverVideos:
+        return 'Driver Videos';
+      case SearchIntent.getTopUploaders:
+        return 'Top Uploaders';
+      case SearchIntent.getTopDriversByWins:
+        return 'Most Career Wins';
+    }
+  }
+
   /// Serializes the enum to standard SCREAMING_SNAKE_CASE string
   String toIntentString() {
     switch (this) {

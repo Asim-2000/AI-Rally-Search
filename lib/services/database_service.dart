@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mysql_client/mysql_client.dart';
+import '../models/search_intent.dart';
 import '../models/search_query.dart';
 import '../models/video_action_search_query.dart';
 
@@ -263,10 +264,10 @@ class DatabaseService {
       SELECT 
         vm.id AS id,
         vm.video_id AS video_id,
-        MIN(rs.id) AS stream_id,
-        MIN(rs.on_demand_url) AS on_demand_url,
-        MIN(rs.clip_start_time) AS clip_start_time,
-        MIN(rs.clip_duration) AS clip_duration,
+        rs.id AS stream_id,
+        rs.on_demand_url AS on_demand_url,
+        rs.clip_start_time AS clip_start_time,
+        rs.clip_duration AS clip_duration,
         va.id AS action_type_id,
         va.action_name AS action_name,
         vm.start_action AS start_action,
@@ -284,7 +285,6 @@ class DatabaseService {
       LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
       LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
       $whereSql
-      GROUP BY vm.id, vm.video_id, va.id, va.action_name, vm.start_action, vm.end_action, vm.points, rv.thumbnail, stg.stage_name, stg.stage_number, ev.event_name, ev.country
       ORDER BY vm.id DESC
       LIMIT $limit OFFSET $offset;
     ''';
@@ -292,22 +292,143 @@ class DatabaseService {
     return await query(sql);
   }
 
-  /// Searches video actions deterministically using structured query filters (supports SearchQuery and VideoActionSearchQuery)
-  Future<List<Map<String, dynamic>>> searchVideoActions(
-    dynamic searchQuery,
-  ) async {
+  // ===========================================================================
+  // MULTI-VALUE SQL CLAUSE GENERATION HELPERS
+  // Enforces: OR within one dimension, AND across different dimensions.
+  // ===========================================================================
+
+  /// Subquery condition that identifies the final stage of each rally event
+  static const String _finalStageSubquery = '''
+    (ev.event_id, CAST(stg.stage_number AS UNSIGNED)) IN (
+      SELECT s2.event_id, MAX(CAST(s2.stage_number AS UNSIGNED))
+      FROM rally_stages s2
+      INNER JOIN rally_results r2 ON s2.stage_id = r2.stage_id AND s2.event_id = r2.rally_id
+      GROUP BY s2.event_id
+    )
+  ''';
+
+  /// Builds WHERE clauses for countries (OR within dimension)
+  List<String> _buildCountryWhereClauses(SearchQuery q, {String prefix = 'ev.'}) {
+    final aliases = q.resolvedCountryAliases;
+    if (aliases.isEmpty) return [];
+
+    final countryIn = aliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
+    final likeClauses = <String>[];
+    for (final c in q.countries) {
+      final sanitized = c.trim().replaceAll("'", "''").toLowerCase();
+      if (sanitized.length > 2) {
+        likeClauses.add("LOWER(${prefix}country) LIKE '%$sanitized%'");
+      }
+    }
+
+    if (likeClauses.isNotEmpty) {
+      return ["(LOWER(${prefix}country) IN ($countryIn) OR ${likeClauses.join(' OR ')})"];
+    }
+    return ["LOWER(${prefix}country) IN ($countryIn)"];
+  }
+
+  /// Builds WHERE clauses for cities (OR within dimension)
+  List<String> _buildCityWhereClauses(SearchQuery q, {String prefix = 'ev.'}) {
+    if (q.cities.isEmpty) return [];
+
+    final cityClauses = <String>[];
+    for (final city in q.cities) {
+      if (city.trim().toUpperCase() == 'ALL') continue;
+      final sanitized = city.trim().replaceAll("'", "''").toLowerCase();
+      cityClauses.add("LOWER(${prefix}city) LIKE '%$sanitized%'");
+    }
+
+    if (cityClauses.isNotEmpty) {
+      return ["(${cityClauses.join(' OR ')})"];
+    }
+    return [];
+  }
+
+  /// Builds WHERE clauses for years and year ranges (OR within dimension)
+  List<String> _buildYearWhereClauses(SearchQuery q, {String prefix = 'ev.'}) {
+    final yearClauses = <String>[];
+
+    if (q.years.isNotEmpty) {
+      final yearsIn = q.years.join(', ');
+      yearClauses.add("COALESCE(YEAR(${prefix}start_date), YEAR(${prefix}end_date)) IN ($yearsIn)");
+    }
+
+    if (q.yearFrom != null && q.yearTo != null) {
+      yearClauses.add("(COALESCE(YEAR(${prefix}start_date), YEAR(${prefix}end_date)) BETWEEN ${q.yearFrom} AND ${q.yearTo})");
+    } else if (q.yearFrom != null) {
+      yearClauses.add("COALESCE(YEAR(${prefix}start_date), YEAR(${prefix}end_date)) >= ${q.yearFrom}");
+    } else if (q.yearTo != null) {
+      yearClauses.add("COALESCE(YEAR(${prefix}start_date), YEAR(${prefix}end_date)) <= ${q.yearTo}");
+    }
+
+    if (yearClauses.isNotEmpty) {
+      return ["(${yearClauses.join(' OR ')})"];
+    }
+    return [];
+  }
+
+  /// Builds WHERE clauses for rallies / events (OR within dimension)
+  List<String> _buildRallyWhereClauses(SearchQuery q, {String prefix = 'ev.'}) {
+    final names = q.targetRallyNames;
+    if (names.isEmpty) return [];
+
+    final rallyClauses = <String>[];
+    for (final r in names) {
+      final sanitized = r.trim().replaceAll("'", "''").toLowerCase();
+      rallyClauses.add("(LOWER(${prefix}event_name) LIKE '%$sanitized%' OR ${prefix}event_id = '$sanitized')");
+    }
+
+    if (rallyClauses.isNotEmpty) {
+      return ["(${rallyClauses.join(' OR ')})"];
+    }
+    return [];
+  }
+
+  /// Builds WHERE clauses for stages and stage numbers (OR within dimension)
+  List<String> _buildStageWhereClauses(SearchQuery q, {String prefix = 'stg.'}) {
+    final clauses = <String>[];
+
+    if (q.stageNames.isNotEmpty) {
+      final stageClauses = <String>[];
+      for (final st in q.stageNames) {
+        final sanitized = st.trim().replaceAll("'", "''").toLowerCase();
+        stageClauses.add("LOWER(${prefix}stage_name) LIKE '%$sanitized%'");
+      }
+      if (stageClauses.isNotEmpty) {
+        clauses.add("(${stageClauses.join(' OR ')})");
+      }
+    }
+
+    if (q.stageNumbers.isNotEmpty) {
+      final numClauses = <String>[];
+      for (final sn in q.stageNumbers) {
+        final sanitized = sn.trim().replaceAll("'", "''").toLowerCase();
+        final cleanNum = sanitized.replaceAll('ss', '').trim();
+        numClauses.add("(${prefix}stage_number = '$cleanNum' OR ${prefix}stage_number = '$sanitized' OR LOWER(${prefix}stage_name) LIKE '%stage $cleanNum%')");
+      }
+      if (numClauses.isNotEmpty) {
+        clauses.add("(${numClauses.join(' OR ')})");
+      }
+    }
+
+    return clauses;
+  }
+
+  // ===========================================================================
+  // 1. SEARCH VIDEO ACTIONS
+  // ===========================================================================
+
+  /// Searches video actions deterministically using structured multi-value query filters
+  Future<List<Map<String, dynamic>>> searchVideoActions(dynamic searchQuery) async {
+    final SearchQuery q = _normalizeSearchQuery(searchQuery);
+
     final whereClauses = <String>[
       "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''",
       "(rs.video_type IS NULL OR rs.video_type != 'instantReplay')"
     ];
 
-    // Action types filter
-    List<String> resolvedActions = [];
-    if (searchQuery is SearchQuery) {
-      resolvedActions = searchQuery.resolvedActionTypes;
-    } else if (searchQuery is VideoActionSearchQuery) {
-      resolvedActions = searchQuery.resolvedActionTypes;
-    }
+    // Action types filter (OR within dimension)
+    final resolvedActions = q.resolvedActionTypes;
     if (resolvedActions.isNotEmpty) {
       final actionIn = resolvedActions
           .map((a) => "'${a.replaceAll("'", "''")}'")
@@ -315,79 +436,25 @@ class DatabaseService {
       whereClauses.add("va.action_name IN ($actionIn)");
     }
 
-    // Country filter
-    List<String> countryAliases = [];
-    String? countryVal;
-    if (searchQuery is SearchQuery) {
-      countryAliases = searchQuery.resolvedCountryAliases;
-      countryVal = searchQuery.country;
-    } else if (searchQuery is VideoActionSearchQuery) {
-      countryAliases = searchQuery.resolvedCountryAliases;
-      countryVal = searchQuery.country;
-    }
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildStageWhereClauses(q));
 
-    if (countryAliases.isNotEmpty && countryVal != null) {
-      final countryIn = countryAliases
-          .map((c) => "'${c.replaceAll("'", "''")}'")
-          .join(', ');
-      final mainCountry = countryVal.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
+    // Driver filter (Driver Name / Driver ID) (OR within dimension)
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
     }
-
-    // City filter
-    final cityVal = searchQuery is SearchQuery ? searchQuery.city : null;
-    if (cityVal != null && cityVal.trim().isNotEmpty && cityVal.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = cityVal.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
     }
-
-    // Year filter
-    final yearVal = searchQuery is SearchQuery ? searchQuery.year : null;
-    if (yearVal != null && yearVal > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = $yearVal OR YEAR(ev.end_date) = $yearVal)");
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
-
-    // Event name filter (case-insensitive substring)
-    final eventName = searchQuery is SearchQuery
-        ? searchQuery.targetRallyName
-        : (searchQuery is VideoActionSearchQuery ? searchQuery.eventName : null);
-    if (eventName != null && eventName.trim().isNotEmpty) {
-      final sanitizedEvent = eventName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    // Stage name filter (case-insensitive substring)
-    final stageName = searchQuery.stageName as String?;
-    if (stageName != null && stageName.trim().isNotEmpty) {
-      final sanitizedStage = stageName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(stg.stage_name) LIKE '%$sanitizedStage%'");
-    }
-
-    // Stage number filter
-    final stageNum = searchQuery.stageNumber as String?;
-    if (stageNum != null && stageNum.trim().isNotEmpty) {
-      final sanitizedNum = stageNum.trim().replaceAll("'", "''").toLowerCase();
-      final cleanNum = sanitizedNum.replaceAll('ss', '').trim();
-      whereClauses.add("(stg.stage_number = '$cleanNum' OR stg.stage_number = '$sanitizedNum' OR LOWER(stg.stage_name) LIKE '%stage $cleanNum%')");
-    }
-
-    // Driver filter (Driver Name / Driver ID)
-    final driverId = searchQuery is SearchQuery ? searchQuery.driverId : null;
-    final driverName = searchQuery is SearchQuery ? searchQuery.driverName : null;
-    if (driverId != null && driverId.trim().isNotEmpty) {
-      final sanitizedId = driverId.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (driverName != null && driverName.trim().isNotEmpty) {
-      final sanitizedName = driverName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%')");
-    }
-
-    final limit = searchQuery.limit as int;
-    final offset = searchQuery.offset as int;
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -420,27 +487,22 @@ class DatabaseService {
       $whereSql
       GROUP BY vm.id, vm.video_id, va.id, va.action_name, vm.start_action, vm.end_action, vm.points, rv.thumbnail, stg.stage_name, stg.stage_number, ev.event_name, ev.country, dp.full_name
       ORDER BY vm.id DESC
-      LIMIT $limit OFFSET $offset;
+      LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
 
     return await query(sql);
   }
 
-  /// Returns total count of video actions matching the search query
-  Future<int> countVideoActions(
-    dynamic searchQuery,
-  ) async {
+  /// Returns total count of video actions matching the multi-value search query
+  Future<int> countVideoActions(dynamic searchQuery) async {
+    final SearchQuery q = _normalizeSearchQuery(searchQuery);
+
     final whereClauses = <String>[
       "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''",
       "(rs.video_type IS NULL OR rs.video_type != 'instantReplay')"
     ];
 
-    List<String> resolvedActions = [];
-    if (searchQuery is SearchQuery) {
-      resolvedActions = searchQuery.resolvedActionTypes;
-    } else if (searchQuery is VideoActionSearchQuery) {
-      resolvedActions = searchQuery.resolvedActionTypes;
-    }
+    final resolvedActions = q.resolvedActionTypes;
     if (resolvedActions.isNotEmpty) {
       final actionIn = resolvedActions
           .map((a) => "'${a.replaceAll("'", "''")}'")
@@ -448,68 +510,23 @@ class DatabaseService {
       whereClauses.add("va.action_name IN ($actionIn)");
     }
 
-    List<String> countryAliases = [];
-    String? countryVal;
-    if (searchQuery is SearchQuery) {
-      countryAliases = searchQuery.resolvedCountryAliases;
-      countryVal = searchQuery.country;
-    } else if (searchQuery is VideoActionSearchQuery) {
-      countryAliases = searchQuery.resolvedCountryAliases;
-      countryVal = searchQuery.country;
-    }
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildStageWhereClauses(q));
 
-    if (countryAliases.isNotEmpty && countryVal != null) {
-      final countryIn = countryAliases
-          .map((c) => "'${c.replaceAll("'", "''")}'")
-          .join(', ');
-      final mainCountry = countryVal.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
     }
-
-    final cityVal = searchQuery is SearchQuery ? searchQuery.city : null;
-    if (cityVal != null && cityVal.trim().isNotEmpty && cityVal.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = cityVal.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
     }
-
-    final yearVal = searchQuery is SearchQuery ? searchQuery.year : null;
-    if (yearVal != null && yearVal > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = $yearVal OR YEAR(ev.end_date) = $yearVal)");
-    }
-
-    final eventName = searchQuery is SearchQuery
-        ? searchQuery.targetRallyName
-        : (searchQuery is VideoActionSearchQuery ? searchQuery.eventName : null);
-    if (eventName != null && eventName.trim().isNotEmpty) {
-      final sanitizedEvent = eventName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    final stageName = searchQuery.stageName as String?;
-    if (stageName != null && stageName.trim().isNotEmpty) {
-      final sanitizedStage = stageName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(stg.stage_name) LIKE '%$sanitizedStage%'");
-    }
-
-    final stageNum = searchQuery.stageNumber as String?;
-    if (stageNum != null && stageNum.trim().isNotEmpty) {
-      final sanitizedNum = stageNum.trim().replaceAll("'", "''").toLowerCase();
-      final cleanNum = sanitizedNum.replaceAll('ss', '').trim();
-      whereClauses.add("(stg.stage_number = '$cleanNum' OR stg.stage_number = '$sanitizedNum' OR LOWER(stg.stage_name) LIKE '%stage $cleanNum%')");
-    }
-
-    final driverId = searchQuery is SearchQuery ? searchQuery.driverId : null;
-    final driverName = searchQuery is SearchQuery ? searchQuery.driverName : null;
-    if (driverId != null && driverId.trim().isNotEmpty) {
-      final sanitizedId = driverId.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (driverName != null && driverName.trim().isNotEmpty) {
-      final sanitizedName = driverName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%')");
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
@@ -535,80 +552,68 @@ class DatabaseService {
     return 0;
   }
 
+  // ===========================================================================
+  // 2. SEARCH RALLIES
+  // ===========================================================================
 
-  // ==========================================
-  // PHASE 2: GENERAL RALLY SEARCH QUERIES
-  // ==========================================
-
-  /// Subquery condition that identifies the final stage of each rally event
-  static const String _finalStageSubquery = '''
-    (ev.event_id, CAST(stg.stage_number AS UNSIGNED)) IN (
-      SELECT s2.event_id, MAX(CAST(s2.stage_number AS UNSIGNED))
-      FROM rally_stages s2
-      INNER JOIN rally_results r2 ON s2.stage_id = r2.stage_id AND s2.event_id = r2.rally_id
-      GROUP BY s2.event_id
-    )
-  ''';
-
-  /// Searches rally events by country, city, year, driver, or event name
+  /// Searches rally events by countries, cities, years, drivers, or event names
   Future<List<Map<String, dynamic>>> searchRallies(SearchQuery q) async {
     final whereClauses = <String>[];
 
-    // Country filter
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases
-          .map((c) => "'${c.replaceAll("'", "''")}'")
-          .join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+
+    // Driver participation subqueries
+    if (q.driverMatchMode == MatchMode.all && (q.driverIds.length > 1 || q.driverNames.length > 1)) {
+      // Explicit ALL semantics: event must contain ALL requested drivers
+      for (final id in q.driverIds) {
+        final sanitizedId = id.replaceAll("'", "''");
+        whereClauses.add('''
+          ev.event_id IN (
+            SELECT DISTINCT rrx.rally_id 
+            FROM rally_results rrx 
+            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            WHERE (dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')
+          )
+        ''');
       }
-    }
-
-    // City filter
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    // Year filter
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    // Event name filter
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    // Driver participation filter (if driverName / driverId specified)
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add('''
-        ev.event_id IN (
-          SELECT DISTINCT rrx.rally_id 
-          FROM rally_results rrx 
-          LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
-          LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-          WHERE (dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')
-        )
-      ''');
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedDriver = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add('''
-        ev.event_id IN (
-          SELECT DISTINCT rrx.rally_id 
-          FROM rally_results rrx 
-          LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
-          LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-          WHERE (LOWER(dpx.full_name) LIKE '%$sanitizedDriver%' OR LOWER(dpx.nick_name) LIKE '%$sanitizedDriver%' OR LOWER(rrx.crew) LIKE '%$sanitizedDriver%')
-        )
-      ''');
+      for (final d in q.driverNames) {
+        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        whereClauses.add('''
+          ev.event_id IN (
+            SELECT DISTINCT rrx.rally_id 
+            FROM rally_results rrx 
+            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            WHERE (LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')
+          )
+        ''');
+      }
+    } else {
+      // Default ANY semantics: event contains ANY requested driver
+      final subClauses = <String>[];
+      if (q.driverIds.isNotEmpty) {
+        final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+        subClauses.add("(dpx.driver_id IN ($idsIn) OR elx.user_driver_id IN ($idsIn))");
+      }
+      for (final d in q.driverNames) {
+        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        subClauses.add("(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')");
+      }
+      if (subClauses.isNotEmpty) {
+        whereClauses.add('''
+          ev.event_id IN (
+            SELECT DISTINCT rrx.rally_id 
+            FROM rally_results rrx 
+            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            WHERE (${subClauses.join(' OR ')})
+          )
+        ''');
+      }
     }
 
     final whereSql = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
@@ -640,56 +645,57 @@ class DatabaseService {
   Future<int> countRallies(SearchQuery q) async {
     final whereClauses = <String>[];
 
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases
-          .map((c) => "'${c.replaceAll("'", "''")}'")
-          .join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+
+    if (q.driverMatchMode == MatchMode.all && (q.driverIds.length > 1 || q.driverNames.length > 1)) {
+      for (final id in q.driverIds) {
+        final sanitizedId = id.replaceAll("'", "''");
+        whereClauses.add('''
+          ev.event_id IN (
+            SELECT DISTINCT rrx.rally_id 
+            FROM rally_results rrx 
+            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            WHERE (dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')
+          )
+        ''');
       }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add('''
-        ev.event_id IN (
-          SELECT DISTINCT rrx.rally_id 
-          FROM rally_results rrx 
-          LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
-          LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-          WHERE (dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')
-        )
-      ''');
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedDriver = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add('''
-        ev.event_id IN (
-          SELECT DISTINCT rrx.rally_id 
-          FROM rally_results rrx 
-          LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
-          LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-          WHERE (LOWER(dpx.full_name) LIKE '%$sanitizedDriver%' OR LOWER(dpx.nick_name) LIKE '%$sanitizedDriver%' OR LOWER(rrx.crew) LIKE '%$sanitizedDriver%')
-        )
-      ''');
+      for (final d in q.driverNames) {
+        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        whereClauses.add('''
+          ev.event_id IN (
+            SELECT DISTINCT rrx.rally_id 
+            FROM rally_results rrx 
+            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            WHERE (LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')
+          )
+        ''');
+      }
+    } else {
+      final subClauses = <String>[];
+      if (q.driverIds.isNotEmpty) {
+        final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+        subClauses.add("(dpx.driver_id IN ($idsIn) OR elx.user_driver_id IN ($idsIn))");
+      }
+      for (final d in q.driverNames) {
+        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        subClauses.add("(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')");
+      }
+      if (subClauses.isNotEmpty) {
+        whereClauses.add('''
+          ev.event_id IN (
+            SELECT DISTINCT rrx.rally_id 
+            FROM rally_results rrx 
+            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            WHERE (${subClauses.join(' OR ')})
+          )
+        ''');
+      }
     }
 
     final whereSql = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
@@ -704,43 +710,31 @@ class DatabaseService {
     return 0;
   }
 
-  /// Searches rallies a driver participated in, returning overall result/finishing position
+  // ===========================================================================
+  // 3. SEARCH DRIVER RALLIES
+  // ===========================================================================
+
+  /// Searches rallies drivers participated in
   Future<List<Map<String, dynamic>>> searchDriverRallies(SearchQuery q) async {
     final whereClauses = <String>[_finalStageSubquery];
 
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+    }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
+    }
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -764,6 +758,7 @@ class DatabaseService {
       LEFT JOIN rally_entry_list el ON rr.entry_list_id = el.id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
       $whereSql
+      GROUP BY rr.id, ev.event_id, ev.event_name, ev.country, ev.city, ev.start_date, dp.driver_id, dp.full_name, rr.crew, rr.car_number, el.car, rr.make, rr.pos_overall, rr.total_time
       ORDER BY ev.start_date DESC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
@@ -775,43 +770,27 @@ class DatabaseService {
   Future<int> countDriverRallies(SearchQuery q) async {
     final whereClauses = <String>[_finalStageSubquery];
 
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+    }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
+    }
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
-      SELECT COUNT(DISTINCT ev.event_id) AS count
+      SELECT COUNT(DISTINCT rr.id) AS count
       FROM rally_results rr
       INNER JOIN rally_events ev ON rr.rally_id = ev.event_id
       INNER JOIN rally_stages stg ON rr.stage_id = stg.stage_id
@@ -829,46 +808,34 @@ class DatabaseService {
     return 0;
   }
 
-  /// Searches rallies a driver won (1 win counted per rally event on final stage)
+  // ===========================================================================
+  // 4. SEARCH DRIVER WINS
+  // ===========================================================================
+
+  /// Searches rallies drivers won (1 win counted per rally event on final stage)
   Future<List<Map<String, dynamic>>> searchDriverWins(SearchQuery q) async {
     final whereClauses = <String>[
       'rr.pos_overall = 1',
       _finalStageSubquery,
     ];
 
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+    }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
+    }
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -892,6 +859,7 @@ class DatabaseService {
       LEFT JOIN rally_entry_list el ON rr.entry_list_id = el.id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
       $whereSql
+      GROUP BY rr.id, ev.event_id, ev.event_name, ev.country, ev.city, ev.start_date, dp.driver_id, dp.full_name, rr.crew, rr.car_number, el.car, rr.make, rr.pos_overall, rr.total_time
       ORDER BY ev.start_date DESC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
@@ -906,43 +874,27 @@ class DatabaseService {
       _finalStageSubquery,
     ];
 
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+    }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
+    }
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildRallyWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
-      SELECT COUNT(DISTINCT ev.event_id) AS count
+      SELECT COUNT(DISTINCT rr.id) AS count
       FROM rally_results rr
       INNER JOIN rally_events ev ON rr.rally_id = ev.event_id
       INNER JOIN rally_stages stg ON rr.stage_id = stg.stage_id
@@ -960,45 +912,33 @@ class DatabaseService {
     return 0;
   }
 
-  /// Gets the top ranked finishers for a rally on the final classification stage
+  // ===========================================================================
+  // 5. GET RALLY TOP FINISHERS
+  // ===========================================================================
+
+  /// Gets the top ranked finishers for rallies on the final classification stage
   Future<List<Map<String, dynamic>>> getRallyTopFinishers(SearchQuery q) async {
     final whereClauses = <String>[
       'rr.pos_overall IS NOT NULL',
       _finalStageSubquery,
     ];
 
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
     }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
     }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
@@ -1028,6 +968,7 @@ class DatabaseService {
       LEFT JOIN rally_entry_list el ON rr.entry_list_id = el.id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
       $whereSql
+      GROUP BY rr.id, rr.rally_id, ev.event_name, rr.stage_id, stg.stage_name, stg.stage_number, dp.driver_id, dp.full_name, rr.crew, rr.car_number, rr.make, rr.class_type, rr.pos_overall, rr.pos_stage, rr.total_time, rr.stage_time, rr.diff_leader, rr.diff_prev
       ORDER BY rr.pos_overall ASC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
@@ -1042,38 +983,22 @@ class DatabaseService {
       _finalStageSubquery,
     ];
 
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
     }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
     }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
@@ -1096,7 +1021,11 @@ class DatabaseService {
     return 0;
   }
 
-  /// Gets the first-place winner / result of a rally
+  // ===========================================================================
+  // 6. GET RALLY RESULTS (Single Champion Winner)
+  // ===========================================================================
+
+  /// Gets the first-place winner / single result of a rally
   Future<List<Map<String, dynamic>>> getRallyResults(SearchQuery q) async {
     final singleWinnerQuery = q.copyWith(limit: 1, offset: 0);
     final whereClauses = <String>[
@@ -1104,33 +1033,22 @@ class DatabaseService {
       _finalStageSubquery,
     ];
 
-    final targetName = singleWinnerQuery.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(singleWinnerQuery));
+    whereClauses.addAll(_buildYearWhereClauses(singleWinnerQuery));
+    whereClauses.addAll(_buildCountryWhereClauses(singleWinnerQuery));
+    whereClauses.addAll(_buildCityWhereClauses(singleWinnerQuery));
 
-    if (singleWinnerQuery.year != null && singleWinnerQuery.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${singleWinnerQuery.year} OR YEAR(ev.end_date) = ${singleWinnerQuery.year})");
+    final driverClauses = <String>[];
+    if (singleWinnerQuery.driverIds.isNotEmpty) {
+      final idsIn = singleWinnerQuery.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
     }
-
-    final countryAliases = singleWinnerQuery.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = singleWinnerQuery.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
+    for (final d in singleWinnerQuery.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
     }
-
-    if (singleWinnerQuery.driverId != null && singleWinnerQuery.driverId!.trim().isNotEmpty) {
-      final sanitizedId = singleWinnerQuery.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (singleWinnerQuery.driverName != null && singleWinnerQuery.driverName!.trim().isNotEmpty) {
-      final sanitizedName = singleWinnerQuery.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%' OR LOWER(rr.crew) LIKE '%$sanitizedName%')");
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
@@ -1160,6 +1078,7 @@ class DatabaseService {
       LEFT JOIN rally_entry_list el ON rr.entry_list_id = el.id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
       $whereSql
+      GROUP BY rr.id, rr.rally_id, ev.event_name, rr.stage_id, stg.stage_name, stg.stage_number, dp.driver_id, dp.full_name, rr.crew, rr.car_number, rr.make, rr.class_type, rr.pos_overall, rr.pos_stage, rr.total_time, rr.stage_time, rr.diff_leader, rr.diff_prev
       ORDER BY rr.pos_overall ASC
       LIMIT 1;
     ''';
@@ -1167,57 +1086,35 @@ class DatabaseService {
     return await query(sql);
   }
 
-  /// Searches videos featuring a specific driver via metadata -> entry_list -> driver_profile
+  // ===========================================================================
+  // 7. SEARCH DRIVER VIDEOS
+  // ===========================================================================
+
+  /// Searches videos featuring drivers via metadata -> entry_list -> driver_profile
   Future<List<Map<String, dynamic>>> searchDriverVideos(SearchQuery q) async {
     final whereClauses = <String>[
       "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''",
       "(rs.video_type IS NULL OR rs.video_type != 'instantReplay')",
     ];
 
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%')");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+    }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
+    }
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    if (q.stageName != null && q.stageName!.trim().isNotEmpty) {
-      final sanitizedStage = q.stageName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(stg.stage_name) LIKE '%$sanitizedStage%'");
-    }
-
-    if (q.stageNumber != null && q.stageNumber!.trim().isNotEmpty) {
-      final sanitizedNum = q.stageNumber!.trim().replaceAll("'", "''").toLowerCase();
-      final cleanNum = sanitizedNum.replaceAll('ss', '').trim();
-      whereClauses.add("(stg.stage_number = '$cleanNum' OR stg.stage_number = '$sanitizedNum' OR LOWER(stg.stage_name) LIKE '%stage $cleanNum%')");
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildStageWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -1249,57 +1146,31 @@ class DatabaseService {
     return await query(sql);
   }
 
-  /// Total count of videos featuring a driver
+  /// Total count of videos featuring drivers
   Future<int> countDriverVideos(SearchQuery q) async {
     final whereClauses = <String>[
       "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''",
       "(rs.video_type IS NULL OR rs.video_type != 'instantReplay')",
     ];
 
-    if (q.driverId != null && q.driverId!.trim().isNotEmpty) {
-      final sanitizedId = q.driverId!.trim().replaceAll("'", "''");
-      whereClauses.add("(dp.driver_id = '$sanitizedId' OR el.user_driver_id = '$sanitizedId')");
-    } else if (q.driverName != null && q.driverName!.trim().isNotEmpty) {
-      final sanitizedName = q.driverName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(dp.full_name) LIKE '%$sanitizedName%' OR LOWER(dp.nick_name) LIKE '%$sanitizedName%')");
+    final driverClauses = <String>[];
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+    }
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
+    }
+    if (driverClauses.isNotEmpty) {
+      whereClauses.add("(${driverClauses.join(' OR ')})");
     }
 
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
-
-    if (q.city != null && q.city!.trim().isNotEmpty && q.city!.trim().toUpperCase() != 'ALL') {
-      final sanitizedCity = q.city!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(ev.city) LIKE '%$sanitizedCity%'");
-    }
-
-    if (q.stageName != null && q.stageName!.trim().isNotEmpty) {
-      final sanitizedStage = q.stageName!.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("LOWER(stg.stage_name) LIKE '%$sanitizedStage%'");
-    }
-
-    if (q.stageNumber != null && q.stageNumber!.trim().isNotEmpty) {
-      final sanitizedNum = q.stageNumber!.trim().replaceAll("'", "''").toLowerCase();
-      final cleanNum = sanitizedNum.replaceAll('ss', '').trim();
-      whereClauses.add("(stg.stage_number = '$cleanNum' OR stg.stage_number = '$sanitizedNum' OR LOWER(stg.stage_name) LIKE '%stage $cleanNum%')");
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
+    whereClauses.addAll(_buildStageWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -1315,7 +1186,6 @@ class DatabaseService {
     ''';
 
     final result = await query(sql);
-
     if (result.isNotEmpty) {
       final countVal = result.first['count'];
       if (countVal is int) return countVal;
@@ -1324,30 +1194,18 @@ class DatabaseService {
     return 0;
   }
 
+  // ===========================================================================
+  // 8. GET TOP UPLOADERS
+  // ===========================================================================
+
   /// Gets top uploaders for a rally or globally
   Future<List<Map<String, dynamic>>> getTopUploaders(SearchQuery q) async {
     final whereClauses = <String>['rv.uploader_user_id IS NOT NULL'];
 
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -1373,26 +1231,10 @@ class DatabaseService {
   Future<int> countTopUploaders(SearchQuery q) async {
     final whereClauses = <String>['rv.uploader_user_id IS NOT NULL'];
 
-    final targetName = q.targetRallyName;
-    if (targetName != null && targetName.trim().isNotEmpty) {
-      final sanitizedEvent = targetName.trim().replaceAll("'", "''").toLowerCase();
-      whereClauses.add("(LOWER(ev.event_name) LIKE '%$sanitizedEvent%' OR ev.event_id = '$sanitizedEvent')");
-    }
-
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
+    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
+    whereClauses.addAll(_buildCityWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -1412,6 +1254,10 @@ class DatabaseService {
     return 0;
   }
 
+  // ===========================================================================
+  // 9. GET TOP DRIVERS BY WINS
+  // ===========================================================================
+
   /// Gets ranked leaderboard of drivers with most career rally wins (1 win counted per rally event)
   Future<List<Map<String, dynamic>>> getTopDriversByWins(SearchQuery q) async {
     final whereClauses = <String>[
@@ -1419,20 +1265,8 @@ class DatabaseService {
       _finalStageSubquery,
     ];
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -1464,20 +1298,8 @@ class DatabaseService {
       _finalStageSubquery,
     ];
 
-    if (q.year != null && q.year! > 0) {
-      whereClauses.add("(YEAR(ev.start_date) = ${q.year} OR YEAR(ev.end_date) = ${q.year})");
-    }
-
-    final countryAliases = q.resolvedCountryAliases;
-    if (countryAliases.isNotEmpty) {
-      final countryIn = countryAliases.map((c) => "'${c.replaceAll("'", "''")}'").join(', ');
-      final mainCountry = q.country!.trim().replaceAll("'", "''").toLowerCase();
-      if (mainCountry.length > 2) {
-        whereClauses.add("(LOWER(ev.country) IN ($countryIn) OR LOWER(ev.country) LIKE '%$mainCountry%')");
-      } else {
-        whereClauses.add("LOWER(ev.country) IN ($countryIn)");
-      }
-    }
+    whereClauses.addAll(_buildYearWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q));
 
     final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
     final sql = '''
@@ -1499,6 +1321,26 @@ class DatabaseService {
     return 0;
   }
 
+  /// Normalizes incoming query object (SearchQuery or VideoActionSearchQuery) into SearchQuery
+  SearchQuery _normalizeSearchQuery(dynamic query) {
+    if (query is SearchQuery) {
+      return query;
+    }
+    if (query is VideoActionSearchQuery) {
+      return SearchQuery(
+        intent: SearchIntent.searchVideoActions,
+        actionTypes: query.actionType != null ? [query.actionType!] : [],
+        countries: query.country != null ? [query.country!] : [],
+        rallyNames: query.eventName != null ? [query.eventName!] : [],
+        eventNames: query.eventName != null ? [query.eventName!] : [],
+        stageNames: query.stageName != null ? [query.stageName!] : [],
+        stageNumbers: query.stageNumber != null ? [query.stageNumber!] : [],
+        limit: query.limit,
+        offset: query.offset,
+      );
+    }
+    return const SearchQuery(intent: SearchIntent.searchRallies);
+  }
 
   /// Closes the active database connection
   Future<void> close() async {
@@ -1509,4 +1351,3 @@ class DatabaseService {
     }
   }
 }
-

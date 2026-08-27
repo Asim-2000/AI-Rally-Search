@@ -414,6 +414,48 @@ class DatabaseService {
     return clauses;
   }
 
+  /// Builds person / driver / co-driver where clauses respecting the query's PersonRole
+  List<String> _buildPersonWhereClauses(
+    SearchQuery q, {
+    String driverAlias = 'dp',
+    String codriverAlias = 'cdp',
+    String entryListAlias = 'el',
+  }) {
+    final clauses = <String>[];
+
+    if (q.driverIds.isNotEmpty) {
+      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+      switch (q.personRole) {
+        case PersonRole.driver:
+          clauses.add("($driverAlias.driver_id IN ($idsIn) OR $entryListAlias.user_driver_id IN ($idsIn))");
+          break;
+        case PersonRole.coDriver:
+          clauses.add("($codriverAlias.codriver_id IN ($idsIn) OR $entryListAlias.user_co_driver_id IN ($idsIn))");
+          break;
+        case PersonRole.any:
+          clauses.add("($driverAlias.driver_id IN ($idsIn) OR $entryListAlias.user_driver_id IN ($idsIn) OR $codriverAlias.codriver_id IN ($idsIn) OR $entryListAlias.user_co_driver_id IN ($idsIn))");
+          break;
+      }
+    }
+
+    for (final d in q.driverNames) {
+      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+      switch (q.personRole) {
+        case PersonRole.driver:
+          clauses.add("(LOWER($driverAlias.full_name) LIKE '%$sanitized%' OR LOWER($driverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.driver_link) LIKE '%$sanitized%')");
+          break;
+        case PersonRole.coDriver:
+          clauses.add("(LOWER($codriverAlias.full_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.co_driver_link) LIKE '%$sanitized%')");
+          break;
+        case PersonRole.any:
+          clauses.add("(LOWER($driverAlias.full_name) LIKE '%$sanitized%' OR LOWER($driverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.full_name) LIKE '%$sanitized%' OR LOWER($codriverAlias.nick_name) LIKE '%$sanitized%' OR LOWER($entryListAlias.driver_link) LIKE '%$sanitized%' OR LOWER($entryListAlias.co_driver_link) LIKE '%$sanitized%')");
+          break;
+      }
+    }
+
+    return clauses;
+  }
+
   // ===========================================================================
   // 1. SEARCH VIDEO ACTIONS
   // ===========================================================================
@@ -442,16 +484,8 @@ class DatabaseService {
     whereClauses.addAll(_buildRallyWhereClauses(q));
     whereClauses.addAll(_buildStageWhereClauses(q));
 
-    // Driver filter (Driver Name / Driver ID) (OR within dimension)
-    final driverClauses = <String>[];
-    if (q.driverIds.isNotEmpty) {
-      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
-    }
-    for (final d in q.driverNames) {
-      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
-    }
+    // Person filter (Driver Name / Driver ID / Co-Driver) (OR within dimension)
+    final driverClauses = _buildPersonWhereClauses(q, driverAlias: 'dp', codriverAlias: 'cdp', entryListAlias: 'el');
     if (driverClauses.isNotEmpty) {
       whereClauses.add("(${driverClauses.join(' OR ')})");
     }
@@ -475,7 +509,7 @@ class DatabaseService {
         stg.stage_number,
         ev.event_name,
         ev.country AS event_country,
-        dp.full_name AS driver_name
+        COALESCE(dp.full_name, cdp.full_name) AS driver_name
       FROM rally_video_metadata vm
       INNER JOIN rally_video_actions va ON vm.action_id = va.id
       INNER JOIN rally_streams rs ON vm.video_id = rs.video_id
@@ -484,8 +518,9 @@ class DatabaseService {
       LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
       LEFT JOIN rally_entry_list el ON vm.entry_list_id = el.id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id = cdp.codriver_id
       $whereSql
-      GROUP BY vm.id, vm.video_id, va.id, va.action_name, vm.start_action, vm.end_action, vm.points, rv.thumbnail, stg.stage_name, stg.stage_number, ev.event_name, ev.country, dp.full_name
+      GROUP BY vm.id, vm.video_id, va.id, va.action_name, vm.start_action, vm.end_action, vm.points, rv.thumbnail, stg.stage_name, stg.stage_number, ev.event_name, ev.country, dp.full_name, cdp.full_name
       ORDER BY vm.id DESC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
@@ -516,15 +551,7 @@ class DatabaseService {
     whereClauses.addAll(_buildRallyWhereClauses(q));
     whereClauses.addAll(_buildStageWhereClauses(q));
 
-    final driverClauses = <String>[];
-    if (q.driverIds.isNotEmpty) {
-      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
-    }
-    for (final d in q.driverNames) {
-      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
-    }
+    final driverClauses = _buildPersonWhereClauses(q, driverAlias: 'dp', codriverAlias: 'cdp', entryListAlias: 'el');
     if (driverClauses.isNotEmpty) {
       whereClauses.add("(${driverClauses.join(' OR ')})");
     }
@@ -540,6 +567,7 @@ class DatabaseService {
       LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
       LEFT JOIN rally_entry_list el ON vm.entry_list_id = el.id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id = cdp.codriver_id
       $whereSql;
     ''';
 
@@ -556,7 +584,7 @@ class DatabaseService {
   // 2. SEARCH RALLIES
   // ===========================================================================
 
-  /// Searches rally events by countries, cities, years, drivers, or event names
+  /// Searches rally events by countries, cities, years, drivers/co-drivers, or event names
   Future<List<Map<String, dynamic>>> searchRallies(SearchQuery q) async {
     final whereClauses = <String>[];
 
@@ -565,51 +593,56 @@ class DatabaseService {
     whereClauses.addAll(_buildYearWhereClauses(q));
     whereClauses.addAll(_buildRallyWhereClauses(q));
 
-    // Driver participation subqueries
+    // Person (driver/co-driver) participation subqueries via rally_entry_list -> rally_sub_events
     if (q.driverMatchMode == MatchMode.all && (q.driverIds.length > 1 || q.driverNames.length > 1)) {
-      // Explicit ALL semantics: event must contain ALL requested drivers
+      // Explicit ALL semantics: event must contain ALL requested persons
       for (final id in q.driverIds) {
         final sanitizedId = id.replaceAll("'", "''");
+        final roleClause = q.personRole == PersonRole.driver
+            ? "(dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')"
+            : (q.personRole == PersonRole.coDriver
+                ? "(cdpx.codriver_id = '$sanitizedId' OR elx.user_co_driver_id = '$sanitizedId')"
+                : "(dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId' OR cdpx.codriver_id = '$sanitizedId' OR elx.user_co_driver_id = '$sanitizedId')");
         whereClauses.add('''
           ev.event_id IN (
-            SELECT DISTINCT rrx.rally_id 
-            FROM rally_results rrx 
-            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            SELECT DISTINCT sex.event_id 
+            FROM rally_entry_list elx 
+            JOIN rally_sub_events sex ON elx.sub_event_id = sex.sub_event_id 
             LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-            WHERE (dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')
+            LEFT JOIN user_codriver_profile cdpx ON elx.user_co_driver_id = cdpx.codriver_id 
+            WHERE $roleClause
           )
         ''');
       }
       for (final d in q.driverNames) {
         final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        final roleClause = q.personRole == PersonRole.driver
+            ? "(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(elx.driver_link) LIKE '%$sanitized%')"
+            : (q.personRole == PersonRole.coDriver
+                ? "(LOWER(cdpx.full_name) LIKE '%$sanitized%' OR LOWER(cdpx.nick_name) LIKE '%$sanitized%' OR LOWER(elx.co_driver_link) LIKE '%$sanitized%')"
+                : "(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(cdpx.full_name) LIKE '%$sanitized%' OR LOWER(cdpx.nick_name) LIKE '%$sanitized%' OR LOWER(elx.driver_link) LIKE '%$sanitized%' OR LOWER(elx.co_driver_link) LIKE '%$sanitized%')");
         whereClauses.add('''
           ev.event_id IN (
-            SELECT DISTINCT rrx.rally_id 
-            FROM rally_results rrx 
-            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            SELECT DISTINCT sex.event_id 
+            FROM rally_entry_list elx 
+            JOIN rally_sub_events sex ON elx.sub_event_id = sex.sub_event_id 
             LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-            WHERE (LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')
+            LEFT JOIN user_codriver_profile cdpx ON elx.user_co_driver_id = cdpx.codriver_id 
+            WHERE $roleClause
           )
         ''');
       }
     } else {
-      // Default ANY semantics: event contains ANY requested driver
-      final subClauses = <String>[];
-      if (q.driverIds.isNotEmpty) {
-        final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-        subClauses.add("(dpx.driver_id IN ($idsIn) OR elx.user_driver_id IN ($idsIn))");
-      }
-      for (final d in q.driverNames) {
-        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-        subClauses.add("(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')");
-      }
+      // Default ANY semantics: event contains ANY requested person
+      final subClauses = _buildPersonWhereClauses(q, driverAlias: 'dpx', codriverAlias: 'cdpx', entryListAlias: 'elx');
       if (subClauses.isNotEmpty) {
         whereClauses.add('''
           ev.event_id IN (
-            SELECT DISTINCT rrx.rally_id 
-            FROM rally_results rrx 
-            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            SELECT DISTINCT sex.event_id 
+            FROM rally_entry_list elx 
+            JOIN rally_sub_events sex ON elx.sub_event_id = sex.sub_event_id 
             LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            LEFT JOIN user_codriver_profile cdpx ON elx.user_co_driver_id = cdpx.codriver_id 
             WHERE (${subClauses.join(' OR ')})
           )
         ''');
@@ -653,45 +686,50 @@ class DatabaseService {
     if (q.driverMatchMode == MatchMode.all && (q.driverIds.length > 1 || q.driverNames.length > 1)) {
       for (final id in q.driverIds) {
         final sanitizedId = id.replaceAll("'", "''");
+        final roleClause = q.personRole == PersonRole.driver
+            ? "(dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')"
+            : (q.personRole == PersonRole.coDriver
+                ? "(cdpx.codriver_id = '$sanitizedId' OR elx.user_co_driver_id = '$sanitizedId')"
+                : "(dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId' OR cdpx.codriver_id = '$sanitizedId' OR elx.user_co_driver_id = '$sanitizedId')");
         whereClauses.add('''
           ev.event_id IN (
-            SELECT DISTINCT rrx.rally_id 
-            FROM rally_results rrx 
-            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            SELECT DISTINCT sex.event_id 
+            FROM rally_entry_list elx 
+            JOIN rally_sub_events sex ON elx.sub_event_id = sex.sub_event_id 
             LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-            WHERE (dpx.driver_id = '$sanitizedId' OR elx.user_driver_id = '$sanitizedId')
+            LEFT JOIN user_codriver_profile cdpx ON elx.user_co_driver_id = cdpx.codriver_id 
+            WHERE $roleClause
           )
         ''');
       }
       for (final d in q.driverNames) {
         final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        final roleClause = q.personRole == PersonRole.driver
+            ? "(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(elx.driver_link) LIKE '%$sanitized%')"
+            : (q.personRole == PersonRole.coDriver
+                ? "(LOWER(cdpx.full_name) LIKE '%$sanitized%' OR LOWER(cdpx.nick_name) LIKE '%$sanitized%' OR LOWER(elx.co_driver_link) LIKE '%$sanitized%')"
+                : "(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(cdpx.full_name) LIKE '%$sanitized%' OR LOWER(cdpx.nick_name) LIKE '%$sanitized%' OR LOWER(elx.driver_link) LIKE '%$sanitized%' OR LOWER(elx.co_driver_link) LIKE '%$sanitized%')");
         whereClauses.add('''
           ev.event_id IN (
-            SELECT DISTINCT rrx.rally_id 
-            FROM rally_results rrx 
-            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            SELECT DISTINCT sex.event_id 
+            FROM rally_entry_list elx 
+            JOIN rally_sub_events sex ON elx.sub_event_id = sex.sub_event_id 
             LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
-            WHERE (LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')
+            LEFT JOIN user_codriver_profile cdpx ON elx.user_co_driver_id = cdpx.codriver_id 
+            WHERE $roleClause
           )
         ''');
       }
     } else {
-      final subClauses = <String>[];
-      if (q.driverIds.isNotEmpty) {
-        final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-        subClauses.add("(dpx.driver_id IN ($idsIn) OR elx.user_driver_id IN ($idsIn))");
-      }
-      for (final d in q.driverNames) {
-        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-        subClauses.add("(LOWER(dpx.full_name) LIKE '%$sanitized%' OR LOWER(dpx.nick_name) LIKE '%$sanitized%' OR LOWER(rrx.crew) LIKE '%$sanitized%')");
-      }
+      final subClauses = _buildPersonWhereClauses(q, driverAlias: 'dpx', codriverAlias: 'cdpx', entryListAlias: 'elx');
       if (subClauses.isNotEmpty) {
         whereClauses.add('''
           ev.event_id IN (
-            SELECT DISTINCT rrx.rally_id 
-            FROM rally_results rrx 
-            LEFT JOIN rally_entry_list elx ON rrx.entry_list_id = elx.id 
+            SELECT DISTINCT sex.event_id 
+            FROM rally_entry_list elx 
+            JOIN rally_sub_events sex ON elx.sub_event_id = sex.sub_event_id 
             LEFT JOIN user_driver_profile dpx ON elx.user_driver_id = dpx.driver_id 
+            LEFT JOIN user_codriver_profile cdpx ON elx.user_co_driver_id = cdpx.codriver_id 
             WHERE (${subClauses.join(' OR ')})
           )
         ''');
@@ -711,32 +749,68 @@ class DatabaseService {
   }
 
   // ===========================================================================
-  // 3. SEARCH DRIVER RALLIES
+  // 3. SEARCH DRIVER / CO-DRIVER PARTICIPATION RALLIES
   // ===========================================================================
 
-  /// Searches rallies drivers participated in
+  /// Searches rallies persons (drivers and/or co-drivers) participated in via entry_list
   Future<List<Map<String, dynamic>>> searchDriverRallies(SearchQuery q) async {
-    final whereClauses = <String>[_finalStageSubquery];
+    final whereClauses = <String>[];
 
-    final driverClauses = <String>[];
-    if (q.driverIds.isNotEmpty) {
-      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
-    }
-    for (final d in q.driverNames) {
-      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
-    }
-    if (driverClauses.isNotEmpty) {
-      whereClauses.add("(${driverClauses.join(' OR ')})");
+    final personClauses = _buildPersonWhereClauses(q, driverAlias: 'dp', codriverAlias: 'cdp', entryListAlias: 'el');
+    if (personClauses.isNotEmpty) {
+      whereClauses.add("(${personClauses.join(' OR ')})");
     }
 
-    whereClauses.addAll(_buildCountryWhereClauses(q));
-    whereClauses.addAll(_buildCityWhereClauses(q));
-    whereClauses.addAll(_buildYearWhereClauses(q));
-    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q, prefix: 'ev.'));
+    whereClauses.addAll(_buildCityWhereClauses(q, prefix: 'ev.'));
+    whereClauses.addAll(_buildYearWhereClauses(q, prefix: 'ev.'));
+    whereClauses.addAll(_buildRallyWhereClauses(q, prefix: 'ev.'));
 
-    final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
+    final String personSelectSql;
+    if (q.driverIds.isNotEmpty || q.driverNames.isNotEmpty) {
+      final driverMatchClauses = <String>[];
+      final codriverMatchClauses = <String>[];
+      if (q.driverIds.isNotEmpty) {
+        final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
+        driverMatchClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
+        codriverMatchClauses.add("(cdp.codriver_id IN ($idsIn) OR el.user_co_driver_id IN ($idsIn))");
+      }
+      for (final d in q.driverNames) {
+        final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
+        driverMatchClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(el.driver_link) LIKE '%$sanitized%')");
+        codriverMatchClauses.add("(LOWER(cdp.full_name) LIKE '%$sanitized%' OR LOWER(cdp.nick_name) LIKE '%$sanitized%' OR LOWER(el.co_driver_link) LIKE '%$sanitized%')");
+      }
+      final dMatch = "(${driverMatchClauses.join(' OR ')})";
+      final cdMatch = "(${codriverMatchClauses.join(' OR ')})";
+
+      personSelectSql = '''
+        CASE 
+          WHEN $cdMatch AND NOT $dMatch THEN cdp.codriver_id
+          ELSE dp.driver_id
+        END AS driver_id,
+        CASE 
+          WHEN $cdMatch AND NOT $dMatch THEN cdp.full_name
+          ELSE COALESCE(dp.full_name, cdp.full_name, 'Competitor')
+        END AS driver_name,
+        CASE 
+          WHEN $dMatch AND $cdMatch THEN 'Driver / Co-Driver'
+          WHEN $cdMatch THEN 'Co-Driver'
+          ELSE 'Driver'
+        END AS role
+      ''';
+    } else {
+      personSelectSql = '''
+        COALESCE(dp.driver_id, cdp.codriver_id) AS driver_id,
+        COALESCE(dp.full_name, cdp.full_name, 'Competitor') AS driver_name,
+        CASE 
+          WHEN dp.driver_id IS NOT NULL AND cdp.codriver_id IS NOT NULL THEN 'Driver / Co-Driver'
+          WHEN cdp.codriver_id IS NOT NULL THEN 'Co-Driver'
+          ELSE 'Driver'
+        END AS role
+      ''';
+    }
+
+    final whereSql = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
     final sql = '''
       SELECT 
         ev.event_id AS rally_id,
@@ -744,21 +818,19 @@ class DatabaseService {
         ev.country,
         ev.city,
         ev.start_date,
-        dp.driver_id,
-        COALESCE(dp.full_name, rr.crew) AS driver_name,
-        rr.crew,
-        rr.car_number,
-        el.car,
-        rr.make,
-        rr.pos_overall,
-        rr.total_time
-      FROM rally_results rr
-      INNER JOIN rally_events ev ON rr.rally_id = ev.event_id
-      INNER JOIN rally_stages stg ON rr.stage_id = stg.stage_id
-      LEFT JOIN rally_entry_list el ON rr.entry_list_id = el.id
+        $personSelectSql,
+        MAX(el.car_number) AS car_number,
+        MAX(COALESCE(el.car, el.make)) AS car,
+        MAX(el.make) AS make,
+        NULL AS pos_overall,
+        NULL AS total_time
+      FROM rally_entry_list el
+      JOIN rally_sub_events se ON el.sub_event_id = se.sub_event_id
+      JOIN rally_events ev ON se.event_id = ev.event_id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id = cdp.codriver_id
       $whereSql
-      GROUP BY rr.id, ev.event_id, ev.event_name, ev.country, ev.city, ev.start_date, dp.driver_id, dp.full_name, rr.crew, rr.car_number, el.car, rr.make, rr.pos_overall, rr.total_time
+      GROUP BY ev.event_id, ev.event_name, ev.country, ev.city, ev.start_date, driver_id, driver_name, role
       ORDER BY ev.start_date DESC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
@@ -766,36 +838,28 @@ class DatabaseService {
     return await query(sql);
   }
 
-  /// Total count of driver rally participations
+  /// Total count of distinct rally event participations (deduplicating multiple sub-events)
   Future<int> countDriverRallies(SearchQuery q) async {
-    final whereClauses = <String>[_finalStageSubquery];
+    final whereClauses = <String>[];
 
-    final driverClauses = <String>[];
-    if (q.driverIds.isNotEmpty) {
-      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
-    }
-    for (final d in q.driverNames) {
-      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%' OR LOWER(rr.crew) LIKE '%$sanitized%')");
-    }
-    if (driverClauses.isNotEmpty) {
-      whereClauses.add("(${driverClauses.join(' OR ')})");
+    final personClauses = _buildPersonWhereClauses(q, driverAlias: 'dp', codriverAlias: 'cdp', entryListAlias: 'el');
+    if (personClauses.isNotEmpty) {
+      whereClauses.add("(${personClauses.join(' OR ')})");
     }
 
-    whereClauses.addAll(_buildCountryWhereClauses(q));
-    whereClauses.addAll(_buildCityWhereClauses(q));
-    whereClauses.addAll(_buildYearWhereClauses(q));
-    whereClauses.addAll(_buildRallyWhereClauses(q));
+    whereClauses.addAll(_buildCountryWhereClauses(q, prefix: 'ev.'));
+    whereClauses.addAll(_buildCityWhereClauses(q, prefix: 'ev.'));
+    whereClauses.addAll(_buildYearWhereClauses(q, prefix: 'ev.'));
+    whereClauses.addAll(_buildRallyWhereClauses(q, prefix: 'ev.'));
 
-    final whereSql = 'WHERE ${whereClauses.join(' AND ')}';
+    final whereSql = whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
     final sql = '''
-      SELECT COUNT(DISTINCT rr.id) AS count
-      FROM rally_results rr
-      INNER JOIN rally_events ev ON rr.rally_id = ev.event_id
-      INNER JOIN rally_stages stg ON rr.stage_id = stg.stage_id
-      LEFT JOIN rally_entry_list el ON rr.entry_list_id = el.id
+      SELECT COUNT(DISTINCT ev.event_id) AS count
+      FROM rally_entry_list el
+      JOIN rally_sub_events se ON el.sub_event_id = se.sub_event_id
+      JOIN rally_events ev ON se.event_id = ev.event_id
       LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id = cdp.codriver_id
       $whereSql;
     ''';
 
@@ -1087,27 +1151,19 @@ class DatabaseService {
   }
 
   // ===========================================================================
-  // 7. SEARCH DRIVER VIDEOS
+  // 7. SEARCH DRIVER / CO-DRIVER VIDEOS
   // ===========================================================================
 
-  /// Searches videos featuring drivers via metadata -> entry_list -> driver_profile
+  /// Searches videos featuring drivers or co-drivers via metadata -> entry_list -> profile
   Future<List<Map<String, dynamic>>> searchDriverVideos(SearchQuery q) async {
     final whereClauses = <String>[
       "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''",
       "(rs.video_type IS NULL OR rs.video_type != 'instantReplay')",
     ];
 
-    final driverClauses = <String>[];
-    if (q.driverIds.isNotEmpty) {
-      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
-    }
-    for (final d in q.driverNames) {
-      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
-    }
-    if (driverClauses.isNotEmpty) {
-      whereClauses.add("(${driverClauses.join(' OR ')})");
+    final personClauses = _buildPersonWhereClauses(q, driverAlias: 'dp', codriverAlias: 'cdp', entryListAlias: 'el');
+    if (personClauses.isNotEmpty) {
+      whereClauses.add("(${personClauses.join(' OR ')})");
     }
 
     whereClauses.addAll(_buildRallyWhereClauses(q));
@@ -1126,19 +1182,20 @@ class DatabaseService {
         ev.event_name,
         stg.stage_name,
         stg.stage_number,
-        dp.driver_id,
-        dp.full_name AS driver_name,
+        COALESCE(dp.driver_id, cdp.codriver_id) AS driver_id,
+        COALESCE(dp.full_name, cdp.full_name) AS driver_name,
         rv.video_length_seconds,
         rv.created_at
       FROM rally_videos rv
       INNER JOIN rally_video_metadata vm ON rv.id = vm.video_id
       INNER JOIN rally_entry_list el ON vm.entry_list_id = el.id
-      INNER JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id = cdp.codriver_id
       LEFT JOIN rally_streams rs ON rv.id = rs.video_id
       LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
       LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
       $whereSql
-      GROUP BY rv.id, rv.thumbnail, ev.event_name, stg.stage_name, stg.stage_number, dp.driver_id, dp.full_name, rv.video_length_seconds, rv.created_at
+      GROUP BY rv.id, rv.thumbnail, ev.event_name, stg.stage_name, stg.stage_number, dp.driver_id, cdp.codriver_id, dp.full_name, cdp.full_name, rv.video_length_seconds, rv.created_at
       ORDER BY rv.id DESC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';
@@ -1146,24 +1203,16 @@ class DatabaseService {
     return await query(sql);
   }
 
-  /// Total count of videos featuring drivers
+  /// Total count of videos featuring drivers or co-drivers
   Future<int> countDriverVideos(SearchQuery q) async {
     final whereClauses = <String>[
       "rs.on_demand_url IS NOT NULL AND rs.on_demand_url != ''",
       "(rs.video_type IS NULL OR rs.video_type != 'instantReplay')",
     ];
 
-    final driverClauses = <String>[];
-    if (q.driverIds.isNotEmpty) {
-      final idsIn = q.driverIds.map((id) => "'${id.replaceAll("'", "''")}'").join(', ');
-      driverClauses.add("(dp.driver_id IN ($idsIn) OR el.user_driver_id IN ($idsIn))");
-    }
-    for (final d in q.driverNames) {
-      final sanitized = d.trim().replaceAll("'", "''").toLowerCase();
-      driverClauses.add("(LOWER(dp.full_name) LIKE '%$sanitized%' OR LOWER(dp.nick_name) LIKE '%$sanitized%')");
-    }
-    if (driverClauses.isNotEmpty) {
-      whereClauses.add("(${driverClauses.join(' OR ')})");
+    final personClauses = _buildPersonWhereClauses(q, driverAlias: 'dp', codriverAlias: 'cdp', entryListAlias: 'el');
+    if (personClauses.isNotEmpty) {
+      whereClauses.add("(${personClauses.join(' OR ')})");
     }
 
     whereClauses.addAll(_buildRallyWhereClauses(q));
@@ -1178,7 +1227,8 @@ class DatabaseService {
       FROM rally_videos rv
       INNER JOIN rally_video_metadata vm ON rv.id = vm.video_id
       INNER JOIN rally_entry_list el ON vm.entry_list_id = el.id
-      INNER JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_driver_profile dp ON el.user_driver_id = dp.driver_id
+      LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id = cdp.codriver_id
       LEFT JOIN rally_streams rs ON rv.id = rs.video_id
       LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
       LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
@@ -1198,7 +1248,7 @@ class DatabaseService {
   // 8. GET TOP UPLOADERS
   // ===========================================================================
 
-  /// Gets top uploaders for a rally or globally
+  /// Gets top uploaders for a rally or globally, mapped canonically via user_fan_profile -> user_account
   Future<List<Map<String, dynamic>>> getTopUploaders(SearchQuery q) async {
     final whereClauses = <String>['rv.uploader_user_id IS NOT NULL'];
 
@@ -1211,15 +1261,19 @@ class DatabaseService {
     final sql = '''
       SELECT 
         rv.uploader_user_id,
-        COALESCE(ua.user_name, ua.email, 'Anonymous') AS uploader_name,
+        fp.fan_id,
+        fp.account_id,
+        COALESCE(NULLIF(TRIM(ua.user_name), ''), NULLIF(TRIM(fp.full_name), ''), NULLIF(TRIM(ua.email), ''), 'Rally Contributor') AS uploader_name,
+        fp.profile_picture,
         COUNT(rv.id) AS upload_count,
         MAX(ev.event_name) AS event_name
       FROM rally_videos rv
-      LEFT JOIN user_account ua ON rv.uploader_user_id = ua.id
+      LEFT JOIN user_fan_profile fp ON rv.uploader_user_id = fp.fan_id
+      LEFT JOIN user_account ua ON fp.account_id = ua.id
       LEFT JOIN rally_stages stg ON rv.stage_id = stg.stage_id
       LEFT JOIN rally_events ev ON stg.event_id = ev.event_id
       $whereSql
-      GROUP BY rv.uploader_user_id, ua.user_name, ua.email
+      GROUP BY rv.uploader_user_id, fp.fan_id, fp.account_id, ua.user_name, fp.full_name, ua.email, fp.profile_picture
       ORDER BY upload_count DESC
       LIMIT ${q.limit} OFFSET ${q.offset};
     ''';

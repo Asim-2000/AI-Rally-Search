@@ -292,7 +292,14 @@ class MockLlmQueryParser implements LlmQueryParser {
       limit = int.tryParse(topLimitMatch.group(1)!) ?? 20;
     }
 
-    // 9. Determine Intent
+    // 9. Determine Role & Intent
+    PersonRole personRole = PersonRole.any;
+    if (lower.contains('co-drove') || lower.contains('co-driver') || lower.contains('codriver') || lower.contains('co driver')) {
+      personRole = PersonRole.coDriver;
+    } else if (lower.contains('drove in') || lower.contains('drive in') || lower.contains('as driver')) {
+      personRole = PersonRole.driver;
+    }
+
     SearchIntent intent;
 
     if (lower.contains('uploader') || lower.contains('contributor')) {
@@ -309,7 +316,7 @@ class MockLlmQueryParser implements LlmQueryParser {
       intent = SearchIntent.searchDriverVideos;
     } else if ((lower.contains('win') || lower.contains('won') || lower.contains('victor')) && driverName != null) {
       intent = SearchIntent.searchDriverWins;
-    } else if (driverName != null && (lower.contains('participat') || lower.contains('compet') || lower.contains('drove') || lower.contains('entries'))) {
+    } else if (driverName != null && (lower.contains('participat') || lower.contains('compet') || lower.contains('drove') || lower.contains('drive') || lower.contains('co-drove') || lower.contains('co-driver') || lower.contains('codriver') || lower.contains('entries'))) {
       intent = SearchIntent.searchDriverRallies;
     } else {
       intent = SearchIntent.searchRallies;
@@ -374,6 +381,7 @@ class MockLlmQueryParser implements LlmQueryParser {
       driverName: driverName,
       actionTypes: actionTypes,
       year: year,
+      personRole: personRole,
       limit: limit,
     );
   }

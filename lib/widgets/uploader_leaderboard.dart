@@ -118,14 +118,19 @@ class UploaderLeaderboard extends StatelessWidget {
                           CircleAvatar(
                             radius: 14,
                             backgroundColor: theme.colorScheme.secondaryContainer,
-                            child: Text(
-                              up.uploaderName.isNotEmpty ? up.uploaderName[0].toUpperCase() : 'U',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSecondaryContainer,
-                              ),
-                            ),
+                            backgroundImage: up.profilePicture != null && up.profilePicture!.startsWith('http')
+                                ? NetworkImage(up.profilePicture!)
+                                : null,
+                            child: up.profilePicture == null || !up.profilePicture!.startsWith('http')
+                                ? Text(
+                                    up.uploaderName.isNotEmpty ? up.uploaderName[0].toUpperCase() : 'U',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSecondaryContainer,
+                                    ),
+                                  )
+                                : null,
                           ),
                           const SizedBox(width: 10),
                           Expanded(

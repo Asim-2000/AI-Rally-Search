@@ -81,7 +81,7 @@ class RallySearchResult {
   }
 }
 
-/// Represents a driver's participation record in a rally
+/// Represents a driver or co-driver's participation record in a rally
 class RallyParticipationResult {
   final String rallyId;
   final String eventName;
@@ -89,6 +89,7 @@ class RallyParticipationResult {
   final String? city;
   final String? driverId;
   final String driverName;
+  final String? role;
   final String? crew;
   final String? carNumber;
   final String? car;
@@ -105,6 +106,7 @@ class RallyParticipationResult {
     this.city,
     this.driverId,
     required this.driverName,
+    this.role,
     this.crew,
     this.carNumber,
     this.car,
@@ -122,8 +124,9 @@ class RallyParticipationResult {
       eventName: map['event_name']?.toString() ?? 'Rally Event',
       country: map['country']?.toString() ?? map['driver_country']?.toString(),
       city: map['city']?.toString(),
-      driverId: map['driver_id']?.toString() ?? map['user_driver_id']?.toString(),
-      driverName: map['driver_name']?.toString() ?? map['full_name']?.toString() ?? map['crew']?.toString() ?? 'Driver',
+      driverId: map['driver_id']?.toString() ?? map['user_driver_id']?.toString() ?? map['person_id']?.toString(),
+      driverName: map['driver_name']?.toString() ?? map['full_name']?.toString() ?? map['crew']?.toString() ?? 'Competitor',
+      role: map['role']?.toString(),
       crew: map['crew']?.toString(),
       carNumber: map['car_number']?.toString(),
       car: map['car']?.toString() ?? map['make']?.toString(),
@@ -136,7 +139,12 @@ class RallyParticipationResult {
   }
 
   String get finishPositionDisplay {
-    if (posOverall == null || posOverall! <= 0) return 'Participated';
+    if (posOverall == null || posOverall! <= 0) {
+      if (role != null && role!.isNotEmpty) {
+        return 'Participated ($role)';
+      }
+      return 'Participated';
+    }
     if (posOverall == 1) return '🏆 1st Place (Winner)';
     if (posOverall == 2) return '🥈 2nd Place';
     if (posOverall == 3) return '🥉 3rd Place';
@@ -282,20 +290,42 @@ class UploaderSearchResult {
   final String uploaderName;
   final int uploadCount;
   final String? rallyContext;
+  final String? profilePicture;
 
   const UploaderSearchResult({
     required this.uploaderId,
     required this.uploaderName,
     required this.uploadCount,
     this.rallyContext,
+    this.profilePicture,
   });
 
   factory UploaderSearchResult.fromMap(Map<String, dynamic> map) {
+    final pic = map['profile_picture']?.toString();
+    final rawUploaderName = map['uploader_name']?.toString()?.trim();
+    final rawUserName = map['user_name']?.toString()?.trim();
+    final rawFullName = map['full_name']?.toString()?.trim();
+    final rawEmail = map['email']?.toString()?.trim();
+
+    final String name;
+    if (rawUploaderName != null && rawUploaderName.isNotEmpty) {
+      name = rawUploaderName;
+    } else if (rawUserName != null && rawUserName.isNotEmpty) {
+      name = rawUserName;
+    } else if (rawFullName != null && rawFullName.isNotEmpty) {
+      name = rawFullName;
+    } else if (rawEmail != null && rawEmail.isNotEmpty) {
+      name = rawEmail;
+    } else {
+      name = 'Rally Contributor';
+    }
+
     return UploaderSearchResult(
       uploaderId: map['uploader_user_id']?.toString() ?? map['uploader_id']?.toString() ?? '',
-      uploaderName: map['uploader_name']?.toString() ?? map['user_name']?.toString() ?? map['email']?.toString() ?? 'Uploader',
+      uploaderName: name,
       uploadCount: _parseInt(map['upload_count']) ?? _parseInt(map['count']) ?? 0,
       rallyContext: map['event_name']?.toString() ?? map['rally_name']?.toString(),
+      profilePicture: (pic != null && pic.isNotEmpty && pic != 'none') ? pic : null,
     );
   }
 }

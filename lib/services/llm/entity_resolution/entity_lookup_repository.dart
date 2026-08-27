@@ -186,117 +186,232 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     if (clean.isEmpty) return [];
 
     final patterns = _buildCandidatePatterns(phrase);
-    final patternClauses = <String>[];
+    final driverPatternClauses = <String>[];
+    final codriverPatternClauses = <String>[];
     for (final p in patterns) {
       final pEscaped = p.replaceAll("'", "''").toLowerCase();
       if (pEscaped.endsWith('%')) {
-        patternClauses.add("LOWER(dp.full_name) LIKE '$pEscaped'");
+        driverPatternClauses.add("LOWER(dp.full_name) LIKE '$pEscaped'");
+        codriverPatternClauses.add("LOWER(cdp.full_name) LIKE '$pEscaped'");
       } else {
-        patternClauses.add("LOWER(dp.full_name) LIKE '%$pEscaped%'");
+        driverPatternClauses.add("LOWER(dp.full_name) LIKE '%$pEscaped%'");
+        codriverPatternClauses.add("LOWER(cdp.full_name) LIKE '%$pEscaped%'");
       }
       if (pEscaped.length >= 4 && !pEscaped.contains(' ') && !pEscaped.endsWith('%')) {
-        patternClauses.add("REPLACE(LOWER(dp.full_name), ' ', '') LIKE '%$pEscaped%'");
+        driverPatternClauses.add("REPLACE(LOWER(dp.full_name), ' ', '') LIKE '%$pEscaped%'");
+        codriverPatternClauses.add("REPLACE(LOWER(cdp.full_name), ' ', '') LIKE '%$pEscaped%'");
       }
     }
 
-    patternClauses.add("LOWER(dp.nick_name) LIKE '%${clean.toLowerCase()}%'");
+    driverPatternClauses.add("LOWER(dp.nick_name) LIKE '%${clean.toLowerCase()}%'");
+    codriverPatternClauses.add("LOWER(cdp.nick_name) LIKE '%${clean.toLowerCase()}%'");
 
-    final nameMatchSql = '(${patternClauses.join(' OR ')})';
+    final driverNameMatchSql = '(${driverPatternClauses.join(' OR ')})';
+    final codriverNameMatchSql = '(${codriverPatternClauses.join(' OR ')})';
 
     // If context (event or year) is provided, prioritize participants
     if (eventId != null || eventName != null || (year != null && year > 0)) {
-      final contextClauses = <String>[nameMatchSql];
+      final driverContextClauses = <String>[driverNameMatchSql];
+      final codriverContextClauses = <String>[codriverNameMatchSql];
       if (eventId != null && eventId.isNotEmpty) {
-        contextClauses.add("ev.event_id = '${eventId.replaceAll("'", "''")}'");
+        final sanitizedEvId = eventId.replaceAll("'", "''");
+        driverContextClauses.add("ev.event_id = '$sanitizedEvId'");
+        codriverContextClauses.add("ev.event_id = '$sanitizedEvId'");
       } else if (eventName != null && eventName.isNotEmpty) {
         final sanitizedEv = eventName.replaceAll("'", "''").toLowerCase();
-        contextClauses.add("LOWER(ev.event_name) LIKE '%$sanitizedEv%'");
+        driverContextClauses.add("LOWER(ev.event_name) LIKE '%$sanitizedEv%'");
+        codriverContextClauses.add("LOWER(ev.event_name) LIKE '%$sanitizedEv%'");
       }
       if (year != null && year > 0) {
-        contextClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
+        driverContextClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
+        codriverContextClauses.add("(YEAR(ev.start_date) = $year OR YEAR(ev.end_date) = $year)");
       }
 
       final contextSql = '''
-        SELECT DISTINCT
-          dp.driver_id,
+        (SELECT DISTINCT
+          dp.driver_id AS id,
+          dp.account_id,
           dp.full_name,
           dp.nick_name,
           dp.country,
+          'driver' AS role,
           MAX(ev.event_name) AS participated_event,
-          MAX(YEAR(ev.start_date)) AS event_year
+          MAX(YEAR(ev.start_date)) AS event_year,
+          CASE 
+            WHEN LOWER(dp.full_name) = '${clean.toLowerCase()}' THEN 1
+            WHEN LOWER(dp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
+            ELSE 3
+          END AS match_rank
         FROM user_driver_profile dp
         INNER JOIN rally_entry_list el ON el.user_driver_id = dp.driver_id
-        LEFT JOIN rally_results rr ON rr.entry_list_id = el.id
-        LEFT JOIN rally_events ev ON rr.rally_id = ev.event_id
-        WHERE ${contextClauses.join(' AND ')}
-        GROUP BY dp.driver_id, dp.full_name, dp.nick_name, dp.country
-        LIMIT $limit;
+        INNER JOIN rally_sub_events se ON el.sub_event_id = se.sub_event_id
+        INNER JOIN rally_events ev ON se.event_id = ev.event_id
+        WHERE ${driverContextClauses.join(' AND ')}
+        GROUP BY dp.driver_id, dp.account_id, dp.full_name, dp.nick_name, dp.country)
+        UNION ALL
+        (SELECT DISTINCT
+          cdp.codriver_id AS id,
+          cdp.account_id,
+          cdp.full_name,
+          cdp.nick_name,
+          cdp.country,
+          'co_driver' AS role,
+          MAX(ev.event_name) AS participated_event,
+          MAX(YEAR(ev.start_date)) AS event_year,
+          CASE 
+            WHEN LOWER(cdp.full_name) = '${clean.toLowerCase()}' THEN 1
+            WHEN LOWER(cdp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
+            ELSE 3
+          END AS match_rank
+        FROM user_codriver_profile cdp
+        INNER JOIN rally_entry_list el ON el.user_co_driver_id = cdp.codriver_id
+        INNER JOIN rally_sub_events se ON el.sub_event_id = se.sub_event_id
+        INNER JOIN rally_events ev ON se.event_id = ev.event_id
+        WHERE ${codriverContextClauses.join(' AND ')}
+        GROUP BY cdp.codriver_id, cdp.account_id, cdp.full_name, cdp.nick_name, cdp.country)
+        ORDER BY match_rank ASC
+        LIMIT 50;
       ''';
 
       final contextRows = await _dbService.query(contextSql);
       if (contextRows.isNotEmpty) {
-        return contextRows.map((r) {
-          final id = r['driver_id']?.toString() ?? '';
-          final name = r['full_name']?.toString() ?? '';
-          final country = r['country']?.toString();
-          final event = r['participated_event']?.toString();
-          final yr = r['event_year']?.toString();
-
-          final parts = <String>[];
-          if (country != null && country.isNotEmpty) parts.add(country.toUpperCase());
-          if (event != null && event.isNotEmpty) parts.add(event);
-          if (yr != null && yr.isNotEmpty) parts.add(yr);
-
-          return EntityCandidate(
-            id: id,
-            type: EntityType.driver,
-            canonicalName: name,
-            subtitle: parts.isNotEmpty ? parts.join(' • ') : null,
-            metadata: {
-              'country': country,
-              'inContext': true,
-              'year': int.tryParse(yr ?? ''),
-            },
-          );
-        }).toList();
+        return _mergeAndMapPersonCandidates(contextRows, inContext: true, cleanPhrase: clean, limit: limit);
       }
     }
 
-    // General driver lookup across user_driver_profile
+    // General lookup across BOTH user_driver_profile and user_codriver_profile
     final sql = '''
-      SELECT 
-        dp.driver_id,
+      (SELECT 
+        dp.driver_id AS id,
+        dp.account_id,
         dp.full_name,
         dp.nick_name,
-        dp.country
-      FROM user_driver_profile dp
-      WHERE $nameMatchSql
-      ORDER BY 
+        dp.country,
+        'driver' AS role,
+        NULL AS participated_event,
+        NULL AS event_year,
         CASE 
           WHEN LOWER(dp.full_name) = '${clean.toLowerCase()}' THEN 1
           WHEN LOWER(dp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
           ELSE 3
-        END
-      LIMIT $limit;
+        END AS match_rank
+      FROM user_driver_profile dp
+      WHERE $driverNameMatchSql)
+      UNION ALL
+      (SELECT 
+        cdp.codriver_id AS id,
+        cdp.account_id,
+        cdp.full_name,
+        cdp.nick_name,
+        cdp.country,
+        'co_driver' AS role,
+        NULL AS participated_event,
+        NULL AS event_year,
+        CASE 
+          WHEN LOWER(cdp.full_name) = '${clean.toLowerCase()}' THEN 1
+          WHEN LOWER(cdp.full_name) LIKE '${clean.toLowerCase()}%' THEN 2
+          ELSE 3
+        END AS match_rank
+      FROM user_codriver_profile cdp
+      WHERE $codriverNameMatchSql)
+      ORDER BY match_rank ASC
+      LIMIT 50;
     ''';
 
     final rows = await _dbService.query(sql);
-    return rows.map((r) {
-      final id = r['driver_id']?.toString() ?? '';
+    return _mergeAndMapPersonCandidates(rows, inContext: false, cleanPhrase: clean, limit: limit);
+  }
+
+  /// Consolidates person rows from driver and co-driver tables into unified candidates
+  List<EntityCandidate> _mergeAndMapPersonCandidates(
+    List<Map<String, dynamic>> rows, {
+    required bool inContext,
+    required String cleanPhrase,
+    required int limit,
+  }) {
+    // Group by account_id (if present) or normalized full_name
+    final merged = <String, Map<String, dynamic>>{};
+
+    for (final r in rows) {
+      final name = r['full_name']?.toString()?.trim() ?? '';
+      if (name.isEmpty) continue;
+      final accountId = r['account_id']?.toString()?.trim();
+      final key = (accountId != null && accountId.isNotEmpty && accountId != 'null')
+          ? 'acc:$accountId'
+          : 'name:${name.toLowerCase()}';
+
+      if (!merged.containsKey(key)) {
+        merged[key] = Map<String, dynamic>.from(r);
+      } else {
+        final existing = merged[key]!;
+        final existingRole = existing['role']?.toString();
+        final currentRole = r['role']?.toString();
+        if (existingRole != currentRole) {
+          existing['role'] = 'both';
+        }
+        if (currentRole == 'driver') {
+          existing['driver_id'] = r['id'];
+        } else if (currentRole == 'co_driver') {
+          existing['codriver_id'] = r['id'];
+        }
+        if (r['participated_event'] != null) {
+          existing['participated_event'] = r['participated_event'];
+        }
+        if (r['event_year'] != null) {
+          existing['event_year'] = r['event_year'];
+        }
+      }
+    }
+
+    final candidates = merged.values.map((r) {
+      final id = r['id']?.toString() ?? '';
       final name = r['full_name']?.toString() ?? '';
       final country = r['country']?.toString();
+      final role = r['role']?.toString() ?? 'driver';
+      final event = r['participated_event']?.toString();
+      final yr = r['event_year']?.toString();
+
+      final parts = <String>[];
+      if (role == 'both') {
+        parts.add('DRIVER / CO-DRIVER');
+      } else if (role == 'co_driver') {
+        parts.add('CO-DRIVER');
+      } else {
+        parts.add('DRIVER');
+      }
+      if (country != null && country.isNotEmpty) parts.add(country.toUpperCase());
+      if (event != null && event.isNotEmpty) parts.add(event);
+      if (yr != null && yr.isNotEmpty) parts.add(yr);
 
       return EntityCandidate(
         id: id,
         type: EntityType.driver,
         canonicalName: name,
-        subtitle: country != null && country.isNotEmpty ? country.toUpperCase() : null,
+        subtitle: parts.isNotEmpty ? parts.join(' • ') : null,
         metadata: {
           'country': country,
-          'inContext': false,
+          'role': role,
+          'driverId': role == 'driver' || role == 'both' ? (r['driver_id'] ?? id) : null,
+          'codriverId': role == 'co_driver' || role == 'both' ? (r['codriver_id'] ?? id) : null,
+          'inContext': inContext,
+          'year': int.tryParse(yr ?? ''),
         },
       );
     }).toList();
+
+    // Sort exact matches to the top
+    candidates.sort((a, b) {
+      final aName = a.canonicalName.toLowerCase();
+      final bName = b.canonicalName.toLowerCase();
+      final target = cleanPhrase.toLowerCase();
+      if (aName == target && bName != target) return -1;
+      if (bName == target && aName != target) return 1;
+      if (aName.startsWith(target) && !bName.startsWith(target)) return -1;
+      if (bName.startsWith(target) && !aName.startsWith(target)) return 1;
+      return 0;
+    });
+
+    return candidates.take(limit).toList();
   }
 
   @override
@@ -441,29 +556,51 @@ class DatabaseEntityLookupRepository implements IEntityLookupRepository {
     final cleanLower = clean.toLowerCase();
     final sql = '''
       SELECT 
-        u.id,
-        u.username,
-        u.display_name,
-        u.avatar_url
-      FROM users u
-      WHERE LOWER(u.username) LIKE '%$cleanLower%' 
-         OR LOWER(u.display_name) LIKE '%$cleanLower%'
+        fp.fan_id AS id,
+        ua.user_name AS username,
+        fp.full_name,
+        ua.email,
+        fp.profile_picture
+      FROM user_fan_profile fp
+      LEFT JOIN user_account ua ON fp.account_id = ua.id
+      WHERE LOWER(fp.full_name) LIKE '%$cleanLower%' 
+         OR LOWER(ua.user_name) LIKE '%$cleanLower%'
+         OR LOWER(ua.email) LIKE '%$cleanLower%'
+      ORDER BY 
+        CASE 
+          WHEN LOWER(fp.full_name) = '$cleanLower' OR LOWER(ua.user_name) = '$cleanLower' THEN 1
+          WHEN LOWER(fp.full_name) LIKE '$cleanLower%' OR LOWER(ua.user_name) LIKE '$cleanLower%' THEN 2
+          ELSE 3
+        END
       LIMIT $limit;
     ''';
 
     final rows = await _dbService.query(sql);
     return rows.map((r) {
       final id = r['id']?.toString() ?? '';
-      final username = r['username']?.toString() ?? '';
-      final displayName = r['display_name']?.toString();
+      final fullName = r['full_name']?.toString()?.trim();
+      final username = r['username']?.toString()?.trim();
+      final email = r['email']?.toString()?.trim();
+      final profilePic = r['profile_picture']?.toString();
+
+      final displayName = (username != null && username.isNotEmpty)
+          ? username
+          : ((fullName != null && fullName.isNotEmpty)
+              ? fullName
+              : ((email != null && email.isNotEmpty) ? email : 'Rally Contributor'));
 
       return EntityCandidate(
         id: id,
         type: EntityType.uploader,
-        canonicalName: displayName != null && displayName.isNotEmpty ? displayName : username,
-        subtitle: '@$username',
+        canonicalName: displayName,
+        subtitle: (fullName != null && fullName.isNotEmpty && fullName != username)
+            ? fullName
+            : (username != null && username.isNotEmpty ? '@$username' : null),
         metadata: {
           'username': username,
+          'fullName': fullName,
+          'fanId': id,
+          'profilePicture': profilePic,
         },
       );
     }).toList();

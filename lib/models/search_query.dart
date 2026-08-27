@@ -15,6 +15,23 @@ enum MatchMode {
   String toModeString() => name.toUpperCase();
 }
 
+/// Person role filter (e.g. "drove in" -> driver, "co-drove in" -> coDriver, default -> any)
+enum PersonRole {
+  any,
+  driver,
+  coDriver;
+
+  static PersonRole fromString(String? raw) {
+    if (raw == null) return PersonRole.any;
+    final clean = raw.trim().toLowerCase();
+    if (clean == 'driver' || clean == 'drive') return PersonRole.driver;
+    if (clean == 'codriver' || clean == 'co_driver' || clean == 'co-driver' || clean == 'co-drove' || clean == 'codrive') return PersonRole.coDriver;
+    return PersonRole.any;
+  }
+
+  String toRoleString() => name.toUpperCase();
+}
+
 /// General structured search query representation.
 /// Plural list fields are canonical across all dimensions (OR within a dimension, AND across dimensions).
 /// Singular getters and constructor parameters are provided for backward compatibility.
@@ -45,6 +62,7 @@ class SearchQuery {
   final List<String> _uploaders;
   final String? _uploader;
   final MatchMode driverMatchMode;
+  final PersonRole personRole;
   final int limit;
   final int offset;
 
@@ -75,6 +93,7 @@ class SearchQuery {
     List<String> uploaders = const [],
     String? uploader,
     this.driverMatchMode = MatchMode.any,
+    this.personRole = PersonRole.any,
     this.limit = 20,
     this.offset = 0,
   })  : _rallyNames = rallyNames,
@@ -297,6 +316,7 @@ class SearchQuery {
       if (actionType != null) 'actionType': actionType,
       if (uploaders.isNotEmpty) 'uploaders': uploaders,
       'driverMatchMode': driverMatchMode.toModeString(),
+      'personRole': personRole.toRoleString(),
       'limit': limit,
       'offset': offset,
     };
@@ -349,8 +369,9 @@ class SearchQuery {
     // Parse uploaders
     final uploadersList = _extractStringList(map['uploaders'] ?? map['uploader']);
 
-    // Parse match mode
+    // Parse match mode & person role
     final matchModeVal = MatchMode.fromString(map['driverMatchMode']?.toString() ?? map['driver_match_mode']?.toString());
+    final personRoleVal = PersonRole.fromString(map['personRole']?.toString() ?? map['person_role']?.toString() ?? map['role']?.toString());
 
     return SearchQuery(
       intent: parsedIntent,
@@ -368,6 +389,7 @@ class SearchQuery {
       yearTo: yearToVal,
       uploaders: uploadersList,
       driverMatchMode: matchModeVal,
+      personRole: personRoleVal,
       limit: limitVal,
       offset: offsetVal,
     );
@@ -449,6 +471,7 @@ class SearchQuery {
     List<String>? uploaders,
     String? uploader,
     MatchMode? driverMatchMode,
+    PersonRole? personRole,
     int? limit,
     int? offset,
   }) {
@@ -468,6 +491,7 @@ class SearchQuery {
       yearTo: yearTo ?? this.yearTo,
       uploaders: uploaders ?? (uploader != null ? [uploader] : this.uploaders),
       driverMatchMode: driverMatchMode ?? this.driverMatchMode,
+      personRole: personRole ?? this.personRole,
       limit: limit ?? this.limit,
       offset: offset ?? this.offset,
     );

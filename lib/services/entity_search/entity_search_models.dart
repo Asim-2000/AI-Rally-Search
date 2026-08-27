@@ -100,3 +100,19 @@ class EntitySearchIndexStats {
     required this.estimatedBytes,
   });
 }
+
+class EntitySearchQueryStats {
+  final SearchEntityType entityType;
+  final int rawCandidatesEvaluated;
+  final int survivingCandidates;
+  final int returnedCandidates;
+  final Duration latency;
+
+  const EntitySearchQueryStats({
+    required this.entityType,
+    required this.rawCandidatesEvaluated,
+    required this.survivingCandidates,
+    required this.returnedCandidates,
+    required this.latency,
+  });
+}

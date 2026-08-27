@@ -37,6 +37,7 @@ class InMemoryEntitySearchService implements IEntitySearchService {
   List<_IndexedEntity> _index = const [];
   @override
   EntitySearchIndexStats? indexStats;
+  EntitySearchQueryStats? lastQueryStats;
 
   InMemoryEntitySearchService({required this.dataSource});
 
@@ -90,8 +91,19 @@ class InMemoryEntitySearchService implements IEntitySearchService {
   Future<List<EntitySearchCandidate>> search(
     EntitySearchRequest request,
   ) async {
+    final stopwatch = Stopwatch()..start();
     final raw = request.rawMention.trim();
-    if (raw.isEmpty || request.limit <= 0) return const [];
+    if (raw.isEmpty || request.limit <= 0) {
+      stopwatch.stop();
+      lastQueryStats = EntitySearchQueryStats(
+        entityType: request.entityType,
+        rawCandidatesEvaluated: 0,
+        survivingCandidates: 0,
+        returnedCandidates: 0,
+        latency: stopwatch.elapsed,
+      );
+      return const [];
+    }
     final normalized = _searchText(raw);
     final collapsed = normalized.replaceAll(' ', '');
     final tokens = normalized.split(' ').where((e) => e.isNotEmpty).toSet();
@@ -99,12 +111,14 @@ class InMemoryEntitySearchService implements IEntitySearchService {
     final trigrams = _grams(collapsed, 3);
     final phonetic = _phonetic(raw);
     final results = <EntitySearchCandidate>[];
+    var evaluated = 0;
 
     for (final entity in _index) {
       if (entity.source.entityType != request.entityType ||
           !_roleAllowed(entity, request.personRole)) {
         continue;
       }
+      evaluated++;
       final exact =
           raw.toLowerCase() == entity.source.canonicalName.toLowerCase()
           ? 1.0
@@ -181,7 +195,17 @@ class InMemoryEntitySearchService implements IEntitySearchService {
       final score = b.score.compareTo(a.score);
       return score != 0 ? score : a.canonicalName.compareTo(b.canonicalName);
     });
-    return results.take(request.limit).toList(growable: false);
+    final surviving = results.length;
+    final returned = results.take(request.limit).toList(growable: false);
+    stopwatch.stop();
+    lastQueryStats = EntitySearchQueryStats(
+      entityType: request.entityType,
+      rawCandidatesEvaluated: evaluated,
+      survivingCandidates: surviving,
+      returnedCandidates: returned.length,
+      latency: stopwatch.elapsed,
+    );
+    return returned;
   }
 
   static bool _roleAllowed(_IndexedEntity entity, dynamic requested) {

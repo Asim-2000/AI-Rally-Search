@@ -139,6 +139,8 @@ void main() {
     final actualSttAudioSeconds = _actualSttAudioSeconds(
       results,
       audioDirectory,
+      negativeCases,
+      negativeResults,
     );
     final report = {
       'phase': 'ES-6A',
@@ -188,7 +190,22 @@ void main() {
       'cost': {
         'ttsApiCalls': 0,
         'localTtsSynthesesForFullCorpus': corpus.utterances.length * 2,
-        'sttCalls': _actualSttCalls(results) + negativeResults.length * 2,
+        'syntheticAudioDurationSeconds': audioStats.totalDurationMs / 1000,
+        'baselineSttCalls':
+            results
+                .where((e) => e.strategy == SyntheticSttStrategy.baseline)
+                .length +
+            negativeCases.length,
+        'staticContextSttCalls': results
+            .where((e) => e.strategy == SyntheticSttStrategy.staticContext)
+            .length,
+        'dynamicSecondPassSttCalls':
+            results.where((e) => e.secondPassTriggered).length +
+            negativeResults.length,
+        'sttCalls':
+            _actualSttCalls(results) +
+            negativeCases.length +
+            negativeResults.length,
         'measuredSttAudioSeconds': actualSttAudioSeconds,
         'gptTranscribePricePerMinuteUsd': 0.0045,
         'estimatedExperimentalSttCostUsd': actualSttAudioSeconds / 60 * 0.0045,
@@ -368,6 +385,8 @@ int _actualSttCalls(List<SyntheticSttEvaluationResult> results) {
 double _actualSttAudioSeconds(
   List<SyntheticSttEvaluationResult> results,
   Directory directory,
+  List<NegativeBiasCase> negativeCases,
+  List<Map<String, Object?>> negativeResults,
 ) {
   var seconds = 0.0;
   for (final baseline in results.where(
@@ -387,6 +406,12 @@ double _actualSttAudioSeconds(
         )
         .length;
     seconds += duration * dynamicCalls;
+  }
+  for (final negative in negativeCases) {
+    final dynamicCalls = negativeResults
+        .where((result) => result['id'] == negative.id)
+        .length;
+    seconds += _wavSeconds(negative.audioFile) * (1 + dynamicCalls);
   }
   return seconds;
 }

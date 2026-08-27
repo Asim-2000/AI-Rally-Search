@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ai_rally_search/l10n/generated/app_localizations.dart';
 import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
@@ -41,26 +42,44 @@ class MockSearchRepository implements ISearchRepository {
   }
 
   @override
-  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async {
+  Future<SearchResponse<RallySearchResult>> searchRallies(
+    SearchQuery query,
+  ) async {
     return (await search(query)) as SearchResponse<RallySearchResult>;
   }
 
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyResults(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyTopFinishers(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoAction>> searchVideoActions(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
 }
 
 class FakeLlmParser implements LlmQueryParser {
@@ -68,7 +87,10 @@ class FakeLlmParser implements LlmQueryParser {
   LlmProvider get provider => LlmProvider.mock;
 
   @override
-  Future<QueryParseResult> parse(String rawQuery, {SearchContext? context}) async {
+  Future<QueryParseResult> parse(
+    String rawQuery, {
+    SearchContext? context,
+  }) async {
     return QueryParseResult(
       rawResponse: '{"intent": "SEARCH_VIDEO_ACTIONS", "driver_name": "Josh Moffett", "action_type": "jump"}',
       query: const SearchQuery(
@@ -120,117 +142,127 @@ void main() {
     late MockSpeechToTextService mockSpeech;
 
     setUp(() {
+      dotenv.loadFromString(envString: 'ENTITY_SEARCH_FALLBACK_MODE=OFF');
       mockRepo = MockSearchRepository();
       mockSpeech = MockSpeechToTextService(
         defaultTranscript: 'Show jumps featuring Moffett',
       );
     });
 
-    testWidgets('Voice search button is present and starts idle', (tester) async {
+    testWidgets('Voice search button is present and starts idle', (
+      tester,
+    ) async {
       setupScreen(tester);
 
-      await tester.pumpWidget(createTestApp(
-        repository: mockRepo,
-        speechService: mockSpeech,
-      ));
+      await tester.pumpWidget(
+        createTestApp(repository: mockRepo, speechService: mockSpeech),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(VoiceSearchButton), findsOneWidget);
       expect(find.byIcon(Icons.mic_rounded), findsOneWidget);
     });
 
-    testWidgets('Tapping mic button triggers listening and populates transcript without auto-executing', (tester) async {
-      setupScreen(tester);
+    testWidgets(
+      'Tapping mic button triggers listening and populates transcript without auto-executing',
+      (tester) async {
+        setupScreen(tester);
 
-      mockSpeech.defaultTranscript = 'Show drifts in Galway 2024';
+        mockSpeech.defaultTranscript = 'Show drifts in Galway 2024';
 
-      await tester.pumpWidget(createTestApp(
-        repository: mockRepo,
-        speechService: mockSpeech,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(repository: mockRepo, speechService: mockSpeech),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap voice button to start listening
-      final micButton = find.byType(VoiceSearchButton);
-      await tester.tap(micButton);
-      await tester.pump();
+        // Tap voice button to start listening
+        final micButton = find.byType(VoiceSearchButton);
+        await tester.tap(micButton);
+        await tester.pump();
 
-      expect(mockSpeech.isListening, isTrue);
+        expect(mockSpeech.isListening, isTrue);
 
-      // Tap voice button again to stop & finish transcription
-      await tester.tap(micButton);
-      await tester.pumpAndSettle();
+        // Tap voice button again to stop & finish transcription
+        await tester.tap(micButton);
+        await tester.pump(const Duration(milliseconds: 250));
 
-      // Verify transcript is populated in textfield
-      expect(find.text('Show drifts in Galway 2024'), findsOneWidget);
+        // Verify transcript is populated in textfield
+        expect(find.text('Show drifts in Galway 2024'), findsOneWidget);
 
-      // Verify text field holds the value for review/edit
-      final textFieldFinder = find.byWidgetPredicate(
-        (w) => w is TextField && w.controller?.text == 'Show drifts in Galway 2024',
-      );
-      expect(textFieldFinder, findsOneWidget);
-    });
+        // Verify text field holds the value for review/edit
+        final textFieldFinder = find.byWidgetPredicate(
+          (w) =>
+              w is TextField &&
+              w.controller?.text == 'Show drifts in Galway 2024',
+        );
+        expect(textFieldFinder, findsOneWidget);
+      },
+    );
 
-    testWidgets('RTL text direction applies when Arabic or Urdu language is selected', (tester) async {
-      setupScreen(tester);
+    testWidgets(
+      'RTL text direction applies when Arabic or Urdu language is selected',
+      (tester) async {
+        setupScreen(tester);
 
-      await tester.pumpWidget(createTestApp(
-        repository: mockRepo,
-        speechService: mockSpeech,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(repository: mockRepo, speechService: mockSpeech),
+        );
+        await tester.pumpAndSettle();
 
-      // Find language dropdown
-      final dropdown = find.byType(DropdownButton<SupportedLanguage>);
-      expect(dropdown, findsOneWidget);
+        // Find language dropdown
+        final dropdown = find.byType(DropdownButton<SupportedLanguage>);
+        expect(dropdown, findsOneWidget);
 
-      // Open dropdown
-      await tester.tap(dropdown);
-      await tester.pumpAndSettle();
+        // Open dropdown
+        await tester.tap(dropdown);
+        await tester.pumpAndSettle();
 
-      // Select Arabic
-      final arabicItem = find.text('العربية (AR)').last;
-      await tester.tap(arabicItem);
-      await tester.pumpAndSettle();
+        // Select Arabic
+        final arabicItem = find.text('العربية (AR)').last;
+        await tester.tap(arabicItem);
+        await tester.pumpAndSettle();
 
-      // Verify TextField has RTL text direction
-      final textFieldFinder = find.byType(TextField).first;
-      expect(textFieldFinder, findsOneWidget);
-      final textField = tester.widget<TextField>(textFieldFinder);
-      expect(textField.textDirection, equals(TextDirection.rtl));
-      expect(textField.textAlign, equals(TextAlign.right));
-    });
+        // Verify TextField has RTL text direction
+        final textFieldFinder = find.byType(TextField).first;
+        expect(textFieldFinder, findsOneWidget);
+        final textField = tester.widget<TextField>(textFieldFinder);
+        expect(textField.textDirection, equals(TextDirection.rtl));
+        expect(textField.textAlign, equals(TextAlign.right));
+      },
+    );
 
-    testWidgets('Microphone permission failure displays snackbar and allows typed search fallback', (tester) async {
-      setupScreen(tester);
+    testWidgets(
+      'Microphone permission failure displays snackbar and allows typed search fallback',
+      (tester) async {
+        setupScreen(tester);
 
-      mockSpeech.permissionGranted = false;
+        mockSpeech.permissionGranted = false;
 
-      await tester.pumpWidget(createTestApp(
-        repository: mockRepo,
-        speechService: mockSpeech,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(repository: mockRepo, speechService: mockSpeech),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap voice button
-      final micButton = find.byType(VoiceSearchButton);
-      await tester.tap(micButton);
-      await tester.pumpAndSettle();
+        // Tap voice button
+        final micButton = find.byType(VoiceSearchButton);
+        await tester.tap(micButton);
+        await tester.pumpAndSettle();
 
-      // Verify snackbar error message is shown
-      expect(find.byType(SnackBar), findsOneWidget);
+        // Verify snackbar error message is shown
+        expect(find.byType(SnackBar), findsOneWidget);
 
-      // Verify typed search continues to work seamlessly
-      final textFieldFinder = find.byType(TextField).first;
-      await tester.enterText(textFieldFinder, 'Moffett crashes 2025');
-      await tester.pumpAndSettle();
+        // Verify typed search continues to work seamlessly
+        final textFieldFinder = find.byType(TextField).first;
+        await tester.enterText(textFieldFinder, 'Moffett crashes 2025');
+        await tester.pumpAndSettle();
 
-      final searchButton = find.widgetWithText(FilledButton, 'Search');
-      await tester.tap(searchButton);
-      await tester.pumpAndSettle();
+        final searchButton = find.widgetWithText(FilledButton, 'Search');
+        await tester.tap(searchButton);
+        await tester.pump(const Duration(milliseconds: 250));
 
-      // Typed search completed successfully
-      expect(find.text('Moffett crashes 2025'), findsOneWidget);
-    });
+        // Typed search completed successfully
+        expect(find.text('Moffett crashes 2025'), findsOneWidget);
+      },
+    );
   });
 }

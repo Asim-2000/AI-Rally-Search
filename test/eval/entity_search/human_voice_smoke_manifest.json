@@ -1,0 +1,129 @@
+{
+  "realHumanAudio": true,
+  "humanSampleCount": 5,
+  "uniqueWaveformCount": 4,
+  "humanBenchmarkStatus": "LABELED_SMOKE_TEST_ONLY",
+  "groundTruthSource": "Human-supplied by the recording owner on 2026-08-28",
+  "fixtures": [
+    {
+      "recordingId": "human-smoke-001",
+      "audioFile": "test/eval/audio/human/asim1.wav",
+      "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+      "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+      "entityMention": "aluksne rally",
+      "canonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+      "expectedCanonicalIds": [
+        "0cea6942-72e3-4257-a8c1-0f8148747d82"
+      ],
+      "canonicalEntityName": "Rally Alūksne 2026",
+      "entityType": "rally",
+      "expectedIntents": [
+        "GET_RALLY_TOP_FINISHERS"
+      ],
+      "expectedQuerySemantics": "Return the participating drivers/results for the independently verified Rally Alūksne event.",
+      "canonicalGroundTruthSource": "LIVE_DB_EXACT_RALLY_EVENTS_QUERY",
+      "speakerLabel": "speaker-anon-01",
+      "environmentLabel": null,
+      "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY"
+    },
+    {
+      "recordingId": "human-smoke-002",
+      "audioFile": "test/eval/audio/human/asim2.wav",
+      "referenceTranscriptRaw": "rallies in aluksne",
+      "referenceTranscriptNormalized": "rallies in aluksne",
+      "entityMention": "aluksne",
+      "canonicalEntityId": null,
+      "expectedCanonicalIds": [],
+      "canonicalEntityName": null,
+      "entityType": "city",
+      "expectedIntents": [
+        "SEARCH_RALLIES"
+      ],
+      "expectedQuerySemantics": "Search rallies with the city filter Alūksne; this is not a Rally Alūksne event-name query.",
+      "canonicalInterpretationAmbiguous": true,
+      "canonicalInterpretationNote": "The literal utterance is a city-filter query. Rally Alūksne 2026 is the independently verified related event, but forcing that event ID as the expected target would change the utterance semantics.",
+      "relatedVerifiedCanonicalEntities": [
+        {
+          "entityType": "rally",
+          "canonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+          "canonicalEntityName": "Rally Alūksne 2026",
+          "relationship": "event sharing the queried place/name"
+        }
+      ],
+      "speakerLabel": "speaker-anon-01",
+      "environmentLabel": null,
+      "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_LITERAL_ENTITY_SPAN",
+      "canonicalOutcomeScorable": false,
+      "canonicalOutcomeLimitation": "City is not an indexed ES-7 SearchEntityType and no canonical city ID is stored in the fixture."
+    },
+    {
+      "recordingId": "human-smoke-003",
+      "audioFile": "test/eval/audio/human/asim3.wav",
+      "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+      "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+      "entityMention": "aluksne rally",
+      "canonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+      "expectedCanonicalIds": [
+        "0cea6942-72e3-4257-a8c1-0f8148747d82"
+      ],
+      "canonicalEntityName": "Rally Alūksne 2026",
+      "entityType": "rally",
+      "expectedIntents": [
+        "GET_RALLY_TOP_FINISHERS"
+      ],
+      "expectedQuerySemantics": "Return the participating drivers/results for the independently verified Rally Alūksne event.",
+      "canonicalGroundTruthSource": "LIVE_DB_EXACT_RALLY_EVENTS_QUERY",
+      "speakerLabel": "speaker-anon-01",
+      "environmentLabel": null,
+      "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+      "duplicateAudioOf": "human-smoke-001"
+    },
+    {
+      "recordingId": "human-smoke-004",
+      "audioFile": "test/eval/audio/human/record_out.wav",
+      "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+      "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+      "referenceNormalizationNote": "Corrected the obvious typed label typo 'patcipated' to 'participated' for WER/CER only; the raw human label is preserved verbatim.",
+      "entityMention": "max freeman",
+      "canonicalEntityId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+      "expectedCanonicalIds": [
+        "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+      ],
+      "canonicalEntityName": "Max Freeman",
+      "equivalentResolverEntityIds": [
+        "7a633b52-950e-49ef-8cab-34cd43e99366"
+      ],
+      "entityType": "person",
+      "expectedIntents": [
+        "SEARCH_DRIVER_RALLIES"
+      ],
+      "expectedPersonRole": "ANY",
+      "expectedQuerySemantics": "Search rally participation for Max Freeman with ANY-role semantics, not wins or rally results. Live DB truth identifies Max Freeman as co-driver-only for these entries.",
+      "canonicalGroundTruthSource": "LIVE_DB_EXACT_PERSON_PROFILE_AND_PARTICIPATION_QUERY",
+      "speakerLabel": "speaker-anon-01",
+      "environmentLabel": null,
+      "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY"
+    },
+    {
+      "recordingId": "human-smoke-005",
+      "audioFile": "test/eval/audio/human/record_out (1).wav",
+      "referenceTranscriptRaw": "rally aluksne drivers",
+      "referenceTranscriptNormalized": "rally aluksne drivers",
+      "entityMention": "rally aluksne",
+      "canonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+      "expectedCanonicalIds": [
+        "0cea6942-72e3-4257-a8c1-0f8148747d82"
+      ],
+      "canonicalEntityName": "Rally Alūksne 2026",
+      "entityType": "rally",
+      "expectedIntents": [
+        "GET_RALLY_TOP_FINISHERS"
+      ],
+      "expectedQuerySemantics": "Return drivers/results for the independently verified Rally Alūksne event; the terse utterance is interpreted as the supported top-finishers intent.",
+      "canonicalGroundTruthSource": "LIVE_DB_EXACT_RALLY_EVENTS_QUERY",
+      "speakerLabel": "speaker-anon-01",
+      "environmentLabel": null,
+      "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY"
+    }
+  ]
+}

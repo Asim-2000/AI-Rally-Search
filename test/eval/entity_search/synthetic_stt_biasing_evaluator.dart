@@ -422,12 +422,11 @@ class SyntheticSttBiasingEvaluator {
         resolved != null &&
         _matchesIdentity(resolved.id, resolved.canonicalName, utterance.target);
     final wrongResolved = resolved != null && !correctResolved;
+    final requiresClarification = resolution?.requiresClarification ?? false;
     final top = candidates.firstOrNull;
     final vocabulary = fixedVocabulary ?? _vocabulary(candidates);
     final safelyResolved =
-        resolved != null &&
-        !wrongResolved &&
-        !(resolution?.requiresClarification ?? false);
+        resolved != null && !wrongResolved && !requiresClarification;
     final phoneticOnly =
         top != null &&
         top.matchedBy.contains('phonetic') &&
@@ -450,11 +449,10 @@ class SyntheticSttBiasingEvaluator {
         sttLatencyMs: sttLatencyMs,
         totalLatencyMs: priorElapsedMs + totalWatch.elapsedMilliseconds,
         canonicalAt1: top?.canonicalId == utterance.target.canonicalId,
-        correctConfident: correctResolved,
-        wrongConfident: wrongResolved,
-        clarification: resolution?.requiresClarification ?? false,
-        noMatch:
-            resolved == null && !(resolution?.requiresClarification ?? false),
+        correctConfident: correctResolved && !requiresClarification,
+        wrongConfident: wrongResolved && !requiresClarification,
+        clarification: requiresClarification,
+        noMatch: resolved == null && !requiresClarification,
         biasVocabulary: vocabulary,
         wer: _errorRate(
           utterance.text.split(RegExp(r'\s+')),

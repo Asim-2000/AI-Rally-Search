@@ -3413,31 +3413,31 @@
   "performance": {
     "totalIndexedEntities": 11243,
     "personEntities": 8750,
-    "buildMicroseconds": 3094318,
+    "buildMicroseconds": 6450051,
     "representationSizeEstimateBytes": 15990462,
     "canonicalRepresentationBytes": 5403734,
     "postingListBytes": 10586728,
-    "rssDeltaBytes": 74285056,
+    "rssDeltaBytes": 76857344,
     "personQueryMicroseconds": {
       "count": 1108,
-      "average": 74239.31588447653,
-      "p50": 71847,
-      "p95": 94570,
-      "max": 209630
+      "average": 75475.87545126354,
+      "p50": 73080,
+      "p95": 98369,
+      "max": 149297
     },
     "candidateGenerationMicroseconds": {
       "count": 1108,
-      "average": 2945.0370036101085,
-      "p50": 2885,
-      "p95": 4134,
-      "max": 10507
+      "average": 3050.976534296029,
+      "p50": 2916,
+      "p95": 4382,
+      "max": 12964
     },
     "scoringMicroseconds": {
       "count": 1108,
-      "average": 71291.44584837546,
-      "p50": 68851,
-      "p95": 90690,
-      "max": 205641
+      "average": 72421.81768953068,
+      "p50": 69974,
+      "p95": 93588,
+      "max": 145877
     }
   }
 }

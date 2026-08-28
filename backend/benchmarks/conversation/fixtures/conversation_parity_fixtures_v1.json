@@ -1,0 +1,274 @@
+{
+  "version": "1.0.0",
+  "description": "Frozen multi-turn conversational search parity fixture derived directly from Dart source tests and screens",
+  "provenance": {
+    "dart_sources": [
+      "test/screens/conversational_search_integration_test.dart",
+      "test/eval/canonical_person_and_role_correctness_test.dart",
+      "test/eval/video_person_semantics_audit_test.dart",
+      "lib/models/conversational_search_session.dart",
+      "lib/models/result_referent_context.dart",
+      "lib/screens/general_search_screen.dart"
+    ]
+  },
+  "cases": [
+    {
+      "id": "conv-001-rally-to-winner-referent",
+      "category": "coreference",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 1 -> Turn 2",
+      "turn": 1,
+      "query": "Show Donegal Rally 2025",
+      "context": {
+        "active_rally": null,
+        "active_driver": null,
+        "last_winner": null,
+        "active_drivers": [],
+        "active_rallies": []
+      },
+      "expected_query": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": ["Donegal Rally"],
+        "years": [2025]
+      },
+      "expected_referents": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": null,
+        "last_winner": null
+      }
+    },
+    {
+      "id": "conv-002-who-won-it-pronoun",
+      "category": "coreference",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 2 (who won it?)",
+      "turn": 2,
+      "query": "Who won it?",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": null,
+        "last_winner": null,
+        "active_drivers": [],
+        "active_rallies": ["Donegal International Rally 2025"],
+        "previous_query": {
+          "intent": "SEARCH_RALLIES",
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "GET_RALLY_RESULTS",
+        "rallyNames": ["Donegal International Rally 2025"],
+        "years": [2025]
+      },
+      "expected_referents": {
+        "active_rally": "Donegal International Rally 2025",
+        "last_winner": "Josh Moffett",
+        "active_driver": "Josh Moffett"
+      }
+    },
+    {
+      "id": "conv-003-videos-of-him-pronoun",
+      "category": "coreference",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 3 (show videos of him)",
+      "turn": 3,
+      "query": "Show videos of him",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": "Josh Moffett",
+        "last_winner": "Josh Moffett",
+        "active_drivers": ["Josh Moffett", "Sam Moffett"],
+        "active_rallies": ["Donegal International Rally 2025"],
+        "previous_query": {
+          "intent": "GET_RALLY_RESULTS",
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverNames": ["Josh Moffett"]
+      },
+      "expected_referents": {
+        "active_driver": "Josh Moffett"
+      }
+    },
+    {
+      "id": "conv-004-action-refinement-jumps",
+      "category": "action_filter",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 4 (only show jumps)",
+      "turn": 4,
+      "query": "Only show jumps",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": "Josh Moffett",
+        "last_winner": "Josh Moffett",
+        "active_drivers": ["Josh Moffett"],
+        "active_rallies": ["Donegal International Rally 2025"],
+        "previous_query": {
+          "intent": "SEARCH_DRIVER_VIDEOS",
+          "driverNames": ["Josh Moffett"],
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "actionTypes": ["jump"],
+        "driverNames": ["Josh Moffett"],
+        "rallyNames": ["Donegal International Rally 2025"],
+        "years": [2025]
+      },
+      "expected_referents": {
+        "active_driver": "Josh Moffett",
+        "active_rally": "Donegal International Rally 2025"
+      }
+    },
+    {
+      "id": "conv-005-action-replacement-drifts",
+      "category": "action_filter",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 5 (only drifts)",
+      "turn": 5,
+      "query": "Only drifts",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": "Josh Moffett",
+        "previous_query": {
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "actionTypes": ["jump"],
+          "driverNames": ["Josh Moffett"],
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "actionTypes": ["drift"],
+        "driverNames": ["Josh Moffett"],
+        "rallyNames": ["Donegal International Rally 2025"],
+        "years": [2025]
+      }
+    },
+    {
+      "id": "conv-006-action-addition-also-drifts",
+      "category": "action_filter",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 6 (also drifts)",
+      "turn": 6,
+      "query": "Also drifts",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": "Josh Moffett",
+        "previous_query": {
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "actionTypes": ["jump"],
+          "driverNames": ["Josh Moffett"],
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "actionTypes": ["jump", "drift"],
+        "driverNames": ["Josh Moffett"],
+        "rallyNames": ["Donegal International Rally 2025"],
+        "years": [2025]
+      }
+    },
+    {
+      "id": "conv-007-remove-driver-filter",
+      "category": "explicit_removal",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 7 (forget the driver)",
+      "turn": 7,
+      "query": "Forget the driver",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "active_driver": "Josh Moffett",
+        "previous_query": {
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "actionTypes": ["jump", "drift"],
+          "driverNames": ["Josh Moffett"],
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverNames": [],
+        "rallyNames": ["Donegal International Rally 2025"],
+        "years": [2025]
+      }
+    },
+    {
+      "id": "conv-008-temporal-refinement-year",
+      "category": "temporal",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Turn 8 (what about 2024?)",
+      "turn": 8,
+      "query": "What about 2024?",
+      "context": {
+        "active_rally": "Donegal International Rally 2025",
+        "previous_query": {
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "actionTypes": ["jump", "drift"],
+          "rallyNames": ["Donegal International Rally 2025"],
+          "years": [2025]
+        }
+      },
+      "expected_query": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "years": [2024],
+        "rallyNames": ["Donegal International Rally 2025"]
+      }
+    },
+    {
+      "id": "conv-009-pronoun-clarification-missing-rally",
+      "category": "clarification",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Clean session 'who won it?'",
+      "turn": 1,
+      "query": "Who won it?",
+      "context": {
+        "active_rally": null,
+        "active_driver": null,
+        "last_winner": null
+      },
+      "expected_clarification": true,
+      "expected_clarification_question_contains": "Which rally"
+    },
+    {
+      "id": "conv-010-pronoun-clarification-ambiguous-driver",
+      "category": "clarification",
+      "source_test": "test/screens/conversational_search_integration_test.dart: Multiple candidate drivers 'show videos of him'",
+      "turn": 1,
+      "query": "Show videos of him",
+      "context": {
+        "active_drivers": ["Josh Moffett", "Sam Moffett"],
+        "last_winner": null
+      },
+      "expected_clarification": true,
+      "expected_clarification_question_contains": "Which driver"
+    },
+    {
+      "id": "conv-011-person-role-co-driver-preservation",
+      "category": "role_semantics",
+      "source_test": "test/eval/canonical_person_and_role_correctness_test.dart",
+      "turn": 1,
+      "query": "Rallies co-driven by Max Freeman",
+      "context": {},
+      "expected_query": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverNames": ["Max Freeman"],
+        "personRole": "CO_DRIVER"
+      }
+    },
+    {
+      "id": "conv-012-driver-match-mode-all",
+      "category": "multi_driver",
+      "source_test": "test/eval/canonical_person_and_role_correctness_test.dart",
+      "turn": 1,
+      "query": "Rallies where both Josh Moffett and Sam Moffett participated",
+      "context": {},
+      "expected_query": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverNames": ["Josh Moffett", "Sam Moffett"],
+        "driverMatchMode": "ALL"
+      }
+    }
+  ]
+}

@@ -5,7 +5,9 @@ CANONICAL_FIELDS = {
     "intent", "rallyNames", "eventNames", "countries", "cities", "stageNames", "stageNumbers",
     "driverNames", "driverIds", "actionTypes", "years", "yearFrom", "yearTo", "uploaders",
     "driverMatchMode", "personRole", "limit", "offset",
+    "requiresClarification", "clarificationQuestion", "requires_clarification", "clarification_question",
 }
+
 
 
 def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:

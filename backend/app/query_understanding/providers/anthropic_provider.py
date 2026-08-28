@@ -1,19 +1,33 @@
 import json
+from typing import Any
 
 from ..models import ProviderResponse, TokenUsage
 from ..prompt import SYSTEM_PROMPT
 from ..provider import ProviderError, QueryUnderstandingProvider
+
 from .http import post_json
 
 
 class AnthropicProvider(QueryUnderstandingProvider):
-    async def parse_raw(self, natural_language_query: str, *, language: str | None = None) -> ProviderResponse:
+    async def parse_raw(
+        self,
+        natural_language_query: str,
+        *,
+        language: str | None = None,
+        context: Any = None,
+    ) -> ProviderResponse:
         c = self.config
         if not c.api_key:
             raise ProviderError("ANTHROPIC_API_KEY is missing")
         from ...domain.search_query import SearchQuery
         tool = {"name": "rally_search_query", "description": "Extract the structured rally SearchQuery", "input_schema": SearchQuery.model_json_schema(by_alias=True)}
-        body = {"model": c.model, "max_tokens": c.max_tokens, "temperature": c.temperature, "system": SYSTEM_PROMPT, "messages": [{"role": "user", "content": natural_language_query}], "tools": [tool], "tool_choice": {"type": "tool", "name": "rally_search_query"}}
+        user_content = natural_language_query
+        if context is not None:
+            ctx_str = getattr(context, "format_prompt_context", lambda: "")()
+            if ctx_str:
+                user_content = f"{natural_language_query}\n\n{ctx_str}"
+        body = {"model": c.model, "max_tokens": c.max_tokens, "temperature": c.temperature, "system": SYSTEM_PROMPT, "messages": [{"role": "user", "content": user_content}], "tools": [tool], "tool_choice": {"type": "tool", "name": "rally_search_query"}}
+
         body.update(c.parameters)
         data = await post_json(f"{(c.base_url or 'https://api.anthropic.com/v1').rstrip('/')}/messages", body, {"Content-Type": "application/json", "x-api-key": c.api_key, "anthropic-version": "2023-06-01"}, c.timeout_seconds)
         blocks = data.get("content") or []

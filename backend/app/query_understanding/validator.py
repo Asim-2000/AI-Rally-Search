@@ -40,7 +40,9 @@ def validate_provider_output(raw: str, *, allow_user_supplied_driver_ids: bool =
     actions = payload.get("actionTypes", [])
     if not isinstance(actions, list) or any(action not in ALLOWED_ACTIONS for action in actions):
         raise OutputValidationError(FailureKind.SEMANTIC_VALIDATION_FAILURE, "unsupported actionTypes value")
+    cleaned = {k: v for k, v in payload.items() if k not in ("requiresClarification", "clarificationQuestion", "requires_clarification", "clarification_question")}
     try:
-        return SearchQuery.model_validate(normalize_payload(payload))
+        return SearchQuery.model_validate(normalize_payload(cleaned))
     except ValidationError as exc:
         raise OutputValidationError(FailureKind.SCHEMA_VALIDATION_FAILURE, str(exc)) from exc
+

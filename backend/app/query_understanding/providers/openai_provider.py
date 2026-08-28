@@ -1,16 +1,31 @@
+from typing import Any
+
 from ..models import ProviderResponse, TokenUsage
 from ..prompt import SYSTEM_PROMPT
 from ..provider import ProviderConfig, ProviderError, QueryUnderstandingProvider
 from .http import post_json
 
 
+
 class OpenAIProvider(QueryUnderstandingProvider):
-    async def parse_raw(self, natural_language_query: str, *, language: str | None = None) -> ProviderResponse:
+    async def parse_raw(
+        self,
+        natural_language_query: str,
+        *,
+        language: str | None = None,
+        context: Any = None,
+    ) -> ProviderResponse:
         c = self.config
         if not c.api_key:
             raise ProviderError("OPENAI_API_KEY is missing")
         schema = _schema()
-        body = {"model": c.model, "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": natural_language_query}], "max_completion_tokens": c.max_tokens}
+        user_content = natural_language_query
+        if context is not None:
+            ctx_str = getattr(context, "format_prompt_context", lambda: "")()
+            if ctx_str:
+                user_content = f"{natural_language_query}\n\n{ctx_str}"
+        body = {"model": c.model, "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_content}], "max_completion_tokens": c.max_tokens}
+
         if c.structured_output:
             body["response_format"] = {"type": "json_schema", "json_schema": {"name": "rally_search_query", "strict": True, "schema": schema}}
         if not _is_reasoning_model(c.model):

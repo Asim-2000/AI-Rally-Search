@@ -672,8 +672,10 @@ class DatabaseEntityResolver:
         base_runner_up = float(runner_up_meta.get("baseScore", runner_up_score))
         base_gap = base_top - base_runner_up
 
-        if gap >= self.min_score_gap or (
-            top_score >= self.min_confidence_threshold and base_gap >= self.min_score_gap
+        if (
+            top_score >= 0.999
+            or gap >= self.min_score_gap
+            or (top_score >= self.min_confidence_threshold and base_gap >= self.min_score_gap)
         ):
             return EntityResolution(
                 type=top.type,
@@ -682,6 +684,8 @@ class DatabaseEntityResolver:
                 confidence=top_score,
                 strategy="clear_winner",
             )
+
+
 
         return EntityResolution(
             type=top.type,

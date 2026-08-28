@@ -35,14 +35,17 @@ class QueryUnderstandingRequest(BaseModel):
 
 
 class QueryUnderstandingResult(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
     query: SearchQuery | None = None
+
     provider: str
     model: str
     prompt_version: str
     schema_version: str
     few_shot_version: str
     raw_response: str | None = None
+    requires_clarification: bool = Field(default=False, alias="requiresClarification")
+    clarification_question: str | None = Field(default=None, alias="clarificationQuestion")
     failure_kind: FailureKind | None = None
     error: str | None = None
     attempts: int = 1
@@ -56,4 +59,5 @@ class QueryUnderstandingResult(BaseModel):
 
     @property
     def succeeded(self) -> bool:
-        return self.query is not None and self.failure_kind is None
+        return self.query is not None and self.failure_kind is None and not self.requires_clarification
+

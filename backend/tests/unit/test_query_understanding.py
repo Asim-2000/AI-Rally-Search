@@ -49,11 +49,12 @@ class SequenceProvider(QueryUnderstandingProvider):
         super().__init__(ProviderConfig(provider="test", model="test", max_retries=1, timeout_seconds=.02))
         self.responses = iter(responses)
 
-    async def parse_raw(self, natural_language_query, *, language=None):
+    async def parse_raw(self, natural_language_query, *, language=None, context=None, **kwargs):
         value = next(self.responses)
         if isinstance(value, Exception): raise value
         if value == "sleep": await asyncio.sleep(.1)
         return ProviderResponse(raw_response=value)
+
 
 
 @pytest.mark.unit

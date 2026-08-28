@@ -34,5 +34,12 @@ class QueryUnderstandingProvider(ABC):
         self.config = config
 
     @abstractmethod
-    async def parse_raw(self, natural_language_query: str, *, language: str | None = None) -> ProviderResponse:
+    async def parse_raw(
+        self,
+        natural_language_query: str,
+        *,
+        language: str | None = None,
+        context: Any = None,
+    ) -> ProviderResponse:
         """Return raw provider output. Validation belongs to the service boundary."""
+

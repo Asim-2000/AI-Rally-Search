@@ -1,4 +1,5 @@
 import json
+from typing import Any
 from urllib.parse import quote
 
 from ..models import ProviderResponse, TokenUsage
@@ -7,8 +8,15 @@ from ..provider import ProviderError, QueryUnderstandingProvider
 from .http import post_json
 
 
+
 class GeminiProvider(QueryUnderstandingProvider):
-    async def parse_raw(self, natural_language_query: str, *, language: str | None = None) -> ProviderResponse:
+    async def parse_raw(
+        self,
+        natural_language_query: str,
+        *,
+        language: str | None = None,
+        context: Any = None,
+    ) -> ProviderResponse:
         c = self.config
         if not c.api_key:
             raise ProviderError("GEMINI_API_KEY is missing")
@@ -18,7 +26,13 @@ class GeminiProvider(QueryUnderstandingProvider):
             from ...domain.search_query import SearchQuery
             generation["responseJsonSchema"] = SearchQuery.model_json_schema(by_alias=True)
         generation.update(c.parameters)
-        body = {"systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]}, "contents": [{"role": "user", "parts": [{"text": natural_language_query}]}], "generationConfig": generation}
+        user_content = natural_language_query
+        if context is not None:
+            ctx_str = getattr(context, "format_prompt_context", lambda: "")()
+            if ctx_str:
+                user_content = f"{natural_language_query}\n\n{ctx_str}"
+        body = {"systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]}, "contents": [{"role": "user", "parts": [{"text": user_content}]}], "generationConfig": generation}
+
         url = f"{(c.base_url or 'https://generativelanguage.googleapis.com/v1beta').rstrip('/')}/{model}:generateContent?key={quote(c.api_key)}"
         data = await post_json(url, body, {"Content-Type": "application/json"}, c.timeout_seconds)
         try:

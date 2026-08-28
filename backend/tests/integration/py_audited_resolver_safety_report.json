@@ -9,16 +9,16 @@
     "details": [
       {
         "input": "aluksnay",
-        "canonical": "Rally Alūksne 2026",
+        "canonical": "Rally Al\u016bksne 2026",
         "type": "rally",
-        "resolved": "Rally Alūksne 2026",
+        "resolved": "Rally Al\u016bksne 2026",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "a looks nay",
-        "canonical": "Rally Alūksne 2026",
+        "canonical": "Rally Al\u016bksne 2026",
         "type": "rally",
         "resolved": null,
         "correct": false,
@@ -27,45 +27,45 @@
       },
       {
         "input": "alux new",
-        "canonical": "Rally Alūksne 2026",
+        "canonical": "Rally Al\u016bksne 2026",
         "type": "rally",
-        "resolved": "Rally Alūksne 2026",
+        "resolved": "Rally Al\u016bksne 2026",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "eluksne",
-        "canonical": "Rally Alūksne 2026",
+        "canonical": "Rally Al\u016bksne 2026",
         "type": "rally",
-        "resolved": "Rally Alūksne 2026",
+        "resolved": "Rally Al\u016bksne 2026",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "aluknse",
-        "canonical": "Rally Alūksne 2026",
+        "canonical": "Rally Al\u016bksne 2026",
         "type": "rally",
-        "resolved": "Rally Alūksne 2026",
+        "resolved": "Rally Al\u016bksne 2026",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "aluksney",
-        "canonical": "Rally Alūksne 2026",
+        "canonical": "Rally Al\u016bksne 2026",
         "type": "rally",
-        "resolved": "Rally Alūksne 2026",
+        "resolved": "Rally Al\u016bksne 2026",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "pawel malgo",
-        "canonical": "Paweł Molgo",
+        "canonical": "Pawe\u0142 Molgo",
         "type": "driver",
-        "resolved": "Paweł Molgo",
+        "resolved": "Pawe\u0142 Molgo",
         "correct": true,
         "clarification": false,
         "error": null
@@ -162,9 +162,9 @@
       },
       {
         "input": "1000 Hugel Rallye",
-        "canonical": "OBM Land der 1000 Hügel Rallye 2026",
+        "canonical": "OBM Land der 1000 H\u00fcgel Rallye 2026",
         "type": "rally",
-        "resolved": "OBM Land der 1000 Hügel Rallye 2026",
+        "resolved": "OBM Land der 1000 H\u00fcgel Rallye 2026",
         "correct": true,
         "clarification": false,
         "error": null
@@ -180,9 +180,9 @@
       },
       {
         "input": "Regional des Ardennes",
-        "canonical": "Rallye Régional des Ardennes 2025",
+        "canonical": "Rallye R\u00e9gional des Ardennes 2025",
         "type": "rally",
-        "resolved": "Rallye Régional des Ardennes 2025",
+        "resolved": "Rallye R\u00e9gional des Ardennes 2025",
         "correct": true,
         "clarification": false,
         "error": null
@@ -270,70 +270,70 @@
       },
       {
         "input": "Jon Gunnar Stoten",
-        "canonical": "Jon-Gunnar Støten",
+        "canonical": "Jon-Gunnar St\u00f8ten",
         "type": "driver",
-        "resolved": "Jon-Gunnar Støten",
+        "resolved": "Jon-Gunnar St\u00f8ten",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Michal Babicka",
-        "canonical": "Michal Babička",
+        "canonical": "Michal Babi\u010dka",
         "type": "driver",
-        "resolved": "Michal Babička",
+        "resolved": "Michal Babi\u010dka",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Adam Zelik",
-        "canonical": "Adam Zelík",
+        "canonical": "Adam Zel\u00edk",
         "type": "driver",
-        "resolved": "Adam Zelík",
+        "resolved": "Adam Zel\u00edk",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Veroslav Cvrcek",
-        "canonical": "Věroslav Cvrček",
+        "canonical": "V\u011broslav Cvr\u010dek",
         "type": "driver",
-        "resolved": "Věroslav Cvrček",
+        "resolved": "V\u011broslav Cvr\u010dek",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Piotr Krotoszynski",
-        "canonical": "Piotr Krotoszyński",
+        "canonical": "Piotr Krotoszy\u0144ski",
         "type": "driver",
-        "resolved": "Piotr Krotoszyński",
+        "resolved": "Piotr Krotoszy\u0144ski",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Herve Emerio",
-        "canonical": "Hervé Emeriau",
+        "canonical": "Herv\u00e9 Emeriau",
         "type": "driver",
-        "resolved": "Hervé Emeriau",
+        "resolved": "Herv\u00e9 Emeriau",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Jose Pawla",
-        "canonical": "José Paula",
+        "canonical": "Jos\u00e9 Paula",
         "type": "driver",
-        "resolved": "José Paula",
+        "resolved": "Jos\u00e9 Paula",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Sergio Ramon",
-        "canonical": "Sergio Ramón Arrom",
+        "canonical": "Sergio Ram\u00f3n Arrom",
         "type": "driver",
         "resolved": null,
         "correct": false,
@@ -342,16 +342,16 @@
       },
       {
         "input": "Raphael Czwartkovski",
-        "canonical": "Raphaël Czwartkowski",
+        "canonical": "Rapha\u00ebl Czwartkowski",
         "type": "driver",
-        "resolved": "Raphaël Czwartkowski",
+        "resolved": "Rapha\u00ebl Czwartkowski",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Vitor Mathias",
-        "canonical": "Vítor Matias",
+        "canonical": "V\u00edtor Matias",
         "type": "driver",
         "resolved": null,
         "correct": false,
@@ -387,27 +387,27 @@
       },
       {
         "input": "Nenad Loncarich",
-        "canonical": "Nenad Lončarič",
+        "canonical": "Nenad Lon\u010dari\u010d",
         "type": "driver",
-        "resolved": "Nenad Lončarič",
+        "resolved": "Nenad Lon\u010dari\u010d",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Matej Bogovich",
-        "canonical": "Matej Bogović",
+        "canonical": "Matej Bogovi\u0107",
         "type": "driver",
-        "resolved": "Matej Bogović",
+        "resolved": "Matej Bogovi\u0107",
         "correct": true,
         "clarification": false,
         "error": null
       },
       {
         "input": "Andrej Medich",
-        "canonical": "Andrej Medić",
+        "canonical": "Andrej Medi\u0107",
         "type": "driver",
-        "resolved": "Andrej Medić",
+        "resolved": "Andrej Medi\u0107",
         "correct": true,
         "clarification": false,
         "error": null
@@ -432,9 +432,9 @@
       },
       {
         "input": "Jan Erik Mall",
-        "canonical": "Jan-Erik Mäll",
+        "canonical": "Jan-Erik M\u00e4ll",
         "type": "driver",
-        "resolved": "Jan-Erik Mäll",
+        "resolved": "Jan-Erik M\u00e4ll",
         "correct": true,
         "clarification": false,
         "error": null
@@ -450,9 +450,9 @@
       },
       {
         "input": "Pawel Molgo",
-        "canonical": "Paweł Molgo",
+        "canonical": "Pawe\u0142 Molgo",
         "type": "driver",
-        "resolved": "Paweł Molgo",
+        "resolved": "Pawe\u0142 Molgo",
         "correct": true,
         "clarification": false,
         "error": null
@@ -468,7 +468,7 @@
       },
       {
         "input": "Stoten",
-        "canonical": "Jon-Gunnar Støten",
+        "canonical": "Jon-Gunnar St\u00f8ten",
         "type": "driver",
         "resolved": null,
         "correct": false,
@@ -477,7 +477,7 @@
       },
       {
         "input": "Cvrcek",
-        "canonical": "Věroslav Cvrček",
+        "canonical": "V\u011broslav Cvr\u010dek",
         "type": "driver",
         "resolved": null,
         "correct": false,
@@ -570,8 +570,8 @@
   "negativeConfusable": {
     "queries": 106,
     "wrongConfident": 0,
-    "clarification": 30,
-    "rejection": 76,
+    "clarification": 31,
+    "rejection": 75,
     "details": [
       {
         "input": "Josh Smith",
@@ -780,7 +780,7 @@
         "input": "Fafe Classic 1985",
         "type": "rally",
         "resolved": null,
-        "clarification": false,
+        "clarification": true,
         "error": null
       },
       {
@@ -1319,26 +1319,26 @@
   },
   "falseConfidentAutoResolution": 0,
   "fallbackTelemetry": {
-    "legacyResolved": 37,
-    "legacyClarified": 55,
-    "legacyNoMatch": 81,
-    "entitySearchInvoked": 155,
-    "entitySearchResolved": 16,
-    "entitySearchClarified": 61,
-    "entitySearchNoMatch": 78,
-    "entitySearchRecoveredLegacyFailure": 4,
+    "legacyResolved": 0,
+    "legacyClarified": 0,
+    "legacyNoMatch": 173,
+    "entitySearchInvoked": 173,
+    "entitySearchResolved": 34,
+    "entitySearchClarified": 62,
+    "entitySearchNoMatch": 77,
+    "entitySearchRecoveredLegacyFailure": 96,
     "roleConstraintRejected": 49,
     "yearConstraintRejected": 0,
-    "duplicateIdentityClarification": 12,
-    "legacyLatencyMicroseconds": 16339493,
-    "entitySearchLatencyMicroseconds": 13473065,
-    "totalResolutionLatencyMicroseconds": 29821340
+    "duplicateIdentityClarification": 11,
+    "legacyLatencyMicroseconds": 1631,
+    "entitySearchLatencyMicroseconds": 13996486,
+    "totalResolutionLatencyMicroseconds": 14002151
   },
   "nullAccountSafety": [
     {
       "case": "same visible name / different IDs",
       "input": "Shea Breen",
-      "role": "any",
+      "role": "ANY",
       "resolvedCanonicalId": null,
       "clarification": true,
       "error": null,
@@ -1346,17 +1346,17 @@
     },
     {
       "case": "wrong PersonRole",
-      "input": "Paweł Molgo",
-      "role": "coDriver",
+      "input": "Pawe\u0142 Molgo",
+      "role": "CO_DRIVER",
       "resolvedCanonicalId": null,
       "clarification": false,
-      "error": "We couldn't confidently identify that driver (\"Paweł Molgo\").",
+      "error": "We couldn't confidently identify that driver (\"Pawe\u0142 Molgo\").",
       "safe": true
     },
     {
       "case": "common surname collision",
       "input": "David Young",
-      "role": "any",
+      "role": "ANY",
       "resolvedCanonicalId": null,
       "clarification": true,
       "error": null,
@@ -1364,8 +1364,8 @@
     },
     {
       "case": "partial person name",
-      "input": "Paweł",
-      "role": "any",
+      "input": "Pawe\u0142",
+      "role": "ANY",
       "resolvedCanonicalId": null,
       "clarification": true,
       "error": null,
@@ -1374,7 +1374,7 @@
     {
       "case": "duplicate person names",
       "input": "John O'Sullivan",
-      "role": "driver",
+      "role": "DRIVER",
       "resolvedCanonicalId": null,
       "clarification": true,
       "error": null,

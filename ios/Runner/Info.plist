@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>AI Rally Search uses your microphone to transcribe voice queries in 19 languages.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>AI Rally Search uses speech recognition to parse natural language rally queries.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -30,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AI Rally Search uses your microphone to transcribe voice queries in 19 languages.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AI Rally Search uses speech recognition to parse natural language rally queries.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

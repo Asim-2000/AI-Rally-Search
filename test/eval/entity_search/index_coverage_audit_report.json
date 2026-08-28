@@ -38,8 +38,8 @@
       "coveragePercent": 100.0
     },
     "STAGE": {
-      "sourceCanonicalCount": 1023,
-      "indexedCanonicalCount": 1023,
+      "sourceCanonicalCount": 1025,
+      "indexedCanonicalCount": 1025,
       "missingCount": 0,
       "coveragePercent": 100.0
     },

@@ -1330,9 +1330,9 @@
     "roleConstraintRejected": 49,
     "yearConstraintRejected": 0,
     "duplicateIdentityClarification": 12,
-    "legacyLatencyMicroseconds": 16762429,
-    "entitySearchLatencyMicroseconds": 14777892,
-    "totalResolutionLatencyMicroseconds": 31551075
+    "legacyLatencyMicroseconds": 20556471,
+    "entitySearchLatencyMicroseconds": 14558560,
+    "totalResolutionLatencyMicroseconds": 35127290
   },
   "nullAccountSafety": [
     {

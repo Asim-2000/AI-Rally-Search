@@ -29,6 +29,16 @@ class VoiceTranscriptionPayload(BaseModel):
     latency_ms: float = Field(alias="latencyMs")
 
 
+class VoiceTranscribeResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    transcript: str
+    provider: str
+    model: str
+    language: str
+    latency_ms: float = Field(alias="latencyMs")
+    uncalibrated_confidence: float | None = Field(default=None, alias="uncalibratedConfidence")
+
+
 class VoiceSearchResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     session: SearchConversationSession
@@ -54,6 +64,39 @@ def _voice_service(
         preprocessing_strategy="raw",
     ))
     return VoiceSearchService(speech_provider=provider, conversation_service=conversation)
+
+
+@router.post("/transcribe", response_model=VoiceTranscribeResponse, response_model_by_alias=True)
+async def transcribe_voice(
+    request: Request,
+    filename: str = Query("audio.wav"),
+    language: str = Query("en"),
+    conversation: ConversationalSearchService = Depends(get_conversational_service),
+    settings: Settings = Depends(get_settings),
+) -> VoiceTranscribeResponse:
+    audio = await request.body()
+    if not audio:
+        raise HTTPException(422, "audio body must not be empty")
+    transcription = None
+    try:
+        transcription = await _voice_service(conversation, settings).transcribe(
+            audio,
+            filename=filename,
+            language=language,
+        )
+        return VoiceTranscribeResponse(
+            transcript=transcription.text,
+            provider=transcription.provider,
+            model=transcription.model,
+            language=transcription.language,
+            latencyMs=transcription.latency_ms,
+            uncalibratedConfidence=transcription.confidence,
+        )
+    except SpeechProviderError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    finally:
+        if transcription is not None:
+            transcription.dispose_audio()
 
 
 @router.post("/search", response_model=VoiceSearchResponse, response_model_by_alias=True)

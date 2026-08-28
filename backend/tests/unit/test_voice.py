@@ -33,6 +33,69 @@ class EmptyRepository:
 @pytest.mark.voice
 def test_experimental_raw_audio_endpoint_is_registered():
     assert "post" in app.openapi()["paths"]["/v1/voice/search"]
+    assert "post" in app.openapi()["paths"]["/v1/voice/transcribe"]
+
+
+@pytest.mark.unit
+@pytest.mark.voice
+def test_transcribe_endpoint_returns_transcription_only(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.api.v1 import voice as voice_module
+
+    svc, _ = voice_service(transcript="show rallies where Max Freeman participated")
+    monkeypatch.setattr(voice_module, "_voice_service", lambda conversation, settings: svc)
+
+    client = TestClient(app)
+    response = client.post(
+        "/v1/voice/transcribe?filename=test.wav&language=en",
+        content=b"dummy_audio_bytes",
+        headers={"Content-Type": "application/octet-stream"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["transcript"] == "show rallies where Max Freeman participated"
+    assert data["provider"] == "mock"
+    assert data["model"] == "mock-stt"
+    assert data["language"] == "en"
+    assert "latencyMs" in data
+    # Assert NO search, NO session, NO DB execution fields
+    assert "session" not in data
+    assert "result" not in data
+    assert "searchResponse" not in data
+    assert "parsedQuery" not in data
+
+
+@pytest.mark.unit
+@pytest.mark.voice
+def test_transcribe_endpoint_empty_audio_returns_422():
+    from fastapi.testclient import TestClient
+
+    client = TestClient(app)
+    response = client.post(
+        "/v1/voice/transcribe",
+        content=b"",
+        headers={"Content-Type": "application/octet-stream"},
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.unit
+@pytest.mark.voice
+def test_transcribe_endpoint_provider_error_returns_502(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.api.v1 import voice as voice_module
+
+    svc, _ = voice_service(error=SpeechProviderError("transcription failed"))
+    monkeypatch.setattr(voice_module, "_voice_service", lambda conversation, settings: svc)
+
+    client = TestClient(app)
+    response = client.post(
+        "/v1/voice/transcribe",
+        content=b"dummy_audio_bytes",
+        headers={"Content-Type": "application/octet-stream"},
+    )
+    assert response.status_code == 502
+    assert "transcription failed" in response.text
 
 
 def voice_service(transcript="Show rallies in Ireland", *, error=None):

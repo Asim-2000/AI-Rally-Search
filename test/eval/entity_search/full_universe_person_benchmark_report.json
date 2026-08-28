@@ -3411,33 +3411,33 @@
     }
   },
   "performance": {
-    "totalIndexedEntities": 11243,
+    "totalIndexedEntities": 11245,
     "personEntities": 8750,
-    "buildMicroseconds": 6450051,
-    "representationSizeEstimateBytes": 15990462,
-    "canonicalRepresentationBytes": 5403734,
-    "postingListBytes": 10586728,
-    "rssDeltaBytes": 76857344,
+    "buildMicroseconds": 4160338,
+    "representationSizeEstimateBytes": 15992794,
+    "canonicalRepresentationBytes": 5404554,
+    "postingListBytes": 10588240,
+    "rssDeltaBytes": 67026944,
     "personQueryMicroseconds": {
       "count": 1108,
-      "average": 75475.87545126354,
-      "p50": 73080,
-      "p95": 98369,
-      "max": 149297
+      "average": 115908.56407942239,
+      "p50": 106331,
+      "p95": 181550,
+      "max": 785247
     },
     "candidateGenerationMicroseconds": {
       "count": 1108,
-      "average": 3050.976534296029,
-      "p50": 2916,
-      "p95": 4382,
-      "max": 12964
+      "average": 4802.434115523466,
+      "p50": 4135,
+      "p95": 9103,
+      "max": 36641
     },
     "scoringMicroseconds": {
       "count": 1108,
-      "average": 72421.81768953068,
-      "p50": 69974,
-      "p95": 93588,
-      "max": 145877
+      "average": 111101.66696750902,
+      "p50": 102064,
+      "p95": 174050,
+      "max": 766621
     }
   }
 }

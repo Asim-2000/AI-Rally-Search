@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/speech/speech_transcription_result.dart';
@@ -14,6 +16,10 @@ class VoiceSearchButton extends StatefulWidget {
   final ValueChanged<SpeechTranscriptionResult>? onResultDetailed;
   final ValueChanged<VoiceError>? onError;
   final ValueChanged<VoiceState>? onStateChanged;
+  final String label;
+  final IconData idleIcon;
+  final String tooltipPrefix;
+  final Future<void> Function()? onBeforeStart;
 
   const VoiceSearchButton({
     super.key,
@@ -23,6 +29,10 @@ class VoiceSearchButton extends StatefulWidget {
     this.onResultDetailed,
     this.onError,
     this.onStateChanged,
+    this.label = 'Voice',
+    this.idleIcon = Icons.mic_rounded,
+    this.tooltipPrefix = 'Voice Search',
+    this.onBeforeStart,
   });
 
   @override
@@ -36,6 +46,7 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
   VoiceState _state = VoiceState.idle;
   String? _errorMessage;
   bool _isAwaitingStopResult = false;
+  StreamSubscription<VoiceState>? _stateSubscription;
 
   @override
   void initState() {
@@ -47,10 +58,27 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    _state = widget.speechService.currentState;
+    _stateSubscription = widget.speechService.stateStream.listen((state) {
+      _handleStateChanged(state);
+    });
+  }
+
+  @override
+  void didUpdateWidget(VoiceSearchButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.speechService != widget.speechService) {
+      _stateSubscription?.cancel();
+      _state = widget.speechService.currentState;
+      _stateSubscription = widget.speechService.stateStream.listen((state) {
+        _handleStateChanged(state);
+      });
+    }
   }
 
   @override
   void dispose() {
+    _stateSubscription?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -104,6 +132,9 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
     // Start listening
     _errorMessage = null;
     _isAwaitingStopResult = false;
+    if (widget.onBeforeStart != null) {
+      await widget.onBeforeStart!();
+    }
     await widget.speechService.startListening(
       language: widget.selectedLanguage,
       onResult: (transcript, isFinal) {
@@ -181,7 +212,7 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
         );
         buttonColor = Colors.redAccent.shade400;
         tooltipText =
-            'Listening (${widget.selectedLanguage.displayName})... Tap to stop';
+            '${widget.tooltipPrefix}: Listening (${widget.selectedLanguage.displayName})... Tap to stop';
         break;
 
       case VoiceState.processing:
@@ -194,7 +225,7 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
           ),
         );
         buttonColor = Colors.deepPurpleAccent;
-        tooltipText = 'Transcribing voice query...';
+        tooltipText = '${widget.tooltipPrefix}: Transcribing...';
         break;
 
       case VoiceState.requestingPermission:
@@ -217,19 +248,20 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
           size: 20,
         );
         buttonColor = Colors.red.shade600;
-        tooltipText = _errorMessage ?? 'Voice search error. Tap to retry';
+        tooltipText = _errorMessage ?? '${widget.tooltipPrefix} error. Tap to retry';
         break;
 
       case VoiceState.idle:
         iconWidget = Icon(
-          Icons.mic_rounded,
+          widget.idleIcon,
           color: isDark ? Colors.white70 : theme.colorScheme.primary,
           size: 20,
         );
         buttonColor = isDark
             ? Colors.white12
             : theme.colorScheme.primary.withValues(alpha: 0.1);
-        tooltipText = 'Voice Search (${widget.selectedLanguage.displayName})';
+        tooltipText =
+            '${widget.tooltipPrefix} (${widget.selectedLanguage.displayName})';
         break;
     }
 

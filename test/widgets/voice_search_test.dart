@@ -19,7 +19,6 @@ import 'package:ai_rally_search/services/llm/query_parse_result.dart';
 import 'package:ai_rally_search/services/search_repository.dart';
 import 'package:ai_rally_search/services/python_search_api_client.dart';
 import 'package:ai_rally_search/services/speech/mock_speech_to_text_service.dart';
-import 'package:ai_rally_search/widgets/voice_search_button.dart';
 
 class MockSearchRepository implements ISearchRepository {
   SearchQuery? lastQuery;
@@ -166,8 +165,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(VoiceSearchButton), findsOneWidget);
-      expect(find.byIcon(Icons.mic_rounded), findsOneWidget);
+      expect(find.byKey(const Key('native_voice_button')), findsOneWidget);
+      expect(find.byKey(const Key('cloud_voice_button')), findsOneWidget);
     });
 
     testWidgets(
@@ -183,8 +182,8 @@ void main() {
         await tester.pumpAndSettle();
         mockRepo.lastQuery = null;
 
-        // Tap voice button to start listening
-        final micButton = find.byType(VoiceSearchButton);
+        // Tap native voice button to start listening
+        final micButton = find.byKey(const Key('native_voice_button'));
         await tester.tap(micButton);
         await tester.pump();
 
@@ -278,7 +277,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final mic = find.byType(VoiceSearchButton);
+        final mic = find.byKey(const Key('native_voice_button'));
         await tester.tap(mic);
         await tester.pump();
         mockSpeech.emitPartialResult('Max McRae');
@@ -311,7 +310,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(VoiceSearchButton));
+      await tester.tap(find.byKey(const Key('native_voice_button')));
       await tester.pump();
       mockSpeech.emitPartialResult('temporary words');
       await tester.pump();
@@ -380,8 +379,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Tap voice button
-        final micButton = find.byType(VoiceSearchButton);
+        // Tap native voice button
+        final micButton = find.byKey(const Key('native_voice_button'));
         await tester.tap(micButton);
         await tester.pumpAndSettle();
 

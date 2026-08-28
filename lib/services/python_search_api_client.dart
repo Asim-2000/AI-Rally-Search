@@ -101,6 +101,36 @@ class PythonConversationResponse {
   });
 }
 
+class CloudTranscriptionResponse {
+  final String transcript;
+  final String provider;
+  final String model;
+  final String language;
+  final double latencyMs;
+  final double? uncalibratedConfidence;
+
+  const CloudTranscriptionResponse({
+    required this.transcript,
+    required this.provider,
+    required this.model,
+    required this.language,
+    required this.latencyMs,
+    this.uncalibratedConfidence,
+  });
+
+  factory CloudTranscriptionResponse.fromJson(Map<String, dynamic> json) {
+    return CloudTranscriptionResponse(
+      transcript: '${json['transcript'] ?? ''}',
+      provider: '${json['provider'] ?? ''}',
+      model: '${json['model'] ?? ''}',
+      language: '${json['language'] ?? 'en'}',
+      latencyMs: (json['latencyMs'] as num?)?.toDouble() ?? 0.0,
+      uncalibratedConfidence:
+          (json['uncalibratedConfidence'] as num?)?.toDouble(),
+    );
+  }
+}
+
 class PythonSearchApiClient {
   final Uri baseUrl;
   final http.Client _http;
@@ -133,6 +163,28 @@ class PythonSearchApiClient {
       voiceTimeout: config.voiceTimeout,
       headers: config.headers,
     );
+  }
+
+  Future<CloudTranscriptionResponse> transcribe({
+    required Uint8List audioBytes,
+    required String filename,
+    required String language,
+  }) async {
+    final uri = _uri('/v1/voice/transcribe', {
+      'filename': filename,
+      'language': language,
+    });
+    final response = await _send(
+      () => _http
+          .post(
+            uri,
+            headers: {...headers, 'Content-Type': 'application/octet-stream'},
+            body: audioBytes,
+          )
+          .timeout(voiceTimeout),
+    );
+    final body = _decodeBody(response);
+    return CloudTranscriptionResponse.fromJson(body);
   }
 
   Future<SearchResponse<dynamic>> search(SearchQuery query) async {

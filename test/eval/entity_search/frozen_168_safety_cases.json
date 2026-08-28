@@ -3,7 +3,7 @@
     "caseId": "safety_1",
     "category": "positive",
     "input": "aluksnay",
-    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "expectedCanonicalName": "Rally Alūksne 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -11,7 +11,7 @@
     "caseId": "safety_2",
     "category": "positive",
     "input": "a looks nay",
-    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "expectedCanonicalName": "Rally Alūksne 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -19,7 +19,7 @@
     "caseId": "safety_3",
     "category": "positive",
     "input": "alux new",
-    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "expectedCanonicalName": "Rally Alūksne 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -27,7 +27,7 @@
     "caseId": "safety_4",
     "category": "positive",
     "input": "eluksne",
-    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "expectedCanonicalName": "Rally Alūksne 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -35,7 +35,7 @@
     "caseId": "safety_5",
     "category": "positive",
     "input": "aluknse",
-    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "expectedCanonicalName": "Rally Alūksne 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -43,7 +43,7 @@
     "caseId": "safety_6",
     "category": "positive",
     "input": "aluksney",
-    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "expectedCanonicalName": "Rally Alūksne 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -51,9 +51,9 @@
     "caseId": "safety_7",
     "category": "positive",
     "input": "pawel malgo",
-    "expectedCanonicalName": "Pawe\u0142 Molgo",
+    "expectedCanonicalName": "Paweł Molgo",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_8",
@@ -61,7 +61,7 @@
     "input": "shea brain",
     "expectedCanonicalName": "Shea Breen",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_9",
@@ -139,7 +139,7 @@
     "caseId": "safety_18",
     "category": "positive",
     "input": "1000 Hugel Rallye",
-    "expectedCanonicalName": "OBM Land der 1000 H\u00fcgel Rallye 2026",
+    "expectedCanonicalName": "OBM Land der 1000 Hügel Rallye 2026",
     "entityType": "rally",
     "personRole": null
   },
@@ -155,7 +155,7 @@
     "caseId": "safety_20",
     "category": "positive",
     "input": "Regional des Ardennes",
-    "expectedCanonicalName": "Rallye R\u00e9gional des Ardennes 2025",
+    "expectedCanonicalName": "Rallye Régional des Ardennes 2025",
     "entityType": "rally",
     "personRole": null
   },
@@ -235,81 +235,81 @@
     "caseId": "safety_30",
     "category": "positive",
     "input": "Jon Gunnar Stoten",
-    "expectedCanonicalName": "Jon-Gunnar St\u00f8ten",
+    "expectedCanonicalName": "Jon-Gunnar Støten",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_31",
     "category": "positive",
     "input": "Michal Babicka",
-    "expectedCanonicalName": "Michal Babi\u010dka",
+    "expectedCanonicalName": "Michal Babička",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_32",
     "category": "positive",
     "input": "Adam Zelik",
-    "expectedCanonicalName": "Adam Zel\u00edk",
+    "expectedCanonicalName": "Adam Zelík",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_33",
     "category": "positive",
     "input": "Veroslav Cvrcek",
-    "expectedCanonicalName": "V\u011broslav Cvr\u010dek",
+    "expectedCanonicalName": "Věroslav Cvrček",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_34",
     "category": "positive",
     "input": "Piotr Krotoszynski",
-    "expectedCanonicalName": "Piotr Krotoszy\u0144ski",
+    "expectedCanonicalName": "Piotr Krotoszyński",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_35",
     "category": "positive",
     "input": "Herve Emerio",
-    "expectedCanonicalName": "Herv\u00e9 Emeriau",
+    "expectedCanonicalName": "Hervé Emeriau",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_36",
     "category": "positive",
     "input": "Jose Pawla",
-    "expectedCanonicalName": "Jos\u00e9 Paula",
+    "expectedCanonicalName": "José Paula",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_37",
     "category": "positive",
     "input": "Sergio Ramon",
-    "expectedCanonicalName": "Sergio Ram\u00f3n Arrom",
+    "expectedCanonicalName": "Sergio Ramón Arrom",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_38",
     "category": "positive",
     "input": "Raphael Czwartkovski",
-    "expectedCanonicalName": "Rapha\u00ebl Czwartkowski",
+    "expectedCanonicalName": "Raphaël Czwartkowski",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_39",
     "category": "positive",
     "input": "Vitor Mathias",
-    "expectedCanonicalName": "V\u00edtor Matias",
+    "expectedCanonicalName": "Vítor Matias",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_40",
@@ -317,7 +317,7 @@
     "input": "Steven OConnor",
     "expectedCanonicalName": "Stephen O'Connor",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_41",
@@ -325,7 +325,7 @@
     "input": "Dermot OToole",
     "expectedCanonicalName": "Diarmuid O'Toole",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_42",
@@ -333,31 +333,31 @@
     "input": "Tanja Zingelmann",
     "expectedCanonicalName": "Tanja Zingelmann-Hartjen",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_43",
     "category": "positive",
     "input": "Nenad Loncarich",
-    "expectedCanonicalName": "Nenad Lon\u010dari\u010d",
+    "expectedCanonicalName": "Nenad Lončarič",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_44",
     "category": "positive",
     "input": "Matej Bogovich",
-    "expectedCanonicalName": "Matej Bogovi\u0107",
+    "expectedCanonicalName": "Matej Bogović",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_45",
     "category": "positive",
     "input": "Andrej Medich",
-    "expectedCanonicalName": "Andrej Medi\u0107",
+    "expectedCanonicalName": "Andrej Medić",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_46",
@@ -365,7 +365,7 @@
     "input": "John Shanahan Jr",
     "expectedCanonicalName": "John Shanahan jnr.",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_47",
@@ -373,15 +373,15 @@
     "input": "Max Frieman",
     "expectedCanonicalName": "Max Freeman",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_48",
     "category": "positive",
     "input": "Jan Erik Mall",
-    "expectedCanonicalName": "Jan-Erik M\u00e4ll",
+    "expectedCanonicalName": "Jan-Erik Mäll",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_49",
@@ -389,15 +389,15 @@
     "input": "Katarina Schmidt",
     "expectedCanonicalName": "Catharina Schmidt",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_50",
     "category": "positive",
     "input": "Pawel Molgo",
-    "expectedCanonicalName": "Pawe\u0142 Molgo",
+    "expectedCanonicalName": "Paweł Molgo",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_51",
@@ -405,23 +405,23 @@
     "input": "Shea Breen",
     "expectedCanonicalName": "Shea Breen",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_52",
     "category": "positive",
     "input": "Stoten",
-    "expectedCanonicalName": "Jon-Gunnar St\u00f8ten",
+    "expectedCanonicalName": "Jon-Gunnar Støten",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_53",
     "category": "positive",
     "input": "Cvrcek",
-    "expectedCanonicalName": "V\u011broslav Cvr\u010dek",
+    "expectedCanonicalName": "Věroslav Cvrček",
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_54",
@@ -501,7 +501,7 @@
     "input": "Josh Smith",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_64",
@@ -509,7 +509,7 @@
     "input": "Sam Williams",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_65",
@@ -517,7 +517,7 @@
     "input": "Keith O'Connor",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_66",
@@ -525,7 +525,7 @@
     "input": "Craig McErlean",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_67",
@@ -533,7 +533,7 @@
     "input": "Callum Breen",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_68",
@@ -541,7 +541,7 @@
     "input": "Paul Moffett",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_69",
@@ -549,7 +549,7 @@
     "input": "David Cronin",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_70",
@@ -557,7 +557,7 @@
     "input": "Michael Devine",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_71",
@@ -565,7 +565,7 @@
     "input": "Mark Freeman",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_72",
@@ -573,7 +573,7 @@
     "input": "John Breen",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_73",
@@ -581,7 +581,7 @@
     "input": "Brain",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_74",
@@ -589,7 +589,7 @@
     "input": "Breenan",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_75",
@@ -597,7 +597,7 @@
     "input": "Moffitt",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_76",
@@ -605,7 +605,7 @@
     "input": "Moffat",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_77",
@@ -613,7 +613,7 @@
     "input": "Cronan",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_78",
@@ -621,7 +621,7 @@
     "input": "Devaney",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_79",
@@ -629,7 +629,7 @@
     "input": "Molgow",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_80",
@@ -637,7 +637,7 @@
     "input": "Stotenberg",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_81",
@@ -645,7 +645,7 @@
     "input": "Zelinski",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_82",
@@ -653,7 +653,7 @@
     "input": "Babic",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_83",
@@ -797,7 +797,7 @@
     "input": "FictionalEntity2 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_101",
@@ -813,7 +813,7 @@
     "input": "FictionalEntity4 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_103",
@@ -829,7 +829,7 @@
     "input": "FictionalEntity6 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_105",
@@ -845,7 +845,7 @@
     "input": "FictionalEntity8 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_107",
@@ -861,7 +861,7 @@
     "input": "FictionalEntity10 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_109",
@@ -877,7 +877,7 @@
     "input": "FictionalEntity12 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_111",
@@ -893,7 +893,7 @@
     "input": "FictionalEntity14 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_113",
@@ -909,7 +909,7 @@
     "input": "FictionalEntity16 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_115",
@@ -925,7 +925,7 @@
     "input": "FictionalEntity18 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_117",
@@ -941,7 +941,7 @@
     "input": "FictionalEntity20 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_119",
@@ -957,7 +957,7 @@
     "input": "FictionalEntity22 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_121",
@@ -973,7 +973,7 @@
     "input": "FictionalEntity24 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_123",
@@ -989,7 +989,7 @@
     "input": "FictionalEntity26 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_125",
@@ -1005,7 +1005,7 @@
     "input": "FictionalEntity28 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_127",
@@ -1021,7 +1021,7 @@
     "input": "FictionalEntity30 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_129",
@@ -1037,7 +1037,7 @@
     "input": "FictionalEntity32 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_131",
@@ -1053,7 +1053,7 @@
     "input": "FictionalEntity34 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_133",
@@ -1069,7 +1069,7 @@
     "input": "FictionalEntity36 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_135",
@@ -1085,7 +1085,7 @@
     "input": "FictionalEntity38 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_137",
@@ -1101,7 +1101,7 @@
     "input": "FictionalEntity40 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_139",
@@ -1117,7 +1117,7 @@
     "input": "FictionalEntity42 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_141",
@@ -1133,7 +1133,7 @@
     "input": "FictionalEntity44 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_143",
@@ -1149,7 +1149,7 @@
     "input": "FictionalEntity46 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_145",
@@ -1165,7 +1165,7 @@
     "input": "FictionalEntity48 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_147",
@@ -1181,7 +1181,7 @@
     "input": "FictionalEntity50 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_149",
@@ -1197,7 +1197,7 @@
     "input": "FictionalEntity52 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_151",
@@ -1213,7 +1213,7 @@
     "input": "FictionalEntity54 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_153",
@@ -1229,7 +1229,7 @@
     "input": "FictionalEntity56 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_155",
@@ -1245,7 +1245,7 @@
     "input": "FictionalEntity58 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_157",
@@ -1261,7 +1261,7 @@
     "input": "FictionalEntity60 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_159",
@@ -1277,7 +1277,7 @@
     "input": "FictionalEntity62 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_161",
@@ -1293,7 +1293,7 @@
     "input": "FictionalEntity64 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_163",
@@ -1309,7 +1309,7 @@
     "input": "FictionalEntity66 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_165",
@@ -1325,7 +1325,7 @@
     "input": "FictionalEntity68 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   },
   {
     "caseId": "safety_167",
@@ -1341,6 +1341,6 @@
     "input": "FictionalEntity70 PseudoName",
     "expectedCanonicalName": null,
     "entityType": "driver",
-    "personRole": "any"
+    "personRole": "driver"
   }
 ]

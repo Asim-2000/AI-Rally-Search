@@ -63,6 +63,8 @@ class GeneralSearchScreen extends StatefulWidget {
   final NaturalLanguageSearchService? nlSearchService;
   final LlmQueryParser? llmParser;
   final ISpeechToTextService? speechService;
+  final ISpeechToTextService? nativeSpeechService;
+  final ISpeechToTextService? cloudSpeechService;
   final PythonSearchApiClient? pythonApiClient;
 
   const GeneralSearchScreen({
@@ -72,6 +74,8 @@ class GeneralSearchScreen extends StatefulWidget {
     this.nlSearchService,
     this.llmParser,
     this.speechService,
+    this.nativeSpeechService,
+    this.cloudSpeechService,
     this.pythonApiClient,
   });
 
@@ -82,7 +86,8 @@ class GeneralSearchScreen extends StatefulWidget {
 class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   late final ISearchRepository _repository;
   late final NaturalLanguageSearchService _nlSearchService;
-  late final ISpeechToTextService _speechService;
+  late final ISpeechToTextService _nativeSpeechService;
+  late final ISpeechToTextService _cloudSpeechService;
   PythonSearchApiClient? _pythonApiClient;
   late final bool _usePythonBackend;
 
@@ -91,6 +96,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   // Single continuous search field controller
   final TextEditingController _searchController = TextEditingController();
+
+  // Dual STT tracking state for user testing and edit-detection
+  String? _sttSource; // 'NATIVE' or 'CLOUD'
+  String? _sttProvider; // 'OS_NATIVE' or 'OPENAI'
+  String? _sttModel;
+  double? _sttLatencyMs;
+  String? _sttRawTranscript;
+  int _voiceGeneration = 0;
+  Map<String, dynamic>? _lastVoiceTelemetry;
+
+  Map<String, dynamic>? get lastVoiceTelemetry => _lastVoiceTelemetry;
+  String? get currentSttSource => _sttSource;
 
   // Core Conversational Search Session
   SearchConversationSession _session = SearchConversationSession.initial;
@@ -160,7 +177,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           entityResolver: resolver,
           repository: _repository,
         );
-    _speechService = widget.speechService ?? SpeechServiceFactory.create();
+    _nativeSpeechService = widget.nativeSpeechService ??
+        widget.speechService ??
+        SpeechServiceFactory.createNative();
+    _cloudSpeechService = widget.cloudSpeechService ??
+        SpeechServiceFactory.createCloud(pythonApiClient: _pythonApiClient);
+
+    _searchController.addListener(_onSearchControllerChanged);
 
     if (widget.initialQuery != null) {
       _session = _session.copyWith(activeQuery: widget.initialQuery!);
@@ -170,11 +193,46 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
   }
 
+  void _onSearchControllerChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
-    _speechService.dispose();
+    _searchController.removeListener(_onSearchControllerChanged);
+    _nativeSpeechService.dispose();
+    _cloudSpeechService.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleVoiceTranscriptReceived({
+    required String transcript,
+    required String source,
+    required int generation,
+    SpeechTranscriptionResult? detailed,
+  }) {
+    if (generation != _voiceGeneration) {
+      // Stale transcript from previous voice turn -> discard
+      return;
+    }
+    setState(() {
+      _sttSource = source;
+      _sttProvider = detailed?.provider ??
+          (source == 'NATIVE' ? 'OS_NATIVE' : 'OPENAI');
+      _sttModel = detailed?.model ??
+          (source == 'NATIVE' ? 'NATIVE_DEVICE_STT' : 'gpt-transcribe');
+      _sttLatencyMs = detailed?.latencyMs;
+      _sttRawTranscript = transcript;
+      _searchController.value = TextEditingValue(
+        text: transcript,
+        selection: TextSelection.collapsed(
+          offset: transcript.length,
+        ),
+      );
+    });
   }
 
   // ===========================================================================
@@ -192,6 +250,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     final requestSession = _session;
     final nextRequestId = _session.activeRequestId + 1;
+    if (_sttSource != null) {
+      final wasEdited = _sttRawTranscript != null &&
+          _sttRawTranscript!.trim().toLowerCase() != queryText.toLowerCase();
+      _lastVoiceTelemetry = {
+        'sttMethod': _sttSource,
+        'sttProvider': _sttProvider,
+        'sttModel': _sttModel,
+        'locale': _selectedLanguage.localeCode,
+        'transcriptionLatencyMs': _sttLatencyMs,
+        'rawTranscript': _sttRawTranscript,
+        'submittedTranscript': queryText,
+        'wasEditedBeforeSubmit': wasEdited,
+      };
+    }
     setState(() {
       if (queryText.isNotEmpty) _searchController.text = queryText;
       _session = _session.copyWith(activeRequestId: nextRequestId);
@@ -466,9 +538,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   }
 
   void _handleClearAll() {
-    unawaited(_speechService.cancelListening());
+    unawaited(_nativeSpeechService.cancelListening());
+    unawaited(_cloudSpeechService.cancelListening());
     setState(() {
       _searchController.clear();
+      _sttSource = null;
+      _sttRawTranscript = null;
+      _voiceGeneration++;
       _session = _session.clearAll();
       _interpretedSummary = null;
       _clarificationQuestion = null;
@@ -974,7 +1050,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 }).toList(),
                 onChanged: (lang) {
                   if (lang != null) {
-                    unawaited(_speechService.cancelListening());
+                    unawaited(_nativeSpeechService.cancelListening());
+                    unawaited(_cloudSpeechService.cancelListening());
                     setState(() {
                       _selectedLanguage = lang;
                       if (_lastNlResult?.query != null) {
@@ -1019,103 +1096,178 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 ),
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    textDirection: _selectedLanguage.isRtl
-                        ? TextDirection.rtl
-                        : TextDirection.ltr,
-                    textAlign: _selectedLanguage.isRtl
-                        ? TextAlign.right
-                        : TextAlign.left,
-                    decoration: InputDecoration(
-                      hintText: 'Search rallies, drivers, jumps, or ask a question...',
-                      hintStyle: const TextStyle(fontSize: 13),
-                      prefixIcon: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: Color(0xFF1E88E5),
-                        size: 20,
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, size: 18),
-                              onPressed: () {
-                                unawaited(_speechService.cancelListening());
-                                setState(() {
-                                  _searchController.clear();
-                                  // Clearing while a request is in flight is a
-                                  // new client generation. Any older response
-                                  // must not repopulate the UI or session.
-                                  _session = _session.copyWith(
-                                    activeRequestId:
-                                        _session.activeRequestId + 1,
-                                  );
-                                  _isLoading = false;
-                                });
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: isDark
-                          ? const Color(0xFF2A2A2A)
-                          : Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF1E88E5),
-                          width: 1.5,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: isDark
-                              ? Colors.blue.withValues(alpha: 0.4)
-                              : Colors.blue.withValues(alpha: 0.3),
-                        ),
-                      ),
-                    ),
-                    onSubmitted: (_) => _executeNaturalLanguageSearch(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                VoiceSearchButton(
-                  speechService: _speechService,
-                  selectedLanguage: _selectedLanguage,
-                  onTranscriptReceived: (transcript) {
-                    if (_searchController.text != transcript) {
-                      setState(() {
-                        _searchController.value = TextEditingValue(
-                          text: transcript,
-                          selection: TextSelection.collapsed(
-                            offset: transcript.length,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        textDirection: _selectedLanguage.isRtl
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
+                        textAlign: _selectedLanguage.isRtl
+                            ? TextAlign.right
+                            : TextAlign.left,
+                        decoration: InputDecoration(
+                          hintText: 'Search rallies, drivers, jumps, or ask a question...',
+                          hintStyle: const TextStyle(fontSize: 13),
+                          prefixIcon: const Icon(
+                            Icons.auto_awesome_rounded,
+                            color: Color(0xFF1E88E5),
+                            size: 20,
                           ),
-                        );
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(width: 8),
-                FilledButton.icon(
-                  onPressed: _executeNaturalLanguageSearch,
-                  icon: const Icon(Icons.search_rounded, size: 18),
-                  label: const Text('Search'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
+                                  onPressed: () {
+                                    unawaited(_nativeSpeechService.cancelListening());
+                                    unawaited(_cloudSpeechService.cancelListening());
+                                    setState(() {
+                                      _searchController.clear();
+                                      _sttSource = null;
+                                      _sttRawTranscript = null;
+                                      _voiceGeneration++;
+                                      _session = _session.copyWith(
+                                        activeRequestId:
+                                            _session.activeRequestId + 1,
+                                      );
+                                      _isLoading = false;
+                                    });
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF2A2A2A)
+                              : Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF1E88E5),
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: isDark
+                                  ? Colors.blue.withValues(alpha: 0.4)
+                                  : Colors.blue.withValues(alpha: 0.3),
+                            ),
+                          ),
+                        ),
+                        onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 6),
+                    VoiceSearchButton(
+                      key: const Key('native_voice_button'),
+                      speechService: _nativeSpeechService,
+                      selectedLanguage: _selectedLanguage,
+                      label: 'Native Voice',
+                      tooltipPrefix: 'Native Voice',
+                      idleIcon: Icons.phone_android_rounded,
+                      onBeforeStart: () async {
+                        setState(() {
+                          _voiceGeneration++;
+                        });
+                        await _cloudSpeechService.cancelListening();
+                      },
+                      onTranscriptReceived: (transcript) {
+                        _handleVoiceTranscriptReceived(
+                          transcript: transcript,
+                          source: 'NATIVE',
+                          generation: _voiceGeneration,
+                        );
+                      },
+                      onResultDetailed: (result) {
+                        _handleVoiceTranscriptReceived(
+                          transcript: result.text,
+                          source: 'NATIVE',
+                          generation: _voiceGeneration,
+                          detailed: result,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    VoiceSearchButton(
+                      key: const Key('cloud_voice_button'),
+                      speechService: _cloudSpeechService,
+                      selectedLanguage: _selectedLanguage,
+                      label: 'Cloud Whisper',
+                      tooltipPrefix: 'Cloud Whisper',
+                      idleIcon: Icons.cloud_outlined,
+                      onBeforeStart: () async {
+                        setState(() {
+                          _voiceGeneration++;
+                        });
+                        await _nativeSpeechService.cancelListening();
+                      },
+                      onTranscriptReceived: (transcript) {
+                        _handleVoiceTranscriptReceived(
+                          transcript: transcript,
+                          source: 'CLOUD',
+                          generation: _voiceGeneration,
+                        );
+                      },
+                      onResultDetailed: (result) {
+                        _handleVoiceTranscriptReceived(
+                          transcript: result.text,
+                          source: 'CLOUD',
+                          generation: _voiceGeneration,
+                          detailed: result,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      onPressed: _executeNaturalLanguageSearch,
+                      icon: const Icon(Icons.search_rounded, size: 18),
+                      label: const Text('Search'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_sttSource != null && _searchController.text.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, left: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _sttSource == 'NATIVE'
+                              ? Icons.phone_android_rounded
+                              : Icons.cloud_outlined,
+                          size: 14,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${_sttSource == 'NATIVE' ? 'Native' : 'Cloud Whisper'} transcript'
+                          '${(_sttRawTranscript != null && _sttRawTranscript!.trim().toLowerCase() != _searchController.text.trim().toLowerCase()) ? ' (edited)' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
               ],
             ),
           ),

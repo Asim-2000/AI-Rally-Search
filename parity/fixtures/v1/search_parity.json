@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "cases": [
+    {"caseId":"rallies-basic","description":"Recent rallies","searchQuery":{"intent":"SEARCH_RALLIES","limit":10},"expectedIntent":"SEARCH_RALLIES","comparisonType":"DART_PYTHON"},
+    {"caseId":"rallies-multi-country-year","description":"OR countries and years, AND dimensions","searchQuery":{"intent":"SEARCH_RALLIES","countries":["Latvia","Estonia"],"years":[2025,2026],"limit":50},"expectedIntent":"SEARCH_RALLIES","comparisonType":"DART_PYTHON"},
+    {"caseId":"rallies-multi-city-range","description":"Multiple cities and inclusive range","searchQuery":{"intent":"SEARCH_RALLIES","cities":["Riga","Tallinn"],"yearFrom":2024,"yearTo":2026,"limit":50},"expectedIntent":"SEARCH_RALLIES","comparisonType":"DART_PYTHON"},
+    {"caseId":"rallies-multi-event","description":"Multiple rally names","searchQuery":{"intent":"SEARCH_RALLIES","rallyNames":["Moonraker","Donegal"],"limit":50},"expectedIntent":"SEARCH_RALLIES","comparisonType":"DART_PYTHON"},
+
+    {"caseId":"participation-basic","description":"Participation relational path","searchQuery":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Josh Moffett"],"personRole":"DRIVER","limit":100},"expectedIntent":"SEARCH_DRIVER_RALLIES","comparisonType":"RAW_DART_PYTHON","oracle":"participation"},
+    {"caseId":"role-codriver-only-driver","description":"Max Freeman incompatible driver role","searchQuery":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Max Freeman"],"personRole":"DRIVER","limit":100},"expectedIntent":"SEARCH_DRIVER_RALLIES","comparisonType":"RAW_DART_PYTHON","oracle":"participation"},
+    {"caseId":"role-codriver-only-codriver","description":"Max Freeman co-driver role","searchQuery":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Max Freeman"],"personRole":"CO_DRIVER","limit":100},"expectedIntent":"SEARCH_DRIVER_RALLIES","comparisonType":"RAW_DART_PYTHON","oracle":"participation"},
+    {"caseId":"role-codriver-only-any","description":"Max Freeman any role","searchQuery":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Max Freeman"],"personRole":"ANY","limit":100},"expectedIntent":"SEARCH_DRIVER_RALLIES","comparisonType":"DART_PYTHON"},
+    {"caseId":"participation-multi-person-any","description":"Multiple people ANY","searchQuery":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Josh Moffett","Max Freeman"],"driverMatchMode":"ANY","personRole":"ANY","limit":100},"expectedIntent":"SEARCH_DRIVER_RALLIES","comparisonType":"DART_PYTHON"},
+
+    {"caseId":"driver-wins-basic","description":"Driver wins use classification","searchQuery":{"intent":"SEARCH_DRIVER_WINS","driverNames":["Josh Moffett"],"limit":100},"expectedIntent":"SEARCH_DRIVER_WINS","comparisonType":"RAW_DART_PYTHON","oracle":"driver_win"},
+    {"caseId":"driver-wins-nonwinner-zero","description":"Participation does not imply win","searchQuery":{"intent":"SEARCH_DRIVER_WINS","driverNames":["Max Freeman"],"limit":100},"expectedIntent":"SEARCH_DRIVER_WINS","comparisonType":"DART_PYTHON"},
+    {"caseId":"driver-wins-year-range","description":"Wins range","searchQuery":{"intent":"SEARCH_DRIVER_WINS","driverNames":["Josh Moffett"],"yearFrom":2024,"yearTo":2026,"limit":50},"expectedIntent":"SEARCH_DRIVER_WINS","comparisonType":"DART_PYTHON"},
+
+    {"caseId":"rally-winner-basic","description":"Latest rally winner","searchQuery":{"intent":"GET_RALLY_RESULTS","limit":1},"expectedIntent":"GET_RALLY_RESULTS","comparisonType":"RAW_DART_PYTHON","oracle":"rally_winner"},
+    {"caseId":"rally-winner-filtered","description":"Winner with country/year","searchQuery":{"intent":"GET_RALLY_RESULTS","countries":["Latvia","Estonia"],"years":[2025,2026]},"expectedIntent":"GET_RALLY_RESULTS","comparisonType":"DART_PYTHON"},
+
+    {"caseId":"finishers-basic","description":"Final classification","searchQuery":{"intent":"GET_RALLY_TOP_FINISHERS","limit":20},"expectedIntent":"GET_RALLY_TOP_FINISHERS","comparisonType":"DART_PYTHON"},
+    {"caseId":"finishers-event-range","description":"Top ten classification for one live event plus one absent event ID","searchQuery":{"intent":"GET_RALLY_TOP_FINISHERS","eventNames":["2c411152-5bfe-4292-bd5a-43bc98ba6ab3","00000000-0000-0000-0000-000000000000"],"limit":10},"expectedIntent":"GET_RALLY_TOP_FINISHERS","comparisonType":"RAW_DART_PYTHON","oracle":"top_finishers"},
+
+    {"caseId":"actions-basic","description":"Recent actions","searchQuery":{"intent":"SEARCH_VIDEO_ACTIONS","limit":20},"expectedIntent":"SEARCH_VIDEO_ACTIONS","comparisonType":"DART_PYTHON"},
+    {"caseId":"actions-multi-filter","description":"Multiple actions/stages/numbers","searchQuery":{"intent":"SEARCH_VIDEO_ACTIONS","actionTypes":["jump","drift"],"stageNames":["stage","power"],"stageNumbers":["1","2"],"limit":50},"expectedIntent":"SEARCH_VIDEO_ACTIONS","comparisonType":"DART_PYTHON"},
+    {"caseId":"actions-person-direct","description":"Direct metadata crew attribution","searchQuery":{"intent":"SEARCH_VIDEO_ACTIONS","driverNames":["Max Freeman"],"personRole":"CO_DRIVER","limit":100},"expectedIntent":"SEARCH_VIDEO_ACTIONS","comparisonType":"RAW_DART_PYTHON","oracle":"direct_actions"},
+    {"caseId":"actions-role-zero","description":"Incompatible direct action role","searchQuery":{"intent":"SEARCH_VIDEO_ACTIONS","driverNames":["Max Freeman"],"personRole":"DRIVER","limit":100},"expectedIntent":"SEARCH_VIDEO_ACTIONS","comparisonType":"DART_PYTHON"},
+    {"caseId":"actions-page-1","description":"Action pagination first page","searchQuery":{"intent":"SEARCH_VIDEO_ACTIONS","actionTypes":["jump"],"limit":10,"offset":0},"expectedIntent":"SEARCH_VIDEO_ACTIONS","comparisonType":"DART_PYTHON","pageGroup":"actions-pages"},
+    {"caseId":"actions-page-2","description":"Action pagination second page","searchQuery":{"intent":"SEARCH_VIDEO_ACTIONS","actionTypes":["jump"],"limit":10,"offset":10},"expectedIntent":"SEARCH_VIDEO_ACTIONS","comparisonType":"DART_PYTHON","pageGroup":"actions-pages"},
+
+    {"caseId":"videos-basic","description":"Recent directly attributed videos","searchQuery":{"intent":"SEARCH_DRIVER_VIDEOS","limit":20},"expectedIntent":"SEARCH_DRIVER_VIDEOS","comparisonType":"DART_PYTHON"},
+    {"caseId":"videos-person-direct","description":"Direct video crew attribution","searchQuery":{"intent":"SEARCH_DRIVER_VIDEOS","driverNames":["Max Freeman"],"personRole":"CO_DRIVER","limit":100},"expectedIntent":"SEARCH_DRIVER_VIDEOS","comparisonType":"RAW_DART_PYTHON","oracle":"direct_videos"},
+    {"caseId":"videos-role-zero","description":"Incompatible direct video role","searchQuery":{"intent":"SEARCH_DRIVER_VIDEOS","driverNames":["Max Freeman"],"personRole":"DRIVER","limit":100},"expectedIntent":"SEARCH_DRIVER_VIDEOS","comparisonType":"DART_PYTHON"},
+    {"caseId":"videos-page-1","description":"Video pagination first page","searchQuery":{"intent":"SEARCH_DRIVER_VIDEOS","limit":10,"offset":0},"expectedIntent":"SEARCH_DRIVER_VIDEOS","comparisonType":"DART_PYTHON","pageGroup":"videos-pages"},
+    {"caseId":"videos-page-2","description":"Video pagination second page","searchQuery":{"intent":"SEARCH_DRIVER_VIDEOS","limit":10,"offset":10},"expectedIntent":"SEARCH_DRIVER_VIDEOS","comparisonType":"DART_PYTHON","pageGroup":"videos-pages"},
+
+    {"caseId":"uploaders-basic","description":"Canonical fan uploader leaderboard","searchQuery":{"intent":"GET_TOP_UPLOADERS","limit":20},"expectedIntent":"GET_TOP_UPLOADERS","comparisonType":"RAW_DART_PYTHON","oracle":"uploaders"},
+    {"caseId":"uploaders-filter-unused","description":"KNOWN_PRODUCT_SEMANTIC uploader filter is unused","searchQuery":{"intent":"GET_TOP_UPLOADERS","uploaders":["definitely-not-a-real-uploader"],"limit":20},"expectedIntent":"GET_TOP_UPLOADERS","comparisonType":"DART_PYTHON","notes":"KNOWN_PRODUCT_SEMANTIC:UPLOADERS_FILTER_CURRENTLY_UNUSED"},
+
+    {"caseId":"top-drivers-basic","description":"Driver win leaderboard","searchQuery":{"intent":"GET_TOP_DRIVERS_BY_WINS","limit":20},"expectedIntent":"GET_TOP_DRIVERS_BY_WINS","comparisonType":"RAW_DART_PYTHON","oracle":"driver_leaderboard"},
+    {"caseId":"top-drivers-multi-year","description":"Leaderboard discrete years","searchQuery":{"intent":"GET_TOP_DRIVERS_BY_WINS","years":[2025,2026],"countries":["Latvia","Estonia"],"limit":20},"expectedIntent":"GET_TOP_DRIVERS_BY_WINS","comparisonType":"DART_PYTHON"},
+
+    {"caseId":"zero-impossible-country","description":"Legitimate zero result","searchQuery":{"intent":"SEARCH_RALLIES","countries":["ZZZ-NOT-A-COUNTRY"],"limit":20},"expectedIntent":"SEARCH_RALLIES","comparisonType":"DART_PYTHON","expectedCanonicalIds":[],"expectedTotal":0}
+  ]
+}

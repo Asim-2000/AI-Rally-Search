@@ -41,6 +41,30 @@ class HumanVoiceSmokeEvaluator {
     strategy: 'RAW',
     preprocessingLatency: Duration.zero,
     preprocessingDiagnostics: const {'implementation': 'no_op'},
+    transcriptionContext: const SpeechTranscriptionContext(
+      origin: TranscriptionOrigin.baseline,
+      prompt: '',
+      keywords: [],
+      languageHints: ['en'],
+    ),
+    groundTruth: groundTruth,
+  );
+
+  Future<Map<String, Object?>> evaluateRawWithContext({
+    required String recordingId,
+    required File audioFile,
+    required Map<String, dynamic> groundTruth,
+    required SpeechTranscriptionContext transcriptionContext,
+    required String strategy,
+  }) async => _evaluateBytes(
+    recordingId: recordingId,
+    audioFile: audioFile,
+    audioBytes: await audioFile.readAsBytes(),
+    transcriptionFilename: audioFile.uri.pathSegments.last,
+    strategy: strategy,
+    preprocessingLatency: Duration.zero,
+    preprocessingDiagnostics: const {'implementation': 'no_op'},
+    transcriptionContext: transcriptionContext,
     groundTruth: groundTruth,
   );
 
@@ -57,6 +81,12 @@ class HumanVoiceSmokeEvaluator {
     strategy: processed.strategy.name,
     preprocessingLatency: processed.latency,
     preprocessingDiagnostics: processed.diagnostics,
+    transcriptionContext: const SpeechTranscriptionContext(
+      origin: TranscriptionOrigin.baseline,
+      prompt: '',
+      keywords: [],
+      languageHints: ['en'],
+    ),
     groundTruth: groundTruth,
   );
 
@@ -68,6 +98,7 @@ class HumanVoiceSmokeEvaluator {
     required String strategy,
     required Duration preprocessingLatency,
     required Map<String, Object?> preprocessingDiagnostics,
+    required SpeechTranscriptionContext transcriptionContext,
     required Map<String, dynamic> groundTruth,
   }) async {
     final totalWatch = Stopwatch()..start();
@@ -77,12 +108,7 @@ class HumanVoiceSmokeEvaluator {
       audioBytes,
       language: SupportedLanguages.english,
       filename: transcriptionFilename,
-      context: const SpeechTranscriptionContext(
-        origin: TranscriptionOrigin.baseline,
-        prompt: '',
-        keywords: [],
-        languageHints: ['en'],
-      ),
+      context: transcriptionContext,
     );
     sttWatch.stop();
     final transcript = transcription?.text.trim() ?? '';
@@ -238,8 +264,10 @@ class HumanVoiceSmokeEvaluator {
         'description': groundTruth['expectedQuerySemantics'],
       },
       'transcription': {
-        'origin': 'baseline',
-        'biasingUsed': false,
+        'origin': transcriptionContext.origin.name,
+        'biasingUsed': transcriptionContext.hasBias,
+        'prompt': transcriptionContext.prompt,
+        'keywords': transcriptionContext.keywords,
         'transcript': transcript,
         'requestedLanguage': 'en',
         'detectedLanguage': null,

@@ -4,6 +4,8 @@ import '../../models/search_query.dart';
 import '../../models/search_results.dart';
 import '../../models/speech/speech_transcription_result.dart';
 import '../search_repository.dart';
+import '../friendly_response_service.dart';
+import '../special_query_matcher.dart';
 import '../speech/voice_entity_recovery_service.dart';
 import 'entity_resolution/entity_resolver.dart';
 import 'entity_resolution/spoken_entity_resolver.dart';
@@ -48,6 +50,15 @@ class NaturalLanguageSearchResult {
   /// Any error message encountered during parsing, resolution, or DB execution.
   final String? error;
 
+  /// Stable code for UI mapping and telemetry. [error] retains technical detail.
+  final SearchErrorCode? errorCode;
+
+  /// Deterministic copy intended for display. Never used as a backend error.
+  final String? friendlyMessage;
+
+  /// Present when query understanding was intentionally bypassed.
+  final FriendlyResponseCategory? specialResponseCategory;
+
   /// Deterministic human-readable explanation of what was understood.
   final String? interpretedSummary;
 
@@ -74,6 +85,9 @@ class NaturalLanguageSearchResult {
     this.candidates = const [],
     this.resolutions = const {},
     this.error,
+    this.errorCode,
+    this.friendlyMessage,
+    this.specialResponseCategory,
     this.interpretedSummary,
     this.referents = ResultReferentContext.empty,
     this.entityResolutionLatencyMs = 0,
@@ -82,7 +96,10 @@ class NaturalLanguageSearchResult {
   });
 
   /// Success indicator: LLM parsing, entity resolution, and SearchRepository execution all succeeded.
-  bool get isSuccess => searchResponse != null && error == null && !requiresClarification;
+  bool get isSuccess =>
+      searchResponse != null && error == null && !requiresClarification;
+
+  bool get isSpecialResponse => specialResponseCategory != null;
 
   /// Total count of results returned by the deterministic database layer.
   int get totalCount => searchResponse?.totalCount ?? 0;
@@ -128,6 +145,8 @@ class NaturalLanguageSearchResult {
     SearchQuery? parsedQuery,
     VoiceEntityRecoveryResult? voiceRecovery,
     required String error,
+    SearchErrorCode? errorCode,
+    String? friendlyMessage,
     ResultReferentContext referents = ResultReferentContext.empty,
     int entityResolutionLatencyMs = 0,
     int totalLatencyMs = 0,
@@ -137,10 +156,27 @@ class NaturalLanguageSearchResult {
       parsedQuery: parsedQuery,
       voiceRecovery: voiceRecovery,
       error: error,
+      errorCode: errorCode,
+      friendlyMessage: friendlyMessage,
       interpretedSummary: parseResult.interpretedSummary,
       referents: referents,
       entityResolutionLatencyMs: entityResolutionLatencyMs,
       totalLatencyMs: totalLatencyMs,
+    );
+  }
+
+  factory NaturalLanguageSearchResult.special({
+    required FriendlyResponseCategory category,
+    required String message,
+    SearchErrorCode? errorCode,
+    ResultReferentContext referents = ResultReferentContext.empty,
+  }) {
+    return NaturalLanguageSearchResult(
+      parseResult: const QueryParseResult(),
+      specialResponseCategory: category,
+      friendlyMessage: message,
+      errorCode: errorCode,
+      referents: referents,
     );
   }
 }
@@ -160,14 +196,21 @@ class NaturalLanguageSearchService {
   final EntityResolver entityResolver;
   final ISearchRepository repository;
   final VoiceEntityRecoveryService voiceRecoveryService;
+  final SpecialQueryMatcher specialQueryMatcher;
+  final FriendlyResponseService friendlyResponses;
 
   NaturalLanguageSearchService({
     required this.parser,
     required this.entityResolver,
     ISearchRepository? repository,
     VoiceEntityRecoveryService? voiceRecoveryService,
-  })  : repository = repository ?? SearchRepository(),
-        voiceRecoveryService = voiceRecoveryService ?? const VoiceEntityRecoveryService();
+    SpecialQueryMatcher? specialQueryMatcher,
+    FriendlyResponseService? friendlyResponses,
+  }) : repository = repository ?? SearchRepository(),
+       voiceRecoveryService =
+           voiceRecoveryService ?? const VoiceEntityRecoveryService(),
+       specialQueryMatcher = specialQueryMatcher ?? const SpecialQueryMatcher(),
+       friendlyResponses = friendlyResponses ?? const FriendlyResponseService();
 
   /// Executes natural language search from a rich [SpeechTranscriptionResult] end-to-end,
   /// guaranteeing deterministic disposal of retained audio context in a finally block.
@@ -195,13 +238,36 @@ class NaturalLanguageSearchService {
     final overallStopwatch = Stopwatch()..start();
     final clean = naturalQuery.trim();
     if (clean.isEmpty) {
-      final failureResult = QueryParseResult.failure(error: 'Search query cannot be empty');
+      final failureResult = QueryParseResult.failure(
+        error: 'Search query cannot be empty',
+      );
       overallStopwatch.stop();
       return NaturalLanguageSearchResult.failure(
         parseResult: failureResult,
         error: 'Search query cannot be empty',
+        errorCode: speechResult == null
+            ? SearchErrorCode.queryParseFailed
+            : SearchErrorCode.emptyTranscript,
+        friendlyMessage: friendlyResponses.responseFor(
+          speechResult == null
+              ? FriendlyResponseCategory.parseFailure
+              : FriendlyResponseCategory.emptyVoice,
+        ),
         referents: context?.referents ?? ResultReferentContext.empty,
         totalLatencyMs: overallStopwatch.elapsedMilliseconds,
+      );
+    }
+
+    final special = specialQueryMatcher.match(clean);
+    if (special != null) {
+      overallStopwatch.stop();
+      return NaturalLanguageSearchResult.special(
+        category: special.category,
+        message: friendlyResponses.responseFor(special.category),
+        errorCode: special.category == FriendlyResponseCategory.unsupported
+            ? SearchErrorCode.unsupportedQuery
+            : null,
+        referents: context?.referents ?? ResultReferentContext.empty,
       );
     }
 
@@ -222,7 +288,9 @@ class NaturalLanguageSearchService {
         return NaturalLanguageSearchResult.clarification(
           parseResult: parseResult,
           voiceRecovery: recovery,
-          clarificationQuestion: parseResult.clarificationQuestion ?? 'Please provide more details.',
+          clarificationQuestion:
+              parseResult.clarificationQuestion ??
+              'Please provide more details.',
           referents: context?.referents ?? ResultReferentContext.empty,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
@@ -235,6 +303,10 @@ class NaturalLanguageSearchService {
           parseResult: parseResult,
           voiceRecovery: recovery,
           error: parseResult.error ?? 'Unable to understand search query',
+          errorCode: SearchErrorCode.queryParseFailed,
+          friendlyMessage: friendlyResponses.responseFor(
+            FriendlyResponseCategory.parseFailure,
+          ),
           referents: context?.referents ?? ResultReferentContext.empty,
           totalLatencyMs: overallStopwatch.elapsedMilliseconds,
         );
@@ -246,13 +318,17 @@ class NaturalLanguageSearchService {
       final erStopwatch = Stopwatch()..start();
       final EntityResolutionResult resolutionResult;
       if (speechResult != null && entityResolver is SpokenEntityResolver) {
-        resolutionResult = await (entityResolver as SpokenEntityResolver).resolveSpoken(
-          parsedQuery: parsedQuery,
-          speechResult: speechResult,
+        resolutionResult = await (entityResolver as SpokenEntityResolver)
+            .resolveSpoken(
+              parsedQuery: parsedQuery,
+              speechResult: speechResult,
+              context: context,
+            );
+      } else {
+        resolutionResult = await entityResolver.resolve(
+          parsedQuery,
           context: context,
         );
-      } else {
-        resolutionResult = await entityResolver.resolve(parsedQuery, context: context);
       }
       erStopwatch.stop();
 
@@ -262,7 +338,9 @@ class NaturalLanguageSearchService {
           parseResult: parseResult,
           parsedQuery: parsedQuery,
           voiceRecovery: recovery,
-          clarificationQuestion: resolutionResult.clarificationQuestion ?? 'Please clarify the entity.',
+          clarificationQuestion:
+              resolutionResult.clarificationQuestion ??
+              'Please clarify the entity.',
           candidates: resolutionResult.candidates,
           resolutions: resolutionResult.resolutions,
           referents: context?.referents ?? ResultReferentContext.empty,
@@ -293,7 +371,9 @@ class NaturalLanguageSearchService {
       overallStopwatch.stop();
 
       // Deterministically generate summary from the resolved query
-      final summary = QueryOutputValidator.generateInterpretedSummary(resolvedQuery);
+      final summary = QueryOutputValidator.generateInterpretedSummary(
+        resolvedQuery,
+      );
 
       // Deterministically derive referents from SearchResponse
       final derivedReferents = ResultReferentContext.fromSearchResponse(
@@ -312,6 +392,12 @@ class NaturalLanguageSearchService {
         resolvedQuery: resolvedQuery,
         voiceRecovery: recovery,
         searchResponse: searchResponse,
+        errorCode: searchResponse.totalCount == 0
+            ? SearchErrorCode.searchNoResults
+            : null,
+        friendlyMessage: searchResponse.totalCount == 0
+            ? friendlyResponses.responseFor(FriendlyResponseCategory.noResults)
+            : null,
         resolutions: resolutionResult.resolutions,
         interpretedSummary: summary,
         referents: derivedReferents,
@@ -321,13 +407,34 @@ class NaturalLanguageSearchService {
       );
     } catch (e) {
       overallStopwatch.stop();
-      final failureResult = QueryParseResult.failure(error: 'Natural language search failed: $e');
+      final failureResult = QueryParseResult.failure(
+        error: 'Natural language search failed: $e',
+      );
+      final classification = _classifyFailure(e);
       return NaturalLanguageSearchResult.failure(
         parseResult: failureResult,
         error: 'Search failed: $e',
+        errorCode: classification.$1,
+        friendlyMessage: friendlyResponses.responseFor(classification.$2),
         referents: context?.referents ?? ResultReferentContext.empty,
         totalLatencyMs: overallStopwatch.elapsedMilliseconds,
       );
     }
+  }
+
+  (SearchErrorCode, FriendlyResponseCategory) _classifyFailure(Object error) {
+    final value = error.toString().toLowerCase();
+    if (value.contains('timeout') || value.contains('timed out')) {
+      return (SearchErrorCode.requestTimeout, FriendlyResponseCategory.timeout);
+    }
+    if (value.contains('network') ||
+        value.contains('socket') ||
+        value.contains('connection')) {
+      return (
+        SearchErrorCode.networkError,
+        FriendlyResponseCategory.networkError,
+      );
+    }
+    return (SearchErrorCode.serverError, FriendlyResponseCategory.serverError);
   }
 }

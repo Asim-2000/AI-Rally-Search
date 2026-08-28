@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../models/speech/speech_transcription_result.dart';
 import '../models/supported_language.dart';
 import '../models/voice_state.dart';
 import '../services/speech/speech_to_text_service.dart';
+import '../services/friendly_response_service.dart';
 
 /// Interactive voice search button with animated state feedback.
 class VoiceSearchButton extends StatefulWidget {
@@ -27,7 +29,8 @@ class VoiceSearchButton extends StatefulWidget {
   State<VoiceSearchButton> createState() => _VoiceSearchButtonState();
 }
 
-class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTickerProviderStateMixin {
+class _VoiceSearchButtonState extends State<VoiceSearchButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   VoiceState _state = VoiceState.idle;
@@ -78,11 +81,18 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
         } else {
           widget.onTranscriptReceived(detailed.text);
         }
+      } else if (detailed != null) {
+        _showFriendlyVoiceError(
+          const FriendlyResponseService().responseFor(
+            FriendlyResponseCategory.emptyVoice,
+          ),
+        );
       }
       return;
     }
 
-    if (_state == VoiceState.processing || _state == VoiceState.requestingPermission) {
+    if (_state == VoiceState.processing ||
+        _state == VoiceState.requestingPermission) {
       // Busy
       return;
     }
@@ -111,18 +121,40 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
         _isAwaitingStopResult = false;
         if (!mounted) return;
         setState(() {
-          _errorMessage = error.message;
+          _errorMessage = _friendlyVoiceError(error);
         });
         widget.onError?.call(error);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error.message),
+            content: Text(_friendlyVoiceError(error)),
             backgroundColor: Colors.red.shade700,
             duration: const Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
           ),
         );
       },
+    );
+  }
+
+  String _friendlyVoiceError(VoiceError error) {
+    const responses = FriendlyResponseService();
+    if (error.code == VoiceError.noSpeechDetected) {
+      return responses.responseFor(FriendlyResponseCategory.emptyVoice);
+    }
+    if (error.code == VoiceError.timeout) {
+      return responses.responseFor(FriendlyResponseCategory.timeout);
+    }
+    if (error.code == VoiceError.networkError) {
+      return responses.responseFor(FriendlyResponseCategory.networkError);
+    }
+    return error.message;
+  }
+
+  void _showFriendlyVoiceError(String message) {
+    if (!mounted) return;
+    setState(() => _errorMessage = message);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -137,9 +169,14 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
 
     switch (_state) {
       case VoiceState.listening:
-        iconWidget = const Icon(Icons.mic_rounded, color: Colors.white, size: 20);
+        iconWidget = const Icon(
+          Icons.mic_rounded,
+          color: Colors.white,
+          size: 20,
+        );
         buttonColor = Colors.redAccent.shade400;
-        tooltipText = 'Listening (${widget.selectedLanguage.displayName})... Tap to stop';
+        tooltipText =
+            'Listening (${widget.selectedLanguage.displayName})... Tap to stop';
         break;
 
       case VoiceState.processing:
@@ -169,7 +206,11 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
         break;
 
       case VoiceState.error:
-        iconWidget = const Icon(Icons.mic_off_rounded, color: Colors.white, size: 20);
+        iconWidget = const Icon(
+          Icons.mic_off_rounded,
+          color: Colors.white,
+          size: 20,
+        );
         buttonColor = Colors.red.shade600;
         tooltipText = _errorMessage ?? 'Voice search error. Tap to retry';
         break;
@@ -181,7 +222,9 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
           color: isDark ? Colors.white70 : theme.colorScheme.primary,
           size: 20,
         );
-        buttonColor = isDark ? Colors.white12 : theme.colorScheme.primary.withValues(alpha: 0.1);
+        buttonColor = isDark
+            ? Colors.white12
+            : theme.colorScheme.primary.withValues(alpha: 0.1);
         tooltipText = 'Voice Search (${widget.selectedLanguage.displayName})';
         break;
     }
@@ -189,7 +232,9 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> with SingleTicker
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
-        final scale = _state == VoiceState.listening ? _pulseAnimation.value : 1.0;
+        final scale = _state == VoiceState.listening
+            ? _pulseAnimation.value
+            : 1.0;
         return Transform.scale(
           scale: scale,
           child: Tooltip(

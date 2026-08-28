@@ -26,6 +26,7 @@ import '../services/llm/llm_query_parser_factory.dart';
 import '../services/llm/natural_language_search_service.dart';
 import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
+import '../services/friendly_response_service.dart';
 import '../widgets/action_player_modal.dart';
 import '../widgets/active_context_chips_bar.dart';
 import '../widgets/advanced_filters_sheet.dart';
@@ -101,6 +102,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   bool _isLoading = false;
   String _loadingStatus = 'Searching...';
   String? _errorMessage;
+  String? _specialMessage;
+  String? _emptyResultsMessage;
   SearchResponse<dynamic>? _searchResponse;
 
   @override
@@ -171,6 +174,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _isLoading = true;
       _loadingStatus = 'Understanding your search...';
       _errorMessage = null;
+      _specialMessage = null;
+      _emptyResultsMessage = null;
       _clarificationQuestion = null;
       _clarificationCandidates = [];
       _currentPage = 1;
@@ -200,6 +205,17 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
 
+      if (result.isSpecialResponse) {
+        setState(() {
+          _isLoading = false;
+          _specialMessage = result.friendlyMessage;
+          _searchResponse = null;
+          _interpretedSummary = null;
+          _clarificationCandidates = [];
+        });
+        return;
+      }
+
       if (result.requiresClarification) {
         setState(() {
           _isLoading = false;
@@ -213,7 +229,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       if (!result.isSuccess || result.query == null) {
         setState(() {
           _isLoading = false;
-          _errorMessage = result.error ?? 'Query parsing failed';
+          _errorMessage = result.friendlyMessage ?? 'Query parsing failed';
           _clarificationCandidates = [];
           _interpretedSummary = null;
         });
@@ -289,12 +305,16 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _clarificationQuestion = null;
         _clarificationCandidates = [];
         _errorMessage = null;
+        _specialMessage = null;
+        _emptyResultsMessage = result.friendlyMessage;
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
-        _errorMessage = 'Natural language search failed: $e';
+        _errorMessage = const FriendlyResponseService().responseFor(
+          FriendlyResponseCategory.serverError,
+        );
         _clarificationCandidates = [];
         _interpretedSummary = null;
         _isLoading = false;
@@ -313,6 +333,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _isLoading = true;
       _loadingStatus = 'Searching database...';
       _errorMessage = null;
+      _specialMessage = null;
+      _emptyResultsMessage = null;
     });
 
     try {
@@ -346,12 +368,19 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _searchResponse = response;
         _totalCount = response.totalCount;
         _interpretedSummary = summary;
+        _emptyResultsMessage = response.totalCount == 0
+            ? const FriendlyResponseService().responseFor(
+                FriendlyResponseCategory.noResults,
+              )
+            : null;
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
-        _errorMessage = 'Search failed: $e';
+        _errorMessage = const FriendlyResponseService().responseFor(
+          FriendlyResponseCategory.serverError,
+        );
         _isLoading = false;
       });
     }
@@ -1215,6 +1244,30 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       );
     }
 
+    if (_specialMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.sports_motorsports_rounded,
+                size: 52,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _specialMessage!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_errorMessage != null) {
       return Center(
         child: Padding(
@@ -1258,9 +1311,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 color: Colors.grey.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'No search results found',
+              Text(
+                _emptyResultsMessage ?? 'No search results found',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               const Text(

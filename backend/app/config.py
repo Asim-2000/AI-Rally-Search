@@ -1,10 +1,30 @@
 from functools import lru_cache
-from pydantic import SecretStr
+from typing import Any
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _apply_env_fallbacks(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            provider = data.get("query_understanding_provider") or data.get("QUERY_UNDERSTANDING_PROVIDER") or data.get("llm_provider") or data.get("LLM_PROVIDER")
+            if provider:
+                data.setdefault("query_understanding_provider", provider)
+                p_lower = str(provider).lower()
+                if p_lower == "openai":
+                    m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("openai_model") or data.get("OPENAI_MODEL") or "gpt-4o-mini"
+                    data.setdefault("query_understanding_model", m)
+                elif p_lower in ("gemini", "google"):
+                    m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("gemini_model") or data.get("GEMINI_MODEL") or "gemini-3.6-flash"
+                    data.setdefault("query_understanding_model", m)
+                elif p_lower == "anthropic":
+                    m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("anthropic_model") or data.get("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022"
+                    data.setdefault("query_understanding_model", m)
+        return data
 
     db_host: str = ""
     db_port: int = 3306

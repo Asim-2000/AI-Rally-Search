@@ -25,7 +25,7 @@ class AnthropicProvider(QueryUnderstandingProvider):
         if context is not None:
             ctx_str = getattr(context, "format_prompt_context", lambda: "")()
             if ctx_str:
-                user_content = f"{natural_language_query}\n\n{ctx_str}"
+                user_content = f"{ctx_str}{natural_language_query}"
         body = {"model": c.model, "max_tokens": c.max_tokens, "temperature": c.temperature, "system": SYSTEM_PROMPT, "messages": [{"role": "user", "content": user_content}], "tools": [tool], "tool_choice": {"type": "tool", "name": "rally_search_query"}}
 
         body.update(c.parameters)

@@ -77,7 +77,7 @@
       "recallAt1": 0.8866749688667497,
       "recallAt5": 0.9987546699875467,
       "recallAt10": 1.0,
-      "mrr": 0.9403486924034873
+      "mrr": 0.9407638024076382
     },
     "NEW:type:rally": {
       "cases": 214,
@@ -88,17 +88,17 @@
     },
     "NEW:difficulty:easy": {
       "cases": 358,
-      "recallAt1": 0.8770949720670391,
+      "recallAt1": 0.8798882681564246,
       "recallAt5": 1.0,
       "recallAt10": 1.0,
-      "mrr": 0.9362197392923652
+      "mrr": 0.9380819366852887
     },
     "FULL_SCAN:overall": {
       "cases": 803,
-      "recallAt1": 0.8854296388542964,
+      "recallAt1": 0.8891656288916563,
       "recallAt5": 0.9987546699875467,
       "recallAt10": 1.0,
-      "mrr": 0.9379618098796182
+      "mrr": 0.9400373599003736
     },
     "FULL_SCAN:type:rally": {
       "cases": 214,
@@ -109,10 +109,10 @@
     },
     "FULL_SCAN:difficulty:easy": {
       "cases": 358,
-      "recallAt1": 0.88268156424581,
+      "recallAt1": 0.8994413407821229,
       "recallAt5": 1.0,
       "recallAt10": 1.0,
-      "mrr": 0.9380819366852887
+      "mrr": 0.9464618249534452
     },
     "OLD:overall": {
       "cases": 803,
@@ -137,17 +137,17 @@
     },
     "NEW:difficulty:medium": {
       "cases": 372,
-      "recallAt1": 0.8870967741935484,
+      "recallAt1": 0.8844086021505376,
       "recallAt5": 0.9973118279569892,
       "recallAt10": 1.0,
-      "mrr": 0.9397849462365591
+      "mrr": 0.9384408602150537
     },
     "FULL_SCAN:difficulty:medium": {
       "cases": 372,
-      "recallAt1": 0.8763440860215054,
+      "recallAt1": 0.8790322580645161,
       "recallAt5": 0.9973118279569892,
       "recallAt10": 1.0,
-      "mrr": 0.9314964157706093
+      "mrr": 0.93418458781362
     },
     "OLD:difficulty:medium": {
       "cases": 372,
@@ -161,14 +161,14 @@
       "recallAt1": 0.9315068493150684,
       "recallAt5": 1.0,
       "recallAt10": 1.0,
-      "mrr": 0.9634703196347033
+      "mrr": 0.9657534246575342
     },
     "FULL_SCAN:difficulty:hard": {
       "cases": 73,
-      "recallAt1": 0.9452054794520548,
+      "recallAt1": 0.8904109589041096,
       "recallAt5": 1.0,
       "recallAt10": 1.0,
-      "mrr": 0.9703196347031965
+      "mrr": 0.9383561643835616
     },
     "OLD:difficulty:hard": {
       "cases": 73,
@@ -203,14 +203,14 @@
       "recallAt1": 0.8177339901477833,
       "recallAt5": 1.0,
       "recallAt10": 1.0,
-      "mrr": 0.9006568144499182
+      "mrr": 0.9022988505747129
     },
     "FULL_SCAN:type:stage": {
       "cases": 203,
-      "recallAt1": 0.8078817733990148,
+      "recallAt1": 0.8226600985221675,
       "recallAt5": 1.0,
       "recallAt10": 1.0,
-      "mrr": 0.8973727422003288
+      "mrr": 0.9055829228243023
     },
     "OLD:type:stage": {
       "cases": 203,
@@ -10622,7 +10622,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 468,
+      "candidatePoolSize": 469,
       "topCandidates": [
         "Paredes 2",
         "Paredes 1",
@@ -10646,7 +10646,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 498,
+      "candidatePoolSize": 499,
       "topCandidates": [
         "Paredes 2",
         "Paredes 1",
@@ -10670,7 +10670,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 558,
+      "candidatePoolSize": 559,
       "topCandidates": [
         "Paredes 2",
         "Paredes 1",
@@ -10694,7 +10694,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 507,
+      "candidatePoolSize": 508,
       "topCandidates": [
         "Paredes 2",
         "Paredes 1",
@@ -10718,7 +10718,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 551,
+      "candidatePoolSize": 552,
       "topCandidates": [
         "Paredes 2",
         "Paredes 1",
@@ -10742,7 +10742,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 551,
+      "candidatePoolSize": 552,
       "topCandidates": [
         "Paredes 2",
         "Paredes 1",
@@ -10790,7 +10790,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 561,
+      "candidatePoolSize": 562,
       "topCandidates": [
         "Paredes 2",
         "Liez\u0113re 2",
@@ -10910,7 +10910,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 583,
+      "candidatePoolSize": 584,
       "topCandidates": [
         "Monteberg 1",
         "Monteberg 2",
@@ -11006,7 +11006,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 559,
+      "candidatePoolSize": 560,
       "topCandidates": [
         "Monteberg 1",
         "Monteberg 2",
@@ -11030,7 +11030,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 592,
+      "candidatePoolSize": 593,
       "topCandidates": [
         "Monteberg 1",
         "Monte Penna 1",
@@ -11054,7 +11054,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 585,
+      "candidatePoolSize": 586,
       "topCandidates": [
         "Monteberg 1",
         "Monteberg 2",
@@ -13070,7 +13070,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 552,
+      "candidatePoolSize": 553,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13094,7 +13094,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 534,
+      "candidatePoolSize": 535,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13118,7 +13118,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 547,
+      "candidatePoolSize": 548,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13142,7 +13142,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 478,
+      "candidatePoolSize": 479,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13166,7 +13166,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 542,
+      "candidatePoolSize": 543,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13190,7 +13190,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 545,
+      "candidatePoolSize": 546,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13214,7 +13214,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 544,
+      "candidatePoolSize": 545,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13238,7 +13238,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 571,
+      "candidatePoolSize": 572,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13262,7 +13262,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 544,
+      "candidatePoolSize": 545,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13286,7 +13286,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 540,
+      "candidatePoolSize": 541,
       "topCandidates": [
         "Fanad Head 2",
         "Fanad Head 2",
@@ -13574,7 +13574,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 488,
+      "candidatePoolSize": 489,
       "topCandidates": [
         "Lisbabe 2",
         "Lisbabe 1",
@@ -13622,7 +13622,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 484,
+      "candidatePoolSize": 485,
       "topCandidates": [
         "Lisbabe 2",
         "Lisbabe 1",
@@ -13646,7 +13646,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 495,
+      "candidatePoolSize": 496,
       "topCandidates": [
         "Lisbabe 2",
         "Lisbabe 1",
@@ -13670,7 +13670,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 495,
+      "candidatePoolSize": 496,
       "topCandidates": [
         "Lisbabe 2",
         "Lisbabe 1",
@@ -13718,7 +13718,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 476,
+      "candidatePoolSize": 477,
       "topCandidates": [
         "Lisbabe 2",
         "Lisbabe 1",
@@ -13766,7 +13766,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 505,
+      "candidatePoolSize": 506,
       "topCandidates": [
         "Lisbabe 2",
         "Lous\u00e3 2",
@@ -14510,7 +14510,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 571,
+      "candidatePoolSize": 572,
       "topCandidates": [
         "Amarante 2",
         "Amarante 2",
@@ -14702,7 +14702,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 564,
+      "candidatePoolSize": 565,
       "topCandidates": [
         "Amarante 2",
         "Amarante 2",
@@ -14990,7 +14990,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 507,
+      "candidatePoolSize": 508,
       "topCandidates": [
         "Boticas / Vale do T\u00e2mega",
         "Shakedown (Lagoa)",
@@ -15254,7 +15254,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 523,
+      "candidatePoolSize": 524,
       "topCandidates": [
         "Kershope 2",
         "Kershope 1",
@@ -15302,7 +15302,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 541,
+      "candidatePoolSize": 542,
       "topCandidates": [
         "Kershope 2",
         "Kershope 1",
@@ -15326,7 +15326,7 @@
       "preRankedRank": 1,
       "indexedRank": 1,
       "fullScanRank": 1,
-      "candidatePoolSize": 510,
+      "candidatePoolSize": 511,
       "topCandidates": [
         "Kershope 2",
         "Kershope 1",

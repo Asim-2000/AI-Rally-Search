@@ -24,7 +24,7 @@ class VoiceSearchService:
         self,
         *,
         speech_provider: SpeechToTextProvider,
-        conversation_service: ConversationalSearchService,
+        conversation_service: ConversationalSearchService | None = None,
         preprocessor: NoOpAudioPreprocessor | None = None,
     ) -> None:
         self.speech_provider = speech_provider
@@ -64,6 +64,8 @@ class VoiceSearchService:
         session: SearchConversationSession | None = None,
         edited_transcript: str | None = None,
     ) -> VoiceSearchOutcome:
+        if self.conversation_service is None:
+            raise RuntimeError("conversation_service is required for search_spoken")
         started = time.perf_counter()
         effective_text = transcription.effective_text(edited_transcript)
         try:

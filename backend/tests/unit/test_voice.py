@@ -42,8 +42,9 @@ def test_transcribe_endpoint_returns_transcription_only(monkeypatch):
     from fastapi.testclient import TestClient
     from app.api.v1 import voice as voice_module
 
-    svc, _ = voice_service(transcript="show rallies where Max Freeman participated")
-    monkeypatch.setattr(voice_module, "_voice_service", lambda conversation, settings: svc)
+    config = SpeechProviderConfig(provider="mock", model="mock-stt")
+    mock_provider = MockSpeechToTextProvider(config, transcript="show rallies where Max Freeman participated")
+    monkeypatch.setattr(voice_module, "_speech_provider", lambda settings: mock_provider)
 
     client = TestClient(app)
     response = client.post(
@@ -67,6 +68,23 @@ def test_transcribe_endpoint_returns_transcription_only(monkeypatch):
 
 @pytest.mark.unit
 @pytest.mark.voice
+def test_transcribe_endpoint_has_no_conversational_service_dependency():
+    """Prove /v1/voice/transcribe route does NOT depend on get_conversational_service or DB."""
+    from app.api.v1.conversation import get_conversational_service
+    from app.api.v1.voice import transcribe_voice
+    import inspect
+
+    # Inspect signature and dependencies of transcribe_voice directly
+    sig = inspect.signature(transcribe_voice)
+    for param_name, param in sig.parameters.items():
+        assert param.default != get_conversational_service
+        if hasattr(param.default, "dependency"):
+            assert param.default.dependency != get_conversational_service
+
+
+
+@pytest.mark.unit
+@pytest.mark.voice
 def test_transcribe_endpoint_empty_audio_returns_422():
     from fastapi.testclient import TestClient
 
@@ -85,8 +103,9 @@ def test_transcribe_endpoint_provider_error_returns_502(monkeypatch):
     from fastapi.testclient import TestClient
     from app.api.v1 import voice as voice_module
 
-    svc, _ = voice_service(error=SpeechProviderError("transcription failed"))
-    monkeypatch.setattr(voice_module, "_voice_service", lambda conversation, settings: svc)
+    config = SpeechProviderConfig(provider="mock", model="mock-stt")
+    mock_provider = MockSpeechToTextProvider(config, error=SpeechProviderError("transcription failed"))
+    monkeypatch.setattr(voice_module, "_speech_provider", lambda settings: mock_provider)
 
     client = TestClient(app)
     response = client.post(
@@ -96,6 +115,7 @@ def test_transcribe_endpoint_provider_error_returns_502(monkeypatch):
     )
     assert response.status_code == 502
     assert "transcription failed" in response.text
+
 
 
 def voice_service(transcript="Show rallies in Ireland", *, error=None):
@@ -187,3 +207,71 @@ async def test_static_and_dynamic_biasing_remain_disabled():
         await provider.transcribe(audio, filename="a.wav", language="en", context=SpeechTranscriptionContext(origin=TranscriptionOrigin.BASELINE, prompt="aliases"))
     with pytest.raises(SpeechProviderError, match="biased transcription"):
         await provider.transcribe(audio, filename="a.wav", language="en", context=SpeechTranscriptionContext(origin=TranscriptionOrigin.DYNAMIC_BIASED))
+
+
+@pytest.mark.unit
+@pytest.mark.voice
+def test_map_to_whisper_language_bcp47_and_normalization():
+    from app.voice.vocabulary import map_to_whisper_language
+
+    assert map_to_whisper_language("en") == "en"
+    assert map_to_whisper_language("en-US") == "en"
+    assert map_to_whisper_language("en_GB") == "en"
+    assert map_to_whisper_language("de-DE") == "de"
+    assert map_to_whisper_language("fr-FR") == "fr"
+    assert map_to_whisper_language("es-ES") == "es"
+    assert map_to_whisper_language("nb-NO") == "no"
+    assert map_to_whisper_language("nn") == "no"
+    assert map_to_whisper_language("unknown-xyz") is None
+    assert map_to_whisper_language("") is None
+
+
+@pytest.mark.unit
+@pytest.mark.voice
+async def test_openai_whisper_outbound_request_has_no_prompt_and_uses_json(monkeypatch):
+    captured_data = {}
+    captured_files = {}
+
+    class FakeClient:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+        def post(self, url, headers=None, data=None, files=None):
+            nonlocal captured_data, captured_files
+            captured_data = data or {}
+            captured_files = files or {}
+
+            class FakeResponse:
+                status_code = 200
+
+                def json(self):
+                    return {"text": "Show rallies in Ireland"}
+
+            return FakeResponse()
+
+    monkeypatch.setattr("app.voice.openai_provider.httpx.Client", lambda **kwargs: FakeClient())
+    provider = OpenAISpeechToTextProvider(
+        SpeechProviderConfig(provider="openai", model="whisper-1", api_key="secret")
+    )
+    result = await provider.transcribe(
+        SpokenAudioContext(bytes=b"dummy_m4a_bytes"),
+        filename="voice.m4a",
+        language="en-US",
+    )
+
+    assert result.text == "Show rallies in Ireland"
+    assert captured_data.get("model") == "whisper-1"
+    assert captured_data.get("response_format") == "json"
+    assert captured_data.get("language") == "en"
+    # CRITICAL: Baseline Whisper request must NOT contain a 'prompt' field
+    assert "prompt" not in captured_data
+    # Verify file tuple metadata
+    assert "file" in captured_files
+    filename, file_bytes, content_type = captured_files["file"]
+    assert filename == "voice.m4a"
+    assert file_bytes == b"dummy_m4a_bytes"
+    assert content_type == "audio/mp4"
+

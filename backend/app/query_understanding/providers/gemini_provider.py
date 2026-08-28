@@ -30,7 +30,7 @@ class GeminiProvider(QueryUnderstandingProvider):
         if context is not None:
             ctx_str = getattr(context, "format_prompt_context", lambda: "")()
             if ctx_str:
-                user_content = f"{natural_language_query}\n\n{ctx_str}"
+                user_content = f"{ctx_str}{natural_language_query}"
         body = {"systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]}, "contents": [{"role": "user", "parts": [{"text": user_content}]}], "generationConfig": generation}
 
         url = f"{(c.base_url or 'https://generativelanguage.googleapis.com/v1beta').rstrip('/')}/{model}:generateContent?key={quote(c.api_key)}"

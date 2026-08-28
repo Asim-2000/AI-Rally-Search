@@ -17,6 +17,9 @@ from .models import (
 from .provider import SpeechProviderError, SpeechProviderTimeout, SpeechToTextProvider
 
 
+from .vocabulary import map_to_whisper_language
+
+
 class OpenAISpeechToTextProvider(SpeechToTextProvider):
     async def transcribe(
         self,
@@ -34,14 +37,13 @@ class OpenAISpeechToTextProvider(SpeechToTextProvider):
             raise SpeechProviderError("static STT context is disabled")
 
         started = time.perf_counter()
-        data: dict[str, str] = {"model": self.config.model}
-        if language.strip():
-            data["language"] = language.strip().lower()
-        if self.config.model == "whisper-1":
-            data["response_format"] = "verbose_json"
-            data["timestamp_granularities[]"] = "word"
-        else:
-            data["response_format"] = "json"
+        data: dict[str, str] = {"model": self.config.model, "response_format": "json"}
+        whisper_lang = map_to_whisper_language(language)
+        if whisper_lang:
+            data["language"] = whisper_lang
+        if context is not None and context.prompt:
+            data["prompt"] = context.prompt
+
         headers = {"Authorization": f"Bearer {self.config.api_key}"}
         url = f"{self.config.base_url.rstrip('/')}/audio/transcriptions"
         try:

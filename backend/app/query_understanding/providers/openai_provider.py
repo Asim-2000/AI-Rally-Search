@@ -23,7 +23,7 @@ class OpenAIProvider(QueryUnderstandingProvider):
         if context is not None:
             ctx_str = getattr(context, "format_prompt_context", lambda: "")()
             if ctx_str:
-                user_content = f"{natural_language_query}\n\n{ctx_str}"
+                user_content = f"{ctx_str}{natural_language_query}"
         body = {"model": c.model, "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_content}], "max_completion_tokens": c.max_tokens}
 
         if c.structured_output:

@@ -48,13 +48,10 @@ class VoiceSearchResponse(BaseModel):
     request_id: int | None = Field(default=None, alias="requestId")
 
 
-def _voice_service(
-    conversation: ConversationalSearchService,
-    settings: Settings,
-) -> VoiceSearchService:
+def _speech_provider(settings: Settings) -> OpenAISpeechToTextProvider:
     if settings.speech_provider.lower() != "openai":
         raise HTTPException(503, "unsupported speech provider")
-    provider = OpenAISpeechToTextProvider(SpeechProviderConfig(
+    return OpenAISpeechToTextProvider(SpeechProviderConfig(
         provider="openai",
         model=settings.speech_model,
         api_key=settings.openai_api_key.get_secret_value(),
@@ -63,6 +60,13 @@ def _voice_service(
         dynamic_top3_enabled=False,
         preprocessing_strategy="raw",
     ))
+
+
+def _voice_search_service(
+    conversation: ConversationalSearchService,
+    settings: Settings,
+) -> VoiceSearchService:
+    provider = _speech_provider(settings)
     return VoiceSearchService(speech_provider=provider, conversation_service=conversation)
 
 
@@ -71,7 +75,6 @@ async def transcribe_voice(
     request: Request,
     filename: str = Query("audio.wav"),
     language: str = Query("en"),
-    conversation: ConversationalSearchService = Depends(get_conversational_service),
     settings: Settings = Depends(get_settings),
 ) -> VoiceTranscribeResponse:
     audio = await request.body()
@@ -79,7 +82,8 @@ async def transcribe_voice(
         raise HTTPException(422, "audio body must not be empty")
     transcription = None
     try:
-        transcription = await _voice_service(conversation, settings).transcribe(
+        service = VoiceSearchService(speech_provider=_speech_provider(settings))
+        transcription = await service.transcribe(
             audio,
             filename=filename,
             language=language,
@@ -97,6 +101,7 @@ async def transcribe_voice(
     finally:
         if transcription is not None:
             transcription.dispose_audio()
+
 
 
 @router.post("/search", response_model=VoiceSearchResponse, response_model_by_alias=True)
@@ -118,7 +123,7 @@ async def search_voice(
     except (ValueError, json.JSONDecodeError) as exc:
         raise HTTPException(422, "invalid session JSON") from exc
     try:
-        outcome = await _voice_service(conversation, settings).transcribe_and_search(
+        outcome = await _voice_search_service(conversation, settings).transcribe_and_search(
             audio,
             filename=filename,
             language=language,

@@ -18,3 +18,24 @@ Ordering is compared as returned. Rally ties, classification ties, uploader
 count ties, and win-count ties are risks because current Dart SQL lacks a complete
 tie-breaker. The comparator classifies order-only differences as
 `UNDEFINED_ORDERING`; it never sorts results to make parity pass.
+
+## Live identity fixture
+
+`fixtures/v1/live_identities.private.json` is the local deterministic fixture.
+It contains live canonical/role IDs and must never be copied into human-readable
+reports. Reports use aliases only. Refresh is deliberate, never automatic:
+
+```sh
+PYTHONPATH=backend backend/.venv/bin/python \
+  backend/scripts/refresh_live_identities.py \
+  parity/fixtures/v1/live_identities.private.json
+
+PYTHONPATH=backend backend/.venv/bin/python \
+  backend/scripts/build_identity_matrix.py \
+  parity/fixtures/v1/live_identities.private.json \
+  parity/fixtures/v1/identity_matrix.json
+```
+
+Before every matrix run, execute `validate_live_identities.py`. It verifies the
+fixture hash and current relational category predicates and fails with
+`STALE_LIVE_IDENTITY_FIXTURE` rather than selecting a replacement.

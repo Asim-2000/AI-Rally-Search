@@ -1,0 +1,780 @@
+{
+  "schemaVersion": "1.0",
+  "identityFixtureHash": "sha256:26773057fe7fe2f75558c710e1f6e8f25fa939aae98f01c3c2cb595fc34dd847",
+  "cases": [
+    {
+      "caseId": "identity_driver_only_01-participation-driver",
+      "description": "IDENTITY_DRIVER_ONLY_01 participation DRIVER",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-participation-co_driver",
+      "description": "IDENTITY_DRIVER_ONLY_01 participation CO_DRIVER",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-participation-any",
+      "description": "IDENTITY_DRIVER_ONLY_01 participation ANY",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-videos-driver",
+      "description": "IDENTITY_DRIVER_ONLY_01 videos DRIVER",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-videos-co_driver",
+      "description": "IDENTITY_DRIVER_ONLY_01 videos CO_DRIVER",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-videos-any",
+      "description": "IDENTITY_DRIVER_ONLY_01 videos ANY",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-actions-driver",
+      "description": "IDENTITY_DRIVER_ONLY_01 actions DRIVER",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-actions-co_driver",
+      "description": "IDENTITY_DRIVER_ONLY_01 actions CO_DRIVER",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_driver_only_01-actions-any",
+      "description": "IDENTITY_DRIVER_ONLY_01 actions ANY",
+      "identityAlias": "IDENTITY_DRIVER_ONLY_01",
+      "identityCategory": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "004df6cc-8969-4315-9148-13bd3b1a4c18"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-participation-driver",
+      "description": "IDENTITY_CODRIVER_ONLY_01 participation DRIVER",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-participation-co_driver",
+      "description": "IDENTITY_CODRIVER_ONLY_01 participation CO_DRIVER",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-participation-any",
+      "description": "IDENTITY_CODRIVER_ONLY_01 participation ANY",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-videos-driver",
+      "description": "IDENTITY_CODRIVER_ONLY_01 videos DRIVER",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-videos-co_driver",
+      "description": "IDENTITY_CODRIVER_ONLY_01 videos CO_DRIVER",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-videos-any",
+      "description": "IDENTITY_CODRIVER_ONLY_01 videos ANY",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-actions-driver",
+      "description": "IDENTITY_CODRIVER_ONLY_01 actions DRIVER",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-actions-co_driver",
+      "description": "IDENTITY_CODRIVER_ONLY_01 actions CO_DRIVER",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_codriver_only_01-actions-any",
+      "description": "IDENTITY_CODRIVER_ONLY_01 actions ANY",
+      "identityAlias": "IDENTITY_CODRIVER_ONLY_01",
+      "identityCategory": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "0a5bda89-d890-4672-8c6f-2ee95940be05"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-participation-driver",
+      "description": "IDENTITY_DUAL_ROLE_01 participation DRIVER",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-participation-co_driver",
+      "description": "IDENTITY_DUAL_ROLE_01 participation CO_DRIVER",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-participation-any",
+      "description": "IDENTITY_DUAL_ROLE_01 participation ANY",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-videos-driver",
+      "description": "IDENTITY_DUAL_ROLE_01 videos DRIVER",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-videos-co_driver",
+      "description": "IDENTITY_DUAL_ROLE_01 videos CO_DRIVER",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-videos-any",
+      "description": "IDENTITY_DUAL_ROLE_01 videos ANY",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-actions-driver",
+      "description": "IDENTITY_DUAL_ROLE_01 actions DRIVER",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-actions-co_driver",
+      "description": "IDENTITY_DUAL_ROLE_01 actions CO_DRIVER",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_dual_role_01-actions-any",
+      "description": "IDENTITY_DUAL_ROLE_01 actions ANY",
+      "identityAlias": "IDENTITY_DUAL_ROLE_01",
+      "identityCategory": "DUAL_ROLE_ACCOUNT_BACKED",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+          "f0fe74f4-66e5-47b0-84ef-293ad4a686fc"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-participation-driver",
+      "description": "IDENTITY_NULL_DRIVER_01 participation DRIVER",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-participation-co_driver",
+      "description": "IDENTITY_NULL_DRIVER_01 participation CO_DRIVER",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-participation-any",
+      "description": "IDENTITY_NULL_DRIVER_01 participation ANY",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-videos-driver",
+      "description": "IDENTITY_NULL_DRIVER_01 videos DRIVER",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-videos-co_driver",
+      "description": "IDENTITY_NULL_DRIVER_01 videos CO_DRIVER",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-videos-any",
+      "description": "IDENTITY_NULL_DRIVER_01 videos ANY",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-actions-driver",
+      "description": "IDENTITY_NULL_DRIVER_01 actions DRIVER",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-actions-co_driver",
+      "description": "IDENTITY_NULL_DRIVER_01 actions CO_DRIVER",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_driver_01-actions-any",
+      "description": "IDENTITY_NULL_DRIVER_01 actions ANY",
+      "identityAlias": "IDENTITY_NULL_DRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_DRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-participation-driver",
+      "description": "IDENTITY_NULL_CODRIVER_01 participation DRIVER",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-participation-co_driver",
+      "description": "IDENTITY_NULL_CODRIVER_01 participation CO_DRIVER",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-participation-any",
+      "description": "IDENTITY_NULL_CODRIVER_01 participation ANY",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_RALLIES",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-videos-driver",
+      "description": "IDENTITY_NULL_CODRIVER_01 videos DRIVER",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-videos-co_driver",
+      "description": "IDENTITY_NULL_CODRIVER_01 videos CO_DRIVER",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-videos-any",
+      "description": "IDENTITY_NULL_CODRIVER_01 videos ANY",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_DRIVER_VIDEOS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-actions-driver",
+      "description": "IDENTITY_NULL_CODRIVER_01 actions DRIVER",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-actions-co_driver",
+      "description": "IDENTITY_NULL_CODRIVER_01 actions CO_DRIVER",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "CO_DRIVER",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    },
+    {
+      "caseId": "identity_null_codriver_01-actions-any",
+      "description": "IDENTITY_NULL_CODRIVER_01 actions ANY",
+      "identityAlias": "IDENTITY_NULL_CODRIVER_01",
+      "identityCategory": "NULL_ACCOUNT_CODRIVER",
+      "searchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "driverIds": [
+          "0003ce6a-72c1-4856-beec-22866c68c358"
+        ],
+        "personRole": "ANY",
+        "limit": 500
+      },
+      "expectedIntent": "SEARCH_VIDEO_ACTIONS",
+      "comparisonType": "RAW_DART_PYTHON",
+      "oracle": "identity_matrix"
+    }
+  ]
+}

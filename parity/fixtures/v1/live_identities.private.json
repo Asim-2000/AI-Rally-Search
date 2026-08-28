@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1.0",
+  "selectionTimestamp": "2026-08-28T09:32:41.082998+00:00",
+  "identities": [
+    {
+      "alias": "IDENTITY_DRIVER_ONLY_01",
+      "category": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "canonicalIdentity": "account:f7e7500b-4a89-49e7-b57a-c61141ff0ed4",
+      "accountId": "f7e7500b-4a89-49e7-b57a-c61141ff0ed4",
+      "driverId": "004df6cc-8969-4315-9148-13bd3b1a4c18",
+      "codriverId": null,
+      "categoryPredicate": "driver account non-null; participation exists; no codriver profile for account"
+    },
+    {
+      "alias": "IDENTITY_CODRIVER_ONLY_01",
+      "category": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "canonicalIdentity": "account:7639cb28-e76f-4640-a7e1-ac9168457290",
+      "accountId": "7639cb28-e76f-4640-a7e1-ac9168457290",
+      "driverId": null,
+      "codriverId": "0a5bda89-d890-4672-8c6f-2ee95940be05",
+      "categoryPredicate": "codriver account non-null; participation exists; no driver profile for account"
+    },
+    {
+      "alias": "IDENTITY_DUAL_ROLE_01",
+      "category": "DUAL_ROLE_ACCOUNT_BACKED",
+      "canonicalIdentity": "account:1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
+      "accountId": "1a8d5bcb-9a60-4f1f-bcb0-8f29ce888caf",
+      "driverId": "60735257-183c-4fed-b281-a5aa2b4b5e7a",
+      "codriverId": "f0fe74f4-66e5-47b0-84ef-293ad4a686fc",
+      "categoryPredicate": "same non-null account bridges participating driver and codriver profiles"
+    },
+    {
+      "alias": "IDENTITY_NULL_DRIVER_01",
+      "category": "NULL_ACCOUNT_DRIVER",
+      "canonicalIdentity": "person:driver:00120b7d-a5b8-45d0-a11f-3ce5c4e562b3",
+      "accountId": null,
+      "driverId": "00120b7d-a5b8-45d0-a11f-3ce5c4e562b3",
+      "codriverId": null,
+      "categoryPredicate": "driver account null; participation exists"
+    },
+    {
+      "alias": "IDENTITY_NULL_CODRIVER_01",
+      "category": "NULL_ACCOUNT_CODRIVER",
+      "canonicalIdentity": "person:codriver:0003ce6a-72c1-4856-beec-22866c68c358",
+      "accountId": null,
+      "driverId": null,
+      "codriverId": "0003ce6a-72c1-4856-beec-22866c68c358",
+      "categoryPredicate": "codriver account null; participation exists"
+    }
+  ],
+  "fixtureHash": "sha256:26773057fe7fe2f75558c710e1f6e8f25fa939aae98f01c3c2cb595fc34dd847"
+}

@@ -35,7 +35,7 @@ class SearchQuery(BaseModel):
     uploaders: list[str] = Field(default_factory=list)
     driver_match_mode: MatchMode = Field(MatchMode.ANY, alias="driverMatchMode")
     person_role: PersonRole = Field(PersonRole.ANY, alias="personRole")
-    limit: int = Field(20, ge=1, le=100)
+    limit: int = Field(20, ge=1)
     offset: int = Field(0, ge=0)
 
     @model_validator(mode="before")
@@ -74,4 +74,3 @@ class SearchQuery(BaseModel):
     @property
     def target_rally_names(self) -> list[str]:
         return self.rally_names or self.event_names
-

@@ -51,6 +51,33 @@ void main() {
       expect(positives.length, 62);
       expect(negatives.length, 106);
 
+      // Export frozen 168 safety cases fixture
+      final safetyCases = <Map<String, dynamic>>[];
+      var safetyIdx = 1;
+      for (final p in positives) {
+        safetyCases.add({
+          'caseId': 'safety_${safetyIdx++}',
+          'category': 'positive',
+          'input': p.input,
+          'expectedCanonicalName': p.canonical,
+          'entityType': p.type.name,
+          'personRole': p.type == EntityType.driver ? 'driver' : null,
+        });
+      }
+      for (final n in negatives) {
+        safetyCases.add({
+          'caseId': 'safety_${safetyIdx++}',
+          'category': 'negative_confusable',
+          'input': n.input,
+          'expectedCanonicalName': null,
+          'entityType': n.type.name,
+          'personRole': n.type == EntityType.driver ? 'driver' : null,
+        });
+      }
+      File('test/eval/entity_search/frozen_168_safety_cases.json').writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(safetyCases),
+      );
+
       var correctConfident = 0,
           wrongPositiveConfident = 0,
           positiveClarification = 0,

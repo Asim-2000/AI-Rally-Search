@@ -1,0 +1,86 @@
+[
+  {
+    "caseId": "transcript_1",
+    "input": "aluksni",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_2",
+    "input": "aluksnay",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_3",
+    "input": "aluksney",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_4",
+    "input": "alux new",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_5",
+    "input": "a looks nay",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_6",
+    "input": "eluksne",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_7",
+    "input": "aluknse",
+    "expectedCanonicalName": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_8",
+    "input": "pawel malgo",
+    "expectedCanonicalName": "Pawe\u0142 Molgo",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "transcript_9",
+    "input": "shea brain",
+    "expectedCanonicalName": "Shea Breen",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "transcript_10",
+    "input": "donny gall",
+    "expectedCanonicalName": "Donegal International Rally",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_11",
+    "input": "kemel berg",
+    "expectedCanonicalName": "Woodstoxx Kemmelberg 1",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "transcript_12",
+    "input": "dushniki",
+    "expectedCanonicalName": "Duszniki - Zieleniec 2",
+    "entityType": "stage",
+    "personRole": null
+  }
+]

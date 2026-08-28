@@ -11,7 +11,7 @@ from .models import (
     EntityResolutionResult,
     EntityType,
 )
-from .normalization import normalize, strip_year
+from .normalization import extract_year, normalize, strip_year
 from .scorer import compute_composite_score
 
 
@@ -378,7 +378,7 @@ class DatabaseEntityResolver:
 
         scored = self._score_candidates(phrase, candidates, year=effective_year, years=years)
 
-        has_explicit_years = (effective_year is not None) or bool(years)
+        has_explicit_years = (effective_year is not None) or bool(years) or (extract_year(phrase) is not None)
         if not has_explicit_years and len(scored) > 1:
             top_name = normalize(scored[0].canonical_name)
             second_name = normalize(scored[1].canonical_name)

@@ -318,6 +318,8 @@ def compute_composite_score(
     c_year = candidate_year if candidate_year is not None else extract_year(candidate_name)
 
     # Hard Constraint on Explicit Year Mismatch:
+    # If the user explicitly provided a year (e.g. 1999) that mismatches candidate's year (e.g. 2026),
+    # fuzzy name similarity MUST NEVER overcome the year mismatch to auto-resolve.
     if q_year is not None and c_year is not None and q_year != c_year:
         return 0.25
 

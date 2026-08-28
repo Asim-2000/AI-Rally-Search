@@ -1,0 +1,94 @@
+{
+  "startup": {
+    "entityCount": 11244,
+    "dbLoadMs": 1262.65,
+    "indexBuildMs": 437.33,
+    "totalStartupMs": 2232.03
+  },
+  "queryLatency": {
+    "RALLY": {
+      "queryCount": 214,
+      "candidateGenerationMs": {
+        "avg": 0.07,
+        "p50": 0.07,
+        "p95": 0.12,
+        "max": 0.15
+      },
+      "scoringMs": {
+        "avg": 5.04,
+        "p50": 4.71,
+        "p95": 9.65,
+        "max": 11.23
+      },
+      "totalMs": {
+        "avg": 5.12,
+        "p50": 4.8,
+        "p95": 9.79,
+        "max": 11.37
+      }
+    },
+    "PERSON": {
+      "queryCount": 218,
+      "candidateGenerationMs": {
+        "avg": 2.69,
+        "p50": 2.29,
+        "p95": 3.69,
+        "max": 49.72
+      },
+      "scoringMs": {
+        "avg": 57.87,
+        "p50": 55.49,
+        "p95": 73.7,
+        "max": 117.23
+      },
+      "totalMs": {
+        "avg": 60.62,
+        "p50": 58.03,
+        "p95": 77.57,
+        "max": 121.45
+      }
+    },
+    "STAGE": {
+      "queryCount": 203,
+      "candidateGenerationMs": {
+        "avg": 0.31,
+        "p50": 0.29,
+        "p95": 0.42,
+        "max": 0.55
+      },
+      "scoringMs": {
+        "avg": 24.87,
+        "p50": 23.84,
+        "p95": 36.55,
+        "max": 66.76
+      },
+      "totalMs": {
+        "avg": 25.18,
+        "p50": 24.14,
+        "p95": 36.99,
+        "max": 67.06
+      }
+    },
+    "UPLOADER": {
+      "queryCount": 168,
+      "candidateGenerationMs": {
+        "avg": 0.19,
+        "p50": 0.18,
+        "p95": 0.32,
+        "max": 0.52
+      },
+      "scoringMs": {
+        "avg": 12.08,
+        "p50": 11.03,
+        "p95": 28.06,
+        "max": 44.59
+      },
+      "totalMs": {
+        "avg": 12.28,
+        "p50": 11.21,
+        "p95": 28.47,
+        "max": 44.73
+      }
+    }
+  }
+}

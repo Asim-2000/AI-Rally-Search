@@ -191,7 +191,17 @@ class ResultReferentContext(BaseModel):
                         active_rallies = rally_names
 
             case SearchIntent.SEARCH_VIDEO_ACTIONS:
-                pass
+                actions = [r for r in results if isinstance(r, VideoActionItem)]
+                action_drivers = list(dict.fromkeys(
+                    a.driver_name for a in actions if a.driver_name
+                ))
+                if len(action_drivers) == 1:
+                    active_driver = action_drivers[0]
+                action_rallies = list(dict.fromkeys(
+                    a.event_name for a in actions if a.event_name
+                ))
+                if len(action_rallies) == 1:
+                    active_rally = action_rallies[0]
 
             case SearchIntent.SEARCH_DRIVER_VIDEOS:
                 vid_drivers: list[str] = []

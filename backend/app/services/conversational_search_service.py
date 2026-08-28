@@ -13,6 +13,7 @@ from ..entity_search.resolver import DatabaseEntityResolver
 from ..query_understanding.context import SearchContext
 from ..query_understanding.service import QueryUnderstandingService
 from ..repositories.search_repository import SearchRepository
+from .special_query import match_special_query
 
 
 class ConversationalSearchResult(BaseModel):
@@ -32,6 +33,7 @@ class ConversationalSearchResult(BaseModel):
     error: str | None = None
     error_code: str | None = Field(default=None, alias="errorCode")
     friendly_message: str | None = Field(default=None, alias="friendlyMessage")
+    special_response_category: str | None = Field(default=None, alias="specialResponseCategory")
     interpreted_summary: str | None = Field(default=None, alias="interpretedSummary")
     referents: ResultReferentContext = Field(default_factory=ResultReferentContext)
     parse_latency_ms: float = Field(default=0, alias="parseLatencyMs")
@@ -69,6 +71,61 @@ class ConversationalSearchService:
         self.entity_resolver = entity_resolver
         self.repository = repository
 
+    @staticmethod
+    def _reuse_committed_referent_ids(
+        query: SearchQuery,
+        referents: ResultReferentContext,
+    ) -> tuple[SearchQuery, list[str], list[str], list[str]]:
+        """Remove already-canonical session referents from open-set resolution.
+
+        Returns the query to resolve plus trusted rally names, driver names and
+        driver IDs to restore afterward. This is a PY-4 conversation concern;
+        PY-2 scoring remains unchanged.
+        """
+        trusted_rallies: list[str] = []
+        trusted_drivers: list[str] = []
+        trusted_driver_ids: list[str] = []
+        unresolved_rallies: list[str] = []
+        unresolved_drivers: list[str] = []
+
+        for name in query.target_rally_names:
+            if (
+                referents.active_rally_id
+                and referents.active_rally
+                and name.casefold() == referents.active_rally.casefold()
+            ):
+                trusted_rallies.append(name)
+            else:
+                unresolved_rallies.append(name)
+
+        for name in query.driver_names:
+            trusted_id = None
+            if (
+                referents.active_driver_id
+                and referents.active_driver
+                and name.casefold() == referents.active_driver.casefold()
+            ):
+                trusted_id = referents.active_driver_id
+            elif (
+                referents.last_winner_driver_id
+                and referents.last_winner
+                and name.casefold() == referents.last_winner.casefold()
+            ):
+                trusted_id = referents.last_winner_driver_id
+            if trusted_id:
+                trusted_drivers.append(name)
+                trusted_driver_ids.append(trusted_id)
+            else:
+                unresolved_drivers.append(name)
+
+        resolution_query = query.model_copy(update={
+            "rally_names": unresolved_rallies,
+            "event_names": [],
+            "driver_names": unresolved_drivers,
+            "driver_ids": [],
+        })
+        return resolution_query, trusted_rallies, trusted_drivers, trusted_driver_ids
+
     async def search(
         self,
         natural_query: str,
@@ -92,12 +149,27 @@ class ConversationalSearchService:
             )
             return current_session, result
 
+        # Dart's client advances generation before dispatch. Non-committing
+        # outcomes retain that generation but do not alter query/referents/history.
+        request_session = current_session.next_request()
+
+        special = match_special_query(clean)
+        if special is not None:
+            elapsed = (time.perf_counter() - started) * 1000
+            return request_session, ConversationalSearchResult(
+                error_code=special.error_code,
+                friendly_message=special.message,
+                special_response_category=special.category,
+                referents=request_session.referents,
+                total_latency_ms=elapsed,
+            )
+
         search_context = SearchContext(
             current_year=current_year,
             locale=language,
             language_code=language,
-            referents=current_session.referents,
-            previous_query=current_session.active_query,
+            referents=request_session.referents,
+            previous_query=request_session.active_query,
         )
 
         # Step 1: Query Understanding
@@ -114,11 +186,11 @@ class ConversationalSearchService:
             result = ConversationalSearchResult(
                 requires_clarification=True,
                 clarification_question=parse_result.clarification_question or "Please provide more details.",
-                referents=current_session.referents,
+                referents=request_session.referents,
                 parse_latency_ms=parse_ms,
                 total_latency_ms=elapsed,
             )
-            return current_session, result
+            return request_session, result
 
         if not parse_result.succeeded or parse_result.query is None:
             elapsed = (time.perf_counter() - started) * 1000
@@ -126,11 +198,11 @@ class ConversationalSearchService:
                 error=parse_result.error or "Unable to understand search query",
                 error_code="QUERY_PARSE_FAILED",
                 friendly_message="Unable to understand search query.",
-                referents=current_session.referents,
+                referents=request_session.referents,
                 parse_latency_ms=parse_ms,
                 total_latency_ms=elapsed,
             )
-            return current_session, result
+            return request_session, result
 
         parsed_query = parse_result.query
         resolved_query = parsed_query
@@ -141,8 +213,11 @@ class ConversationalSearchService:
         # Step 2: Deterministic Entity Resolution
         if self.entity_resolver is not None:
             er_start = time.perf_counter()
+            resolution_query, trusted_rallies, trusted_drivers, trusted_driver_ids = (
+                self._reuse_committed_referent_ids(parsed_query, request_session.referents)
+            )
             resolution_result = await self.entity_resolver.resolve(
-                parsed_query,
+                resolution_query,
                 context=search_context,
             )
             er_ms = (time.perf_counter() - er_start) * 1000
@@ -157,12 +232,12 @@ class ConversationalSearchService:
                     clarification_question=resolution_result.clarification_question or "Please clarify the entity.",
                     candidates=candidates,
                     resolutions=resolutions,
-                    referents=current_session.referents,
+                    referents=request_session.referents,
                     parse_latency_ms=parse_ms,
                     entity_resolution_latency_ms=er_ms,
                     total_latency_ms=elapsed,
                 )
-                return current_session, result
+                return request_session, result
 
             if resolution_result.error:
                 elapsed = (time.perf_counter() - started) * 1000
@@ -170,14 +245,20 @@ class ConversationalSearchService:
                     parsed_query=parsed_query,
                     error=resolution_result.error,
                     error_code="ENTITY_RESOLUTION_FAILED",
-                    referents=current_session.referents,
+                    referents=request_session.referents,
                     parse_latency_ms=parse_ms,
                     entity_resolution_latency_ms=er_ms,
                     total_latency_ms=elapsed,
                 )
-                return current_session, result
+                return request_session, result
 
-            resolved_query = resolution_result.resolved_query or parsed_query
+            resolved_query = resolution_result.resolved_query or resolution_query
+            resolved_query = resolved_query.model_copy(update={
+                "rally_names": [*trusted_rallies, *resolved_query.rally_names],
+                "event_names": [*trusted_rallies, *resolved_query.event_names],
+                "driver_names": [*trusted_drivers, *resolved_query.driver_names],
+                "driver_ids": [*trusted_driver_ids, *resolved_query.driver_ids],
+            })
 
         # Step 3: Deterministic Database Search
         db_ms = 0.0
@@ -195,12 +276,12 @@ class ConversationalSearchService:
                     error=f"Database execution error: {exc}",
                     error_code="DATABASE_ERROR",
                     friendly_message="Database execution error.",
-                    referents=current_session.referents,
+                    referents=request_session.referents,
                     parse_latency_ms=parse_ms,
                     entity_resolution_latency_ms=er_ms,
                     total_latency_ms=elapsed,
                 )
-                return current_session, result
+                return request_session, result
         else:
             search_response = SearchResponse(
                 intent=resolved_query.intent,
@@ -215,7 +296,7 @@ class ConversationalSearchService:
         summary = generate_interpreted_summary(resolved_query)
         derived_referents = ResultReferentContext.from_search_response(
             search_response,
-            previous=current_session.referents,
+            previous=request_session.referents,
             query_rally=resolved_query.target_rally_name,
             query_driver=resolved_query.driver_name,
             query_rallies=resolved_query.target_rally_names,
@@ -225,7 +306,7 @@ class ConversationalSearchService:
 
         # Step 5: Advance State Machine via Pure Reducer
         updated_session = reduce_turn(
-            current_session,
+            request_session,
             query=resolved_query,
             referents=derived_referents,
             title=clean,

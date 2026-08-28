@@ -12,6 +12,7 @@ import 'package:ai_rally_search/services/llm/natural_language_search_service.dar
 import 'package:ai_rally_search/services/llm/query_parse_result.dart';
 import 'package:ai_rally_search/services/search_repository.dart';
 import 'package:ai_rally_search/services/speech/mock_speech_to_text_service.dart';
+
 import 'multilingual_voice_benchmark_cases.dart';
 import 'voice_benchmark_evaluator.dart';
 import 'voice_benchmark_models.dart';
@@ -43,6 +44,7 @@ class BenchmarkMockEntityLookupRepository implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 10,
   }) async {
     return const [
@@ -103,23 +105,41 @@ class BenchmarkMockSearchRepository implements ISearchRepository {
   }
 
   @override
-  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallySearchResult>> searchRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyResults(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyTopFinishers(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoAction>> searchVideoActions(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
 }
 
 class BenchmarkMockLlmParser implements LlmQueryParser {
@@ -127,7 +147,10 @@ class BenchmarkMockLlmParser implements LlmQueryParser {
   LlmProvider get provider => LlmProvider.mock;
 
   @override
-  Future<QueryParseResult> parse(String rawQuery, {SearchContext? context}) async {
+  Future<QueryParseResult> parse(
+    String rawQuery, {
+    SearchContext? context,
+  }) async {
     final cleanQuery = rawQuery.trim().toLowerCase();
     VoiceBenchmarkCase? matchedCase;
 
@@ -140,7 +163,8 @@ class BenchmarkMockLlmParser implements LlmQueryParser {
       }
     }
 
-    final query = matchedCase?.expectedQuery ??
+    final query =
+        matchedCase?.expectedQuery ??
         const SearchQuery(
           intent: SearchIntent.searchVideoActions,
           driverName: 'Josh Moffett',
@@ -186,26 +210,41 @@ void main() {
       );
     });
 
-    test('Evaluates all 19 supported languages against benchmark criteria', () async {
-      final cases = MultilingualVoiceBenchmarkCases.all;
-      expect(cases.length, greaterThanOrEqualTo(19));
+    test(
+      'Evaluates all 19 supported languages against benchmark criteria',
+      () async {
+        final cases = MultilingualVoiceBenchmarkCases.all;
+        expect(cases.length, greaterThanOrEqualTo(19));
 
-      final results = await evaluator.evaluateSuite(cases);
-      expect(results.length, equals(cases.length));
+        final results = await evaluator.evaluateSuite(cases);
+        expect(results.length, equals(cases.length));
 
-      // Save output reports
-      VoiceBenchmarkEvaluator.saveEvaluationReports(
-        results: results,
-        outputDir: 'test/eval/reports',
-      );
+        // Save output reports
+        VoiceBenchmarkEvaluator.saveEvaluationReports(
+          results: results,
+          outputDir: 'test/eval/reports',
+        );
 
-      for (final r in results) {
-        expect(r.driverPreserved, isTrue, reason: 'Failed for ${r.benchmarkCase.language.displayName}');
-        expect(r.rallyPreserved, isTrue, reason: 'Failed for ${r.benchmarkCase.language.displayName}');
-        expect(r.databaseExecutionSucceeded, isTrue, reason: 'Failed for ${r.benchmarkCase.language.displayName}');
-        expect(r.wordErrorRate, lessThanOrEqualTo(0.5));
-      }
-    });
+        for (final r in results) {
+          expect(
+            r.driverPreserved,
+            isTrue,
+            reason: 'Failed for ${r.benchmarkCase.language.displayName}',
+          );
+          expect(
+            r.rallyPreserved,
+            isTrue,
+            reason: 'Failed for ${r.benchmarkCase.language.displayName}',
+          );
+          expect(
+            r.databaseExecutionSucceeded,
+            isTrue,
+            reason: 'Failed for ${r.benchmarkCase.language.displayName}',
+          );
+          expect(r.wordErrorRate, lessThanOrEqualTo(0.5));
+        }
+      },
+    );
 
     test('Calculates WER and Entity Preservation accurately', () {
       const ref = 'Show jumps featuring Moffett in Donegal 2025';
@@ -213,11 +252,17 @@ void main() {
       const hypSub = 'Show jumps featuring Moffett in Galway 2025';
 
       expect(VoiceMetricsCalculator.calculateWer(ref, hypExact), equals(0.0));
-      expect(VoiceMetricsCalculator.calculateWer(ref, hypSub), greaterThan(0.0));
+      expect(
+        VoiceMetricsCalculator.calculateWer(ref, hypSub),
+        greaterThan(0.0),
+      );
       expect(VoiceMetricsCalculator.calculateWer(ref, hypSub), lessThan(0.3));
 
       expect(
-        VoiceMetricsCalculator.isEntityPreserved('Josh Moffett', 'Show Moffett jumping'),
+        VoiceMetricsCalculator.isEntityPreserved(
+          'Josh Moffett',
+          'Show Moffett jumping',
+        ),
         isTrue,
       );
       expect(

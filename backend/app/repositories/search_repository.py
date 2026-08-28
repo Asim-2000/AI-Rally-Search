@@ -77,7 +77,7 @@ class SearchRepository:
         p=f.people(q)
         if p:f.dimension(p)
         base="FROM rally_video_metadata vm JOIN rally_video_actions va ON vm.action_id=va.id JOIN rally_streams rs ON vm.video_id=rs.video_id LEFT JOIN rally_videos rv ON vm.video_id=rv.id LEFT JOIN rally_stages stg ON rv.stage_id=stg.stage_id LEFT JOIN rally_events ev ON stg.event_id=ev.event_id LEFT JOIN rally_entry_list el ON vm.entry_list_id=el.id LEFT JOIN user_driver_profile dp ON el.user_driver_id=dp.driver_id LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id=cdp.codriver_id "+f.where
-        data=await rows(self.conn,"SELECT vm.id,vm.video_id,MIN(rs.id) stream_id,va.id action_type_id,va.action_name action_type "+base+" GROUP BY vm.id,vm.video_id,va.id,va.action_name ORDER BY vm.id DESC LIMIT :limit OFFSET :offset",f.params|{"limit":q.limit,"offset":q.offset})
+        data=await rows(self.conn,"SELECT vm.id,vm.video_id,MIN(rs.id) stream_id,MIN(rs.on_demand_url) video_url,va.id action_type_id,va.action_name action_type,TIME_TO_SEC(vm.start_action) start_action,TIME_TO_SEC(vm.end_action) end_action,vm.points,rv.thumbnail thumbnail_url,stg.stage_name,stg.stage_number,ev.event_name,ev.country event_country,COALESCE(dp.full_name,cdp.full_name) driver_name "+base+" GROUP BY vm.id,vm.video_id,va.id,va.action_name,vm.start_action,vm.end_action,vm.points,rv.thumbnail,stg.stage_name,stg.stage_number,ev.event_name,ev.country,dp.full_name,cdp.full_name ORDER BY vm.id DESC LIMIT :limit OFFSET :offset",f.params|{"limit":q.limit,"offset":q.offset})
         total=await count(self.conn,"SELECT COUNT(DISTINCT vm.id) "+base,f.params)
         return [VideoActionItem(**r) for r in data],total
 
@@ -86,7 +86,7 @@ class SearchRepository:
         p=f.people(q)
         if p:f.dimension(p)
         base="FROM rally_videos rv JOIN rally_video_metadata vm ON rv.id=vm.video_id JOIN rally_entry_list el ON vm.entry_list_id=el.id LEFT JOIN user_driver_profile dp ON el.user_driver_id=dp.driver_id LEFT JOIN user_codriver_profile cdp ON el.user_co_driver_id=cdp.codriver_id LEFT JOIN rally_streams rs ON rv.id=rs.video_id LEFT JOIN rally_stages stg ON rv.stage_id=stg.stage_id LEFT JOIN rally_events ev ON stg.event_id=ev.event_id "+f.where
-        data=await rows(self.conn,"SELECT rv.id video_id,MIN(rs.id) stream_id,COALESCE(dp.driver_id,cdp.codriver_id) driver_id,COALESCE(dp.full_name,cdp.full_name) driver_name "+base+" GROUP BY rv.id,dp.driver_id,cdp.codriver_id,dp.full_name,cdp.full_name ORDER BY rv.id DESC LIMIT :limit OFFSET :offset",f.params|{"limit":q.limit,"offset":q.offset})
+        data=await rows(self.conn,"SELECT rv.id video_id,MIN(rs.id) stream_id,MIN(rs.on_demand_url) video_url,rv.thumbnail thumbnail_url,ev.event_name,stg.stage_name,stg.stage_number,COALESCE(dp.driver_id,cdp.codriver_id) driver_id,COALESCE(dp.full_name,cdp.full_name) driver_name,rv.video_length_seconds,rv.created_at "+base+" GROUP BY rv.id,rv.thumbnail,ev.event_name,stg.stage_name,stg.stage_number,dp.driver_id,cdp.codriver_id,dp.full_name,cdp.full_name,rv.video_length_seconds,rv.created_at ORDER BY rv.id DESC LIMIT :limit OFFSET :offset",f.params|{"limit":q.limit,"offset":q.offset})
         total=await count(self.conn,"SELECT COUNT(DISTINCT rv.id) "+base,f.params)
         return [VideoItem(**r) for r in data],total
 

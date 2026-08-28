@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     anthropic_api_key: SecretStr = SecretStr("")
     anthropic_base_url: str = "https://api.anthropic.com/v1"
+    speech_provider: str = "openai"
+    speech_model: str = "whisper-1"
+    speech_timeout_seconds: float = 30.0
+    speech_dynamic_top3_enabled: bool = False
+    speech_preprocessing_strategy: str = "raw"
 
     @property
     def database_url(self) -> str:

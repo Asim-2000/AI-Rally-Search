@@ -26,6 +26,7 @@ import '../services/llm/llm_query_parser_factory.dart';
 import '../services/llm/natural_language_search_service.dart';
 import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
+import '../services/python_search_api_client.dart';
 import '../services/friendly_response_service.dart';
 import '../widgets/action_player_modal.dart';
 import '../widgets/active_context_chips_bar.dart';
@@ -60,6 +61,7 @@ class GeneralSearchScreen extends StatefulWidget {
   final NaturalLanguageSearchService? nlSearchService;
   final LlmQueryParser? llmParser;
   final ISpeechToTextService? speechService;
+  final PythonSearchApiClient? pythonApiClient;
 
   const GeneralSearchScreen({
     super.key,
@@ -68,6 +70,7 @@ class GeneralSearchScreen extends StatefulWidget {
     this.nlSearchService,
     this.llmParser,
     this.speechService,
+    this.pythonApiClient,
   });
 
   @override
@@ -78,6 +81,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   late final ISearchRepository _repository;
   late final NaturalLanguageSearchService _nlSearchService;
   late final ISpeechToTextService _speechService;
+  PythonSearchApiClient? _pythonApiClient;
+  late final bool _usePythonBackend;
 
   // Selected language for speech and query understanding
   SupportedLanguage _selectedLanguage = SupportedLanguages.defaultLanguage;
@@ -109,7 +114,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? SearchRepository();
+    final backendConfig = SearchBackendConfig.fromEnvironment();
+    _usePythonBackend =
+        widget.pythonApiClient != null ||
+        backendConfig.backend == SearchBackend.python;
+    _pythonApiClient =
+        widget.pythonApiClient ??
+        (_usePythonBackend
+            ? PythonSearchApiClient.fromConfig(backendConfig)
+            : null);
+    _repository =
+        widget.repository ??
+        (_pythonApiClient != null
+            ? PythonSearchRepository(_pythonApiClient!)
+            : SearchRepository());
     final parser = widget.llmParser ?? LlmQueryParserFactory.create();
     final lookupRepo = DatabaseEntityLookupRepository();
     final fallbackMetrics = EntitySearchFallbackMetrics();
@@ -125,7 +143,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         ),
       ),
       config: EntitySearchFallbackConfig.fromValue(
-        dotenv.env['ENTITY_SEARCH_FALLBACK_MODE'],
+        dotenv.isInitialized ? dotenv.env['ENTITY_SEARCH_FALLBACK_MODE'] : null,
       ),
       metrics: fallbackMetrics,
     );
@@ -165,11 +183,15 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     SpeechTranscriptionResult? spokenResult,
   }) async {
     final queryText = (spokenResult?.text ?? _searchController.text).trim();
-    if (queryText.isEmpty) return;
+    if (queryText.isEmpty &&
+        !(_usePythonBackend && spokenResult?.audioContext != null)) {
+      return;
+    }
 
+    final requestSession = _session;
     final nextRequestId = _session.activeRequestId + 1;
     setState(() {
-      _searchController.text = queryText;
+      if (queryText.isNotEmpty) _searchController.text = queryText;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
       _loadingStatus = 'Understanding your search...';
@@ -191,7 +213,37 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       );
 
       final NaturalLanguageSearchResult result;
-      if (spokenResult != null) {
+      SearchConversationSession? backendSession;
+      if (_pythonApiClient != null && spokenResult?.audioContext != null) {
+        final audio = spokenResult!.audioContext!;
+        final response = await _pythonApiClient!.voice(
+          audioBytes: audio.bytes,
+          filename: 'query.${audio.format}',
+          session: requestSession,
+          language: _selectedLanguage.languageCode,
+          requestId: nextRequestId,
+          editedTranscript: queryText.isEmpty ? null : queryText,
+        );
+        if (response.requestId != null && response.requestId != nextRequestId) {
+          return;
+        }
+        backendSession = response.session;
+        result = response.result;
+        final transcript = response.transcription?.text.trim() ?? '';
+        if (transcript.isNotEmpty) _searchController.text = transcript;
+      } else if (_pythonApiClient != null) {
+        final response = await _pythonApiClient!.conversation(
+          query: queryText,
+          session: requestSession,
+          language: _selectedLanguage.languageCode,
+          requestId: nextRequestId,
+        );
+        if (response.requestId != null && response.requestId != nextRequestId) {
+          return;
+        }
+        backendSession = response.session;
+        result = response.result;
+      } else if (spokenResult != null) {
         result = await _nlSearchService.searchSpoken(
           spokenResult,
           context: searchContext,
@@ -207,6 +259,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       if (result.isSpecialResponse) {
         setState(() {
+          if (backendSession != null) _session = backendSession;
           _isLoading = false;
           _specialMessage = result.friendlyMessage;
           _searchResponse = null;
@@ -218,6 +271,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       if (result.requiresClarification) {
         setState(() {
+          if (backendSession != null) _session = backendSession;
           _isLoading = false;
           _clarificationQuestion = result.clarificationQuestion;
           _clarificationCandidates = result.candidates;
@@ -228,6 +282,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
       if (!result.isSuccess || result.query == null) {
         setState(() {
+          if (backendSession != null) _session = backendSession;
           _isLoading = false;
           _errorMessage = result.friendlyMessage ?? 'Query parsing failed';
           _clarificationCandidates = [];
@@ -286,15 +341,17 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         }
       }
 
-      final updatedSession = _session.recordTurn(
-        query: parsedQuery,
-        referents: result.referents,
-        title: queryText,
-        response: result.searchResponse,
-        interpretedSummary: localizedSummary,
-        inherited: inherited,
-        refinements: refinements,
-      );
+      final updatedSession =
+          backendSession ??
+          _session.recordTurn(
+            query: parsedQuery,
+            referents: result.referents,
+            title: queryText,
+            response: result.searchResponse,
+            interpretedSummary: localizedSummary,
+            inherited: inherited,
+            refinements: refinements,
+          );
 
       setState(() {
         _session = updatedSession;
@@ -312,13 +369,19 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
-        _errorMessage = const FriendlyResponseService().responseFor(
-          FriendlyResponseCategory.serverError,
-        );
+        _errorMessage = e is PythonApiException
+            ? e.friendlyMessage
+            : const FriendlyResponseService().responseFor(
+                FriendlyResponseCategory.serverError,
+              );
         _clarificationCandidates = [];
         _interpretedSummary = null;
         _isLoading = false;
       });
+    } finally {
+      if (_usePythonBackend && spokenResult?.audioContext != null) {
+        spokenResult!.disposeAudio();
+      }
     }
   }
 
@@ -975,8 +1038,17 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                           ? IconButton(
                               icon: const Icon(Icons.clear_rounded, size: 18),
                               onPressed: () {
-                                _searchController.clear();
-                                setState(() {});
+                                setState(() {
+                                  _searchController.clear();
+                                  // Clearing while a request is in flight is a
+                                  // new client generation. Any older response
+                                  // must not repopulate the UI or session.
+                                  _session = _session.copyWith(
+                                    activeRequestId:
+                                        _session.activeRequestId + 1,
+                                  );
+                                  _isLoading = false;
+                                });
                               },
                             )
                           : null,

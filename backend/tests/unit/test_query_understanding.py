@@ -48,8 +48,10 @@ class SequenceProvider(QueryUnderstandingProvider):
     def __init__(self, responses):
         super().__init__(ProviderConfig(provider="test", model="test", max_retries=1, timeout_seconds=.02))
         self.responses = iter(responses)
+        self.seen_contexts = []
 
     async def parse_raw(self, natural_language_query, *, language=None, context=None, **kwargs):
+        self.seen_contexts.append(context)
         value = next(self.responses)
         if isinstance(value, Exception): raise value
         if value == "sleep": await asyncio.sleep(.1)
@@ -79,6 +81,19 @@ async def test_mock_provider_contract():
     result = await QueryUnderstandingService(MockProvider(ProviderConfig(provider="mock", model="mock-parser-v1"))).parse("Show jumps by Josh Moffett in Ireland in 2025")
     assert result.query.intent.value == "SEARCH_VIDEO_ACTIONS"
     assert result.query.driver_names == ["Josh Moffett"] and result.query.driver_ids == []
+
+
+@pytest.mark.unit
+@pytest.mark.query_understanding
+async def test_context_none_preserves_single_turn_provider_input_and_output():
+    provider = SequenceProvider([payload()])
+    result = await QueryUnderstandingService(provider).parse(
+        "Show rallies in Latvia",
+        context=None,
+    )
+    assert result.succeeded
+    assert provider.seen_contexts == [None]
+    assert result.query.countries == ["Latvia", "Lithuania"]
 
 
 @pytest.mark.unit

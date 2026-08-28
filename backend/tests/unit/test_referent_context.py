@@ -6,6 +6,7 @@ from app.domain.results import (
     ParticipationItem,
     RallyResultItem,
     SearchResponse,
+    VideoActionItem,
     VideoItem,
 )
 from app.domain.search_intent import SearchIntent
@@ -110,6 +111,29 @@ def test_from_search_response_single_rally_extracts_active_rally():
     assert referents.active_rally == "Donegal International Rally 2025"
     assert referents.active_rally_id == "e-donegal-2025"
     assert referents.active_rallies == ["Donegal International Rally 2025"]
+
+
+@pytest.mark.unit
+def test_video_action_referents_match_dart_unique_result_semantics():
+    response = SearchResponse(
+        intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+        results=[
+            VideoActionItem(
+                id=501,
+                video_id=101,
+                action_type="jump",
+                driver_name="Josh Moffett",
+                event_name="Donegal International Rally 2025",
+            )
+        ],
+        total_count=1,
+        has_more=False,
+        limit=20,
+        offset=0,
+    )
+    referents = ResultReferentContext.from_search_response(response)
+    assert referents.active_driver == "Josh Moffett"
+    assert referents.active_rally == "Donegal International Rally 2025"
 
 
 @pytest.mark.unit

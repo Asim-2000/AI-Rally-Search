@@ -26,7 +26,7 @@ class SessionTurnSnapshot(BaseModel):
 def _equalsIgnoreCase(a: str | None, b: str | None) -> bool:
     if a is None or b is None:
         return False
-    return a.strip().lower() == b.strip().lower()
+    return a.lower() == b.lower()
 
 
 class SearchConversationSession(BaseModel):

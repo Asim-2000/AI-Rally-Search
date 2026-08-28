@@ -4,31 +4,7 @@ from app.domain.conversation_session import SearchConversationSession
 from app.domain.referent_context import ResultReferentContext
 from app.domain.search_intent import SearchIntent
 from app.domain.search_query import SearchQuery
-
-
-class SessionCommitGuard:
-    """Pure deterministic validation helper for client-side stale async commit protection."""
-
-    @staticmethod
-    def is_eligible_to_commit(session: SearchConversationSession, response_request_id: int) -> bool:
-        return session.active_request_id == response_request_id
-
-    @staticmethod
-    def commit_if_valid(
-        session: SearchConversationSession,
-        response_request_id: int,
-        turn_query: SearchQuery,
-        turn_referents: ResultReferentContext,
-        turn_title: str,
-    ) -> tuple[bool, SearchConversationSession]:
-        if not SessionCommitGuard.is_eligible_to_commit(session, response_request_id):
-            return False, session
-        updated = session.record_turn(
-            query=turn_query,
-            referents=turn_referents,
-            title=turn_title,
-        )
-        return True, updated
+from app.domain.session_commit import commit_if_current
 
 
 @pytest.mark.unit
@@ -56,25 +32,26 @@ async def test_stale_async_response_protection_concurrent_race():
     async def run_worker_a():
         await b_finished.wait()
         # Worker A attempts commit
-        committed, new_sess = SessionCommitGuard.commit_if_valid(
+        outcome = commit_if_current(
             session,
-            req_a_id,
-            query_a,
-            referents_a,
-            "Query A (Ireland)",
+            response_request_id=req_a_id,
+            query=query_a,
+            referents=referents_a,
+            title="Query A (Ireland)",
         )
-        return committed, new_sess
+        return outcome.committed, outcome.session
 
     async def run_worker_b():
         # Worker B completes first and commits
         nonlocal session
-        committed, new_sess = SessionCommitGuard.commit_if_valid(
+        outcome = commit_if_current(
             session,
-            req_b_id,
-            query_b,
-            referents_b,
-            "Query B (Latvia)",
+            response_request_id=req_b_id,
+            query=query_b,
+            referents=referents_b,
+            title="Query B (Latvia)",
         )
+        committed, new_sess = outcome.committed, outcome.session
         session = new_sess
         b_finished.set()
         return committed, new_sess
@@ -113,13 +90,14 @@ async def test_session_reset_invalidates_in_flight_request():
     query_a = SearchQuery(intent=SearchIntent.SEARCH_RALLIES, countries=["Ireland"])
     referents_a = ResultReferentContext(active_rally="Irish Rally")
 
-    committed, final_session = SessionCommitGuard.commit_if_valid(
+    outcome = commit_if_current(
         session,
-        req_a_id,
-        query_a,
-        referents_a,
-        "Stale Query",
+        response_request_id=req_a_id,
+        query=query_a,
+        referents=referents_a,
+        title="Stale Query",
     )
+    committed, final_session = outcome.committed, outcome.session
 
     assert committed is False
     assert final_session.active_query.countries == []

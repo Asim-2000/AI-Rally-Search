@@ -18,6 +18,7 @@ from app.entity_search.resolver import DatabaseEntityResolver
 from app.entity_search.service import InMemoryEntitySearchService
 
 KNOWN_TRANSCRIPTS = [
+    {"phrase": "aluksni", "expected": "Rally Alūksne 2026", "type": EntityType.RALLY, "searchType": SearchEntityType.RALLY},
     {"phrase": "aluksnay", "expected": "Rally Alūksne 2026", "type": EntityType.RALLY, "searchType": SearchEntityType.RALLY},
     {"phrase": "a looks nay", "expected": "Rally Alūksne 2026", "type": EntityType.RALLY, "searchType": SearchEntityType.RALLY},
     {"phrase": "alux new", "expected": "Rally Alūksne 2026", "type": EntityType.RALLY, "searchType": SearchEntityType.RALLY},
@@ -101,6 +102,12 @@ async def test_known_difficult_transcripts():
                 else "NO_MATCH"
             )
         )
+
+        if res_cand is not None:
+            assert res_cand.canonical_name == expected, (
+                f"wrong-confident resolution for {phrase!r}: "
+                f"{res_cand.canonical_name!r} != {expected!r}"
+            )
 
         rows.append({
             "transcriptPhrase": phrase,

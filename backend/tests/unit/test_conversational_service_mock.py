@@ -239,6 +239,7 @@ async def test_clarification_preserves_session_state_untouched(conversational_se
     # Session remains exactly untouched
     assert len(s_out.history) == 0
     assert s_out.active_query.intent == SearchIntent.SEARCH_RALLIES
+    assert s_out.active_request_id == s0.active_request_id + 1
 
 
 @pytest.mark.unit
@@ -253,3 +254,89 @@ async def test_ambiguous_driver_pronoun_requires_clarification(conversational_se
     assert r_out.requires_clarification is True
     assert "Which driver do you mean?" in r_out.clarification_question
     assert len(s_out.history) == 0
+    assert s_out.active_request_id == session.active_request_id + 1
+
+
+@pytest.mark.unit
+async def test_special_response_advances_generation_without_committing(conversational_service):
+    session = SearchConversationSession()
+    updated, result = await conversational_service.search("Hello!", session=session)
+    assert result.special_response_category == "greeting"
+    assert result.search_response is None
+    assert updated.active_request_id == session.active_request_id + 1
+    assert updated.active_query == session.active_query
+    assert updated.referents == session.referents
+    assert updated.history == session.history
+
+
+@pytest.mark.unit
+async def test_successful_zero_result_commits_turn_and_generation(conversational_service):
+    session = SearchConversationSession()
+    updated, result = await conversational_service.search("Show top uploaders", session=session)
+    assert result.is_success
+    assert result.total_count == 0
+    assert updated.active_request_id == session.active_request_id + 1
+    assert len(updated.history) == 1
+
+
+@pytest.mark.unit
+async def test_provider_schema_failure_advances_generation_without_commit():
+    provider = MockProvider(
+        ProviderConfig(provider="mock", model="mock-parser-v1", max_retries=0),
+        responses={"broken": "not-json"},
+    )
+    service = ConversationalSearchService(
+        query_parser=QueryUnderstandingService(provider),
+        repository=MockSearchRepo(),
+    )
+    session = SearchConversationSession()
+    updated, result = await service.search("broken", session=session)
+    assert result.error_code == "QUERY_PARSE_FAILED"
+    assert updated.active_request_id == session.active_request_id + 1
+    assert updated.active_query == session.active_query
+    assert updated.referents == session.referents
+    assert updated.history == []
+
+
+@pytest.mark.unit
+async def test_database_failure_advances_generation_without_commit():
+    class FailingRepository:
+        async def search(self, query):
+            raise RuntimeError("synthetic DB failure")
+
+    service = ConversationalSearchService(
+        query_parser=QueryUnderstandingService(
+            MockProvider(ProviderConfig(provider="mock", model="mock-parser-v1"))
+        ),
+        repository=FailingRepository(),
+    )
+    session = SearchConversationSession()
+    updated, result = await service.search("Show rallies in Ireland", session=session)
+    assert result.error_code == "DATABASE_ERROR"
+    assert updated.active_request_id == session.active_request_id + 1
+    assert updated.active_query == session.active_query
+    assert updated.referents == session.referents
+    assert updated.history == []
+
+
+@pytest.mark.unit
+def test_committed_referent_ids_bypass_open_set_reresolution():
+    query = SearchQuery(
+        intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+        rally_names=["Donegal International Rally 2025"],
+        driver_names=["Josh Moffett"],
+    )
+    referents = ResultReferentContext(
+        active_rally="Donegal International Rally 2025",
+        active_rally_id="event-2025",
+        last_winner="Josh Moffett",
+        last_winner_driver_id="driver-101",
+    )
+    resolution_query, rallies, drivers, driver_ids = (
+        ConversationalSearchService._reuse_committed_referent_ids(query, referents)
+    )
+    assert resolution_query.target_rally_names == []
+    assert resolution_query.driver_names == []
+    assert rallies == ["Donegal International Rally 2025"]
+    assert drivers == ["Josh Moffett"]
+    assert driver_ids == ["driver-101"]

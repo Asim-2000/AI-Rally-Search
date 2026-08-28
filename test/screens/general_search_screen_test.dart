@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_rally_search/models/entity_candidate.dart';
@@ -9,6 +11,9 @@ import 'package:ai_rally_search/screens/general_search_screen.dart';
 import 'package:ai_rally_search/services/llm/entity_resolution/database_entity_resolver.dart';
 import 'package:ai_rally_search/services/llm/entity_resolution/entity_lookup_repository.dart';
 import 'package:ai_rally_search/services/llm/natural_language_search_service.dart';
+import 'package:ai_rally_search/services/llm/llm_provider_config.dart';
+import 'package:ai_rally_search/services/llm/llm_query_parser.dart';
+import 'package:ai_rally_search/services/llm/query_parse_result.dart';
 import 'package:ai_rally_search/services/llm/providers/mock_query_parser.dart';
 import 'package:ai_rally_search/services/search_repository.dart';
 import 'package:ai_rally_search/widgets/driver_participation_card.dart';
@@ -25,13 +30,16 @@ class FakeSearchRepository implements ISearchRepository {
     lastQuery = query;
 
     if (query.intent == SearchIntent.searchRallies) {
+      final country = query.countries.isEmpty
+          ? 'Ireland'
+          : query.countries.first;
       return SearchResponse<RallySearchResult>(
         intent: query.intent,
         results: [
           RallySearchResult(
             eventId: 'event-101',
-            eventName: 'Rally Ireland 2026',
-            country: 'Ireland',
+            eventName: 'Rally $country 2026',
+            country: country,
             city: 'Letterkenny',
             stagesCount: 12,
             startDate: DateTime(2026, 6, 20),
@@ -42,7 +50,8 @@ class FakeSearchRepository implements ISearchRepository {
         limit: query.limit,
         offset: query.offset,
       );
-    } else if (query.intent == SearchIntent.getRallyResults || query.intent == SearchIntent.getRallyTopFinishers) {
+    } else if (query.intent == SearchIntent.getRallyResults ||
+        query.intent == SearchIntent.getRallyTopFinishers) {
       return SearchResponse<RallyResult>(
         intent: query.intent,
         results: [
@@ -73,32 +82,57 @@ class FakeSearchRepository implements ISearchRepository {
   }
 
   @override
-  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<RallySearchResult>;
+  Future<SearchResponse<RallySearchResult>> searchRallies(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<RallySearchResult>;
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<RallyParticipationResult>;
+  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<RallyParticipationResult>;
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<RallyParticipationResult>;
+  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<RallyParticipationResult>;
   @override
-  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<RallyResult>;
+  Future<SearchResponse<RallyResult>> getRallyResults(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<RallyResult>;
   @override
-  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<RallyResult>;
+  Future<SearchResponse<RallyResult>> getRallyTopFinishers(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<RallyResult>;
   @override
-  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<VideoAction>;
+  Future<SearchResponse<VideoAction>> searchVideoActions(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<VideoAction>;
   @override
-  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<VideoSearchResult>;
+  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<VideoSearchResult>;
   @override
-  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<UploaderSearchResult>;
+  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<UploaderSearchResult>;
   @override
-  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async =>
-      (await search(query)) as SearchResponse<DriverWinResult>;
+  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(
+    SearchQuery query,
+  ) async => (await search(query)) as SearchResponse<DriverWinResult>;
+}
+
+class ControlledLlmQueryParser implements LlmQueryParser {
+  final Map<String, Completer<QueryParseResult>> requests = {};
+
+  @override
+  LlmProvider get provider => LlmProvider.mock;
+
+  @override
+  Future<QueryParseResult> parse(String userQuery, {SearchContext? context}) {
+    return (requests[userQuery] ??= Completer<QueryParseResult>()).future;
+  }
+
+  void complete(String text, SearchQuery query) {
+    requests[text]!.complete(QueryParseResult(query: query));
+  }
 }
 
 class FakeEntityLookupRepo implements IEntityLookupRepository {
@@ -126,6 +160,7 @@ class FakeEntityLookupRepo implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 10,
   }) async => [];
 
@@ -139,15 +174,24 @@ class FakeEntityLookupRepo implements IEntityLookupRepository {
   }) async => [];
 
   @override
-  Future<List<EntityCandidate>> lookupCities(String phrase, {String? country, int limit = 10}) async => [];
+  Future<List<EntityCandidate>> lookupCities(
+    String phrase, {
+    String? country,
+    int limit = 10,
+  }) async => [];
 
   @override
-  Future<List<EntityCandidate>> lookupUploaders(String phrase, {int limit = 10}) async => [];
+  Future<List<EntityCandidate>> lookupUploaders(
+    String phrase, {
+    int limit = 10,
+  }) async => [];
 }
 
 void main() {
   group('Result Views Widget Unit Tests', () {
-    testWidgets('RallyResultCard renders event details properly', (tester) async {
+    testWidgets('RallyResultCard renders event details properly', (
+      tester,
+    ) async {
       final rally = RallySearchResult(
         eventId: 'event-101',
         eventName: 'Donegal International Rally 2025',
@@ -159,9 +203,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: RallyResultCard(rally: rally),
-          ),
+          home: Scaffold(body: RallyResultCard(rally: rally)),
         ),
       );
 
@@ -170,7 +212,9 @@ void main() {
       expect(find.text('14 stages'), findsOneWidget);
     });
 
-    testWidgets('DriverParticipationCard renders win and place badges', (tester) async {
+    testWidgets('DriverParticipationCard renders win and place badges', (
+      tester,
+    ) async {
       final part = RallyParticipationResult(
         rallyId: 'event-101',
         eventName: 'Donegal International Rally 2025',
@@ -184,9 +228,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DriverParticipationCard(participation: part),
-          ),
+          home: Scaffold(body: DriverParticipationCard(participation: part)),
         ),
       );
 
@@ -195,7 +237,9 @@ void main() {
       expect(find.text('🏆 1st Place (Winner)'), findsOneWidget);
     });
 
-    testWidgets('RallyLeaderboard renders top finishers in rank order', (tester) async {
+    testWidgets('RallyLeaderboard renders top finishers in rank order', (
+      tester,
+    ) async {
       const results = [
         RallyResult(
           id: 1,
@@ -219,7 +263,10 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
-              child: RallyLeaderboard(results: results, rallyName: 'Donegal 2025'),
+              child: RallyLeaderboard(
+                results: results,
+                rallyName: 'Donegal 2025',
+              ),
             ),
           ),
         ),
@@ -230,7 +277,9 @@ void main() {
       expect(find.text('Sam Moffett'), findsOneWidget);
     });
 
-    testWidgets('UploaderLeaderboard renders ranked contributors', (tester) async {
+    testWidgets('UploaderLeaderboard renders ranked contributors', (
+      tester,
+    ) async {
       const uploaders = [
         UploaderSearchResult(
           uploaderId: 'u-1',
@@ -253,7 +302,9 @@ void main() {
       expect(find.text('25 vids'), findsOneWidget);
     });
 
-    testWidgets('DriverWinsLeaderboard renders career victories list', (tester) async {
+    testWidgets('DriverWinsLeaderboard renders career victories list', (
+      tester,
+    ) async {
       const winners = [
         DriverWinResult(
           driverName: 'Josh Moffett',
@@ -279,118 +330,125 @@ void main() {
   });
 
   group('GeneralSearchScreen Continuous Search & UX Widget Tests', () {
-    testWidgets('Renders unified search controls, active context chips, and results', (tester) async {
-      final fakeRepo = FakeSearchRepository();
-      final mockParser = MockLlmQueryParser();
-      final lookupRepo = FakeEntityLookupRepo();
-      final resolver = DatabaseEntityResolver(repository: lookupRepo);
-      final nlService = NaturalLanguageSearchService(
-        parser: mockParser,
-        entityResolver: resolver,
-        repository: fakeRepo,
-      );
+    testWidgets(
+      'Renders unified search controls, active context chips, and results',
+      (tester) async {
+        final fakeRepo = FakeSearchRepository();
+        final mockParser = MockLlmQueryParser();
+        final lookupRepo = FakeEntityLookupRepo();
+        final resolver = DatabaseEntityResolver(repository: lookupRepo);
+        final nlService = NaturalLanguageSearchService(
+          parser: mockParser,
+          entityResolver: resolver,
+          repository: fakeRepo,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: GeneralSearchScreen(
-            repository: fakeRepo,
-            nlSearchService: nlService,
-            initialQuery: const SearchQuery(
-              intent: SearchIntent.searchRallies,
-              countries: ['Ireland'],
+        await tester.pumpWidget(
+          MaterialApp(
+            home: GeneralSearchScreen(
+              repository: fakeRepo,
+              nlSearchService: nlService,
+              initialQuery: const SearchQuery(
+                intent: SearchIntent.searchRallies,
+                countries: ['Ireland'],
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('AI Rally Search'), findsOneWidget);
-      expect(find.text('Search'), findsOneWidget);
-      expect(find.text('Ireland'), findsWidgets);
-      expect(find.text('Rally Ireland 2026'), findsOneWidget);
-    });
+        expect(find.text('AI Rally Search'), findsOneWidget);
+        expect(find.text('Search'), findsOneWidget);
+        expect(find.text('Ireland'), findsWidgets);
+        expect(find.text('Rally Ireland 2026'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Submitting continuous natural language search updates query and results', (tester) async {
-      final fakeRepo = FakeSearchRepository();
-      final mockParser = MockLlmQueryParser();
-      final lookupRepo = FakeEntityLookupRepo();
-      final resolver = DatabaseEntityResolver(repository: lookupRepo);
-      final nlService = NaturalLanguageSearchService(
-        parser: mockParser,
-        entityResolver: resolver,
-        repository: fakeRepo,
-      );
+    testWidgets(
+      'Submitting continuous natural language search updates query and results',
+      (tester) async {
+        final fakeRepo = FakeSearchRepository();
+        final mockParser = MockLlmQueryParser();
+        final lookupRepo = FakeEntityLookupRepo();
+        final resolver = DatabaseEntityResolver(repository: lookupRepo);
+        final nlService = NaturalLanguageSearchService(
+          parser: mockParser,
+          entityResolver: resolver,
+          repository: fakeRepo,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: GeneralSearchScreen(
-            repository: fakeRepo,
-            nlSearchService: nlService,
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      final searchField = find.byType(TextField).first;
-      await tester.enterText(searchField, 'Show rallies in Ireland');
-      await tester.tap(find.text('Search'));
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
-      expect(find.text('Rally Ireland 2026'), findsOneWidget);
-    });
-
-    testWidgets('Tapping chip remove (×) deterministically removes filter without LLM call', (tester) async {
-      final fakeRepo = FakeSearchRepository();
-      final mockParser = MockLlmQueryParser();
-      final lookupRepo = FakeEntityLookupRepo();
-      final resolver = DatabaseEntityResolver(repository: lookupRepo);
-      final nlService = NaturalLanguageSearchService(
-        parser: mockParser,
-        entityResolver: resolver,
-        repository: fakeRepo,
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: GeneralSearchScreen(
-            repository: fakeRepo,
-            nlSearchService: nlService,
-            initialQuery: const SearchQuery(
-              intent: SearchIntent.searchRallies,
-              countries: ['Ireland'],
-              years: [2026],
+        await tester.pumpWidget(
+          MaterialApp(
+            home: GeneralSearchScreen(
+              repository: fakeRepo,
+              nlSearchService: nlService,
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('Ireland'), findsWidgets);
-      expect(find.text('2026'), findsWidgets);
+        final searchField = find.byType(TextField).first;
+        await tester.enterText(searchField, 'Show rallies in Ireland');
+        await tester.tap(find.text('Search'));
+        await tester.pumpAndSettle();
 
-      // Tap close on 2026 chip
-      final closeIcons = find.byIcon(Icons.close_rounded);
-      expect(closeIcons, findsWidgets);
-      await tester.tap(closeIcons.first);
-      await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
+        expect(find.text('Rally Ireland 2026'), findsOneWidget);
+      },
+    );
 
-      // Verified search re-executed deterministically
-      expect(fakeRepo.lastQuery, isNotNull);
-    });
+    testWidgets(
+      'Tapping chip remove (×) deterministically removes filter without LLM call',
+      (tester) async {
+        final fakeRepo = FakeSearchRepository();
+        final mockParser = MockLlmQueryParser();
+        final lookupRepo = FakeEntityLookupRepo();
+        final resolver = DatabaseEntityResolver(repository: lookupRepo);
+        final nlService = NaturalLanguageSearchService(
+          parser: mockParser,
+          entityResolver: resolver,
+          repository: fakeRepo,
+        );
 
-    testWidgets('Tapping advanced filters button opens bottom sheet', (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: GeneralSearchScreen(
+              repository: fakeRepo,
+              nlSearchService: nlService,
+              initialQuery: const SearchQuery(
+                intent: SearchIntent.searchRallies,
+                countries: ['Ireland'],
+                years: [2026],
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('Ireland'), findsWidgets);
+        expect(find.text('2026'), findsWidgets);
+
+        // Tap close on 2026 chip
+        final closeIcons = find.byIcon(Icons.close_rounded);
+        expect(closeIcons, findsWidgets);
+        await tester.tap(closeIcons.first);
+        await tester.pumpAndSettle();
+
+        // Verified search re-executed deterministically
+        expect(fakeRepo.lastQuery, isNotNull);
+      },
+    );
+
+    testWidgets('Tapping advanced filters button opens bottom sheet', (
+      tester,
+    ) async {
       final fakeRepo = FakeSearchRepository();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: GeneralSearchScreen(
-            repository: fakeRepo,
-          ),
-        ),
+        MaterialApp(home: GeneralSearchScreen(repository: fakeRepo)),
       );
 
       await tester.pumpAndSettle();
@@ -402,6 +460,100 @@ void main() {
 
       expect(find.text('Advanced Filters'), findsOneWidget);
       expect(find.text('Apply Filters'), findsOneWidget);
+    });
+
+    testWidgets('newer request wins when an older response arrives last', (
+      tester,
+    ) async {
+      final repository = FakeSearchRepository();
+      final parser = ControlledLlmQueryParser();
+      final service = NaturalLanguageSearchService(
+        parser: parser,
+        entityResolver: DatabaseEntityResolver(
+          repository: FakeEntityLookupRepo(),
+        ),
+        repository: repository,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GeneralSearchScreen(
+            repository: repository,
+            nlSearchService: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final field = find.byType(TextField).first;
+      await tester.enterText(field, 'request A');
+      await tester.tap(find.text('Search'));
+      await tester.pump();
+      await tester.enterText(field, 'request B');
+      await tester.tap(find.text('Search'));
+      await tester.pump();
+
+      parser.complete(
+        'request B',
+        const SearchQuery(
+          intent: SearchIntent.searchRallies,
+          countries: ['France'],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Rally France 2026'), findsOneWidget);
+
+      parser.complete(
+        'request A',
+        const SearchQuery(
+          intent: SearchIntent.searchRallies,
+          countries: ['Germany'],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Rally France 2026'), findsOneWidget);
+      expect(find.text('Rally Germany 2026'), findsNothing);
+    });
+
+    testWidgets('clearing input invalidates an in-flight response', (
+      tester,
+    ) async {
+      final repository = FakeSearchRepository();
+      final parser = ControlledLlmQueryParser();
+      final service = NaturalLanguageSearchService(
+        parser: parser,
+        entityResolver: DatabaseEntityResolver(
+          repository: FakeEntityLookupRepo(),
+        ),
+        repository: repository,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GeneralSearchScreen(
+            repository: repository,
+            nlSearchService: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final field = find.byType(TextField).first;
+      await tester.enterText(field, 'request A');
+      await tester.pump();
+      await tester.tap(find.text('Search'));
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.clear_rounded));
+      await tester.pump();
+
+      parser.complete(
+        'request A',
+        const SearchQuery(
+          intent: SearchIntent.searchRallies,
+          countries: ['Germany'],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Rally Germany 2026'), findsNothing);
+      expect(tester.widget<TextField>(field).controller?.text, isEmpty);
     });
   });
 }

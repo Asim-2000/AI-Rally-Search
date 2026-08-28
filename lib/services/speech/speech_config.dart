@@ -37,6 +37,7 @@ class SpeechConfig {
   final Duration timeout;
   final Duration maxRecordingDuration;
   final Map<String, String> customHeaders;
+  final bool deferTranscriptionToBackend;
 
   const SpeechConfig({
     required this.providerType,
@@ -46,6 +47,7 @@ class SpeechConfig {
     this.timeout = const Duration(seconds: 15),
     this.maxRecordingDuration = const Duration(seconds: 30),
     this.customHeaders = const {},
+    this.deferTranscriptionToBackend = false,
   });
 
   /// Factory creating configuration from environment variables (.env).
@@ -58,16 +60,22 @@ class SpeechConfig {
     }
 
     final rawProvider = dotenv.env['SPEECH_PROVIDER'];
-    final provider = overrideProvider ?? SpeechProviderType.fromString(rawProvider);
+    final provider =
+        overrideProvider ?? SpeechProviderType.fromString(rawProvider);
     final model = dotenv.env['SPEECH_MODEL'] ?? 'whisper-1';
     final apiKey = dotenv.env['OPENAI_API_KEY'];
-    final rawTimeout = int.tryParse(dotenv.env['SPEECH_TIMEOUT_SECONDS'] ?? '15') ?? 15;
+    final rawTimeout =
+        int.tryParse(dotenv.env['SPEECH_TIMEOUT_SECONDS'] ?? '15') ?? 15;
+    final deferToBackend =
+        dotenv.env['SEARCH_BACKEND']?.trim().toLowerCase() == 'python';
 
     // Production proxy endpoint vs dev direct URL
-    final proxyUrl = dotenv.env['SPEECH_PROXY_URL'] ??
+    final proxyUrl =
+        dotenv.env['SPEECH_PROXY_URL'] ??
         dotenv.env['API_PROXY_URL'] ??
         'http://localhost:8080/v1/audio/transcriptions';
-    final directUrl = dotenv.env['OPENAI_AUDIO_URL'] ??
+    final directUrl =
+        dotenv.env['OPENAI_AUDIO_URL'] ??
         '${dotenv.env['OPENAI_BASE_URL'] ?? 'https://api.openai.com/v1'}/audio/transcriptions';
 
     switch (provider) {
@@ -78,15 +86,19 @@ class SpeechConfig {
           apiKey: apiKey,
           model: model,
           timeout: Duration(seconds: rawTimeout),
+          deferTranscriptionToBackend: deferToBackend,
         );
       case SpeechProviderType.openAiProxy:
         return SpeechConfig(
           providerType: SpeechProviderType.openAiProxy,
           // If proxy URL is not set but apiKey exists in dev, fallback gracefully to directUrl if requested
-          endpointUrl: dotenv.env['SPEECH_PROXY_URL'] != null ? proxyUrl : directUrl,
+          endpointUrl: dotenv.env['SPEECH_PROXY_URL'] != null
+              ? proxyUrl
+              : directUrl,
           apiKey: apiKey,
           model: model,
           timeout: Duration(seconds: rawTimeout),
+          deferTranscriptionToBackend: deferToBackend,
         );
       case SpeechProviderType.mock:
       default:
@@ -95,6 +107,7 @@ class SpeechConfig {
           endpointUrl: proxyUrl,
           model: model,
           timeout: Duration(seconds: rawTimeout),
+          deferTranscriptionToBackend: deferToBackend,
         );
     }
   }
@@ -107,6 +120,7 @@ class SpeechConfig {
     Duration? timeout,
     Duration? maxRecordingDuration,
     Map<String, String>? customHeaders,
+    bool? deferTranscriptionToBackend,
   }) {
     return SpeechConfig(
       providerType: providerType ?? this.providerType,
@@ -116,6 +130,8 @@ class SpeechConfig {
       timeout: timeout ?? this.timeout,
       maxRecordingDuration: maxRecordingDuration ?? this.maxRecordingDuration,
       customHeaders: customHeaders ?? this.customHeaders,
+      deferTranscriptionToBackend:
+          deferTranscriptionToBackend ?? this.deferTranscriptionToBackend,
     );
   }
 }

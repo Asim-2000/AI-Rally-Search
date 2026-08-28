@@ -23,8 +23,11 @@ markers = [
   "parity: compares canonical IDs across implementations",
   "provider_contract: hermetic provider adapter contract tests",
   "live_provider: opt-in tests requiring provider credentials",
+  "live_openai: opt-in tests requiring OpenAI credentials",
   "query_understanding: single-turn query-understanding tests",
   "e2e_live_db: opt-in natural-language through live database tests",
+  "voice: Python voice/STT migration tests",
+  "live_stt: opt-in tests requiring OpenAI transcription credentials",
 ]
 testpaths = ["tests"]
 pythonpath = ["."]

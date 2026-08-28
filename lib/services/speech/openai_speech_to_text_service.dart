@@ -234,6 +234,18 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
         localFilePath: recordedPath,
       );
 
+      // In Python cutover mode the same audio is sent once to /v1/voice/search,
+      // where transcription and conversational search are one atomic request.
+      if (config.deferTranscriptionToBackend) {
+        _setState(VoiceState.idle);
+        return SpeechTranscriptionResult(
+          text: '',
+          language: _activeLanguage ?? SupportedLanguages.defaultLanguage,
+          audioContext: spokenContext,
+          durationMs: durationMs,
+        );
+      }
+
       final result = await _transcribeAudioBytesDetailed(
         audioBytes: audioBytes,
         filename: 'query.m4a',

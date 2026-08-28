@@ -75,7 +75,8 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
       _isAwaitingStopResult = true;
       final detailed = await widget.speechService.stopListeningDetailed();
       _isAwaitingStopResult = false;
-      if (detailed != null && detailed.text.isNotEmpty) {
+      if (detailed != null &&
+          (detailed.text.isNotEmpty || detailed.audioContext != null)) {
         if (widget.onResultDetailed != null) {
           widget.onResultDetailed!(detailed);
         } else {

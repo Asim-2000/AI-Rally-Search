@@ -16,7 +16,9 @@ HAS_OPENAI_KEY = bool(get_settings().openai_api_key.get_secret_value())
 @pytest.mark.skipif(not HAS_OPENAI_KEY, reason="OPENAI_API_KEY not configured")
 async def test_live_openai_multi_turn_coreference():
     settings = get_settings()
-    model = "gpt-4o-mini" if settings.query_understanding_model.startswith("mock") else settings.query_understanding_model
+    # PY-3.1's validated model is the explicit fallback when local settings use
+    # the hermetic mock provider. Otherwise honor the configured live model.
+    model = "gpt-4.1-mini" if settings.query_understanding_model.startswith("mock") else settings.query_understanding_model
     config = ProviderConfig(
         provider="openai",
         model=model,

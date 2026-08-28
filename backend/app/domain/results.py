@@ -43,6 +43,16 @@ class VideoActionItem(ResultBase):
     action_type_id: int | None = None
     action_type: str
     stream_id: int | None = None
+    event_name: str | None = None
+    driver_name: str | None = None
+    start_action: float | None = None
+    end_action: float | None = None
+    points: float | None = None
+    video_url: str | None = None
+    thumbnail_url: str | None = None
+    stage_name: str | None = None
+    stage_number: str | None = None
+    event_country: str | None = None
 
 class VideoItem(ResultBase):
     kind: Literal["video"] = "video"
@@ -50,6 +60,13 @@ class VideoItem(ResultBase):
     stream_id: int | None = None
     driver_id: str | None = None
     driver_name: str | None = None
+    video_url: str | None = None
+    thumbnail_url: str | None = None
+    event_name: str | None = None
+    stage_name: str | None = None
+    stage_number: str | None = None
+    video_length_seconds: float | None = None
+    created_at: datetime | None = None
 
 class UploaderItem(ResultBase):
     kind: Literal["uploader"] = "uploader"

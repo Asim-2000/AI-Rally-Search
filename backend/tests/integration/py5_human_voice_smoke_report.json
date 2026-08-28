@@ -1,0 +1,73 @@
+{
+  "status": "LABELED_SMOKE_TEST_ONLY",
+  "dynamicTop3Enabled": false,
+  "preprocessing": "raw_no_op",
+  "rows": [
+    {
+      "fixtureId": "human-smoke-001",
+      "transcript": "Drivers that participated in Aleut's narrative.",
+      "expectedCanonicalName": "Rally Al\u016bksne 2026",
+      "topCandidateId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+      "topCandidateName": "Assess Ireland International Rally of the Lakes 2026",
+      "topScore": 0.5489708982738395,
+      "outcome": "CLARIFICATION",
+      "model": "whisper-1"
+    },
+    {
+      "fixtureId": "human-smoke-002",
+      "transcript": "Raleigh is an Aleutian name.",
+      "expectedCanonicalName": null,
+      "topCandidateId": "92893879-1718-4e95-9e61-59a6d51fa1ef",
+      "topCandidateName": "Rally Internazionale Golfo dell'Asinara 2026",
+      "topScore": 0.5995418243259323,
+      "outcome": "AMBIGUOUS_NOT_SCORED",
+      "model": "whisper-1"
+    },
+    {
+      "fixtureId": "human-smoke-003",
+      "transcript": "Drivers that participated in Aleut's narrative.",
+      "expectedCanonicalName": "Rally Al\u016bksne 2026",
+      "topCandidateId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+      "topCandidateName": "Assess Ireland International Rally of the Lakes 2026",
+      "topScore": 0.5489708982738395,
+      "outcome": "CLARIFICATION",
+      "model": "whisper-1"
+    },
+    {
+      "fixtureId": "human-smoke-004",
+      "transcript": "Show me all rallies in which Max Freeman participated.",
+      "expectedCanonicalName": "Max Freeman",
+      "topCandidateId": "person:codriver:f6294866-a097-4e4d-8e6d-eacde972b0c8",
+      "topCandidateName": "Charline Dichamp",
+      "topScore": 0.5695764625238309,
+      "outcome": "CLARIFICATION",
+      "model": "whisper-1"
+    },
+    {
+      "fixtureId": "human-smoke-005",
+      "transcript": "Raleigh aloopsnay drivers",
+      "expectedCanonicalName": "Rally Al\u016bksne 2026",
+      "topCandidateId": "cdd6fb95-ecfc-45d3-a165-65cf3771fccc",
+      "topCandidateName": "Rapalloo",
+      "topScore": 0.6395511060259343,
+      "outcome": "CLARIFICATION",
+      "model": "whisper-1"
+    }
+  ],
+  "fullIntegration": {
+    "audioFile": "test/eval/audio/human/record_out.wav",
+    "transcript": "Show me all rallies in which Max Freeman participated.",
+    "model": "whisper-1",
+    "intent": "SEARCH_DRIVER_RALLIES",
+    "canonicalDriverIds": [
+      "7a633b52-950e-49ef-8cab-34cd43e99366"
+    ],
+    "resultCount": 9,
+    "representativeRallyIds": [
+      "a73dfca5-83b2-4f09-98f6-5d27ad749c81",
+      "01594380-c4aa-4d99-b19c-af125e032102",
+      "1ec50ac2-9408-47ac-a650-1287568ecce2"
+    ],
+    "audioDisposed": true
+  }
+}

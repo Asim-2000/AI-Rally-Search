@@ -30,23 +30,41 @@ class MockSearchRepository implements ISearchRepository {
   }
 
   @override
-  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallySearchResult>> searchRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyResults(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyTopFinishers(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoAction>> searchVideoActions(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
 }
 
 class TestEntityLookupRepository implements IEntityLookupRepository {
@@ -108,6 +126,7 @@ class TestEntityLookupRepository implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 10,
   }) async {
     final lower = phrase.toLowerCase().trim();
@@ -180,9 +199,16 @@ class TestEntityLookupRepository implements IEntityLookupRepository {
   }
 
   @override
-  Future<List<EntityCandidate>> lookupCities(String phrase, {String? country, int limit = 10}) async => [];
+  Future<List<EntityCandidate>> lookupCities(
+    String phrase, {
+    String? country,
+    int limit = 10,
+  }) async => [];
   @override
-  Future<List<EntityCandidate>> lookupUploaders(String phrase, {int limit = 10}) async => [];
+  Future<List<EntityCandidate>> lookupUploaders(
+    String phrase, {
+    int limit = 10,
+  }) async => [];
 }
 
 void main() {
@@ -195,7 +221,9 @@ void main() {
     setUp(() {
       mockRepo = MockSearchRepository();
       mockParser = MockLlmQueryParser();
-      resolver = DatabaseEntityResolver(repository: TestEntityLookupRepository());
+      resolver = DatabaseEntityResolver(
+        repository: TestEntityLookupRepository(),
+      );
       service = NaturalLanguageSearchService(
         parser: mockParser,
         entityResolver: resolver,
@@ -203,14 +231,17 @@ void main() {
       );
     });
 
-    test('1. "Show all rallies in Ireland." -> SEARCH_RALLIES, country=Ireland', () async {
-      final res = await service.search('Show all rallies in Ireland.');
-      expect(res.isSuccess, isTrue);
-      expect(res.query!.intent, SearchIntent.searchRallies);
-      expect(res.query!.country, 'Ireland');
-      expect(mockRepo.lastReceivedQuery!.intent, SearchIntent.searchRallies);
-      expect(mockRepo.lastReceivedQuery!.country, 'Ireland');
-    });
+    test(
+      '1. "Show all rallies in Ireland." -> SEARCH_RALLIES, country=Ireland',
+      () async {
+        final res = await service.search('Show all rallies in Ireland.');
+        expect(res.isSuccess, isTrue);
+        expect(res.query!.intent, SearchIntent.searchRallies);
+        expect(res.query!.country, 'Ireland');
+        expect(mockRepo.lastReceivedQuery!.intent, SearchIntent.searchRallies);
+        expect(mockRepo.lastReceivedQuery!.country, 'Ireland');
+      },
+    );
 
     test('2. "Show rallies in Ireland in 2025." -> SEARCH_RALLIES, country=Ireland, year=2025', () async {
       final res = await service.search('Show rallies in Ireland in 2025.');
@@ -221,7 +252,9 @@ void main() {
     });
 
     test('3. "Show rallies in Ireland in 2025 where Josh Moffett participated." -> preserves parsed & resolved queries', () async {
-      final res = await service.search('Show rallies in Ireland in 2025 where Josh Moffett participated.');
+      final res = await service.search(
+        'Show rallies in Ireland in 2025 where Josh Moffett participated.',
+      );
       expect(res.isSuccess, isTrue);
       expect(res.parsedQuery?.driverName, 'Josh Moffett');
       expect(res.resolvedQuery?.driverName, 'Josh Moffett');
@@ -230,13 +263,18 @@ void main() {
     });
 
     test('4. "Show jump highlights featuring Moffett from Moonraker in 2025" -> contextual resolution', () async {
-      final res = await service.search('Show jump highlights featuring Moffett from Moonraker in 2025');
+      final res = await service.search(
+        'Show jump highlights featuring Moffett from Moonraker in 2025',
+      );
       expect(res.isSuccess, isTrue);
       expect(res.parsedQuery?.driverName, 'Moffett');
       expect(res.parsedQuery?.targetRallyName, 'Moonraker');
       expect(res.resolvedQuery?.driverName, 'Josh Moffett');
       expect(res.resolvedQuery?.driverId, 'josh-moffett-uuid');
-      expect(res.resolvedQuery?.targetRallyName, 'Moonraker Forestry Rally 2025');
+      expect(
+        res.resolvedQuery?.targetRallyName,
+        'Moonraker Forestry Rally 2025',
+      );
       expect(res.query!.actionType, 'jump');
     });
 
@@ -245,19 +283,29 @@ void main() {
       expect(res.isSuccess, isFalse);
       expect(res.requiresClarification, isTrue);
       expect(res.candidates.length, greaterThanOrEqualTo(2));
-      expect(mockRepo.searchCallCount, 0); // Did not execute DB query prematurely
+      expect(
+        mockRepo.searchCallCount,
+        0,
+      ); // Did not execute DB query prematurely
     });
 
     test('6. "Show drift highlights featuring Philip Squires from Get Jerky." -> resolves Get Jerky', () async {
-      final res = await service.search('Show drift highlights featuring Philip Squires from Get Jerky.');
+      final res = await service.search(
+        'Show drift highlights featuring Philip Squires from Get Jerky.',
+      );
       expect(res.isSuccess, isTrue);
-      expect(res.resolvedQuery?.targetRallyName, 'Get Jerky Rally North Wales 2026');
+      expect(
+        res.resolvedQuery?.targetRallyName,
+        'Get Jerky Rally North Wales 2026',
+      );
       expect(res.resolvedQuery?.driverName, 'Philip Squires');
       expect(res.resolvedQuery?.driverId, 'philip-squires-uuid');
     });
 
     test('7. "Show drift highlights from Trackrod Rally on Gale Rigg." -> resolves stage in event context', () async {
-      final res = await service.search('Show drift highlights from Trackrod Rally on Gale Rigg.');
+      final res = await service.search(
+        'Show drift highlights from Trackrod Rally on Gale Rigg.',
+      );
       expect(res.isSuccess, isTrue);
       expect(res.resolvedQuery?.targetRallyName, 'Trackrod Rally 2024');
       expect(res.resolvedQuery?.stageName, 'Gale Rigg');

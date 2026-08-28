@@ -7,17 +7,38 @@ from app.domain.conversation_session import SearchConversationSession
 from app.domain.referent_context import ResultReferentContext
 from app.domain.search_intent import SearchIntent
 from app.domain.search_query import MatchMode, PersonRole, SearchQuery
+from app.domain.results import (
+    ClassificationItem,
+    RallyResultItem,
+    SearchResponse,
+    VideoActionItem,
+    VideoItem,
+)
 from app.query_understanding.context import SearchContext
 from app.query_understanding.provider import ProviderConfig
 from app.query_understanding.providers.mock_provider import MockProvider
 from app.query_understanding.service import QueryUnderstandingService
 
 FIXTURE_PATH = Path(__file__).parent.parent.parent / "benchmarks" / "conversation" / "fixtures" / "conversation_parity_fixtures_v1.json"
+EXPECTED_SHA256 = "4172ed92f9d78052919d55c692ad3c18076230ad2ed3a5dc14ad6dc0e9f0bab2"
 
 
 def load_fixtures() -> dict:
     with open(FIXTURE_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def oracle_response(query: SearchQuery) -> SearchResponse:
+    results = []
+    if query.intent == SearchIntent.SEARCH_RALLIES:
+        results = [RallyResultItem(event_id="event-2025", event_name="Donegal International Rally 2025")]
+    elif query.intent in (SearchIntent.GET_RALLY_RESULTS, SearchIntent.GET_RALLY_TOP_FINISHERS):
+        results = [ClassificationItem(id=101, rally_id="event-2025", event_name="Donegal International Rally 2025", driver_id="driver-101", driver_name="Josh Moffett", pos_overall=1)]
+    elif query.intent == SearchIntent.SEARCH_DRIVER_VIDEOS:
+        results = [VideoItem(video_id=101, driver_name="Josh Moffett")]
+    elif query.intent == SearchIntent.SEARCH_VIDEO_ACTIONS:
+        results = [VideoActionItem(id=501, video_id=101, action_type="jump", event_name="Donegal International Rally 2025", driver_name="Josh Moffett")]
+    return SearchResponse(intent=query.intent, results=results, total_count=len(results), has_more=False, limit=query.limit, offset=query.offset)
 
 
 @pytest.fixture(scope="module")
@@ -29,8 +50,8 @@ def fixture_data():
 def test_fixture_integrity(fixture_data):
     content = FIXTURE_PATH.read_bytes()
     sha256_hex = hashlib.sha256(content).hexdigest()
-    assert len(sha256_hex) == 64
-    assert len(fixture_data["cases"]) >= 12
+    assert sha256_hex == EXPECTED_SHA256
+    assert len(fixture_data["cases"]) == 12
 
 
 @pytest.mark.parity
@@ -91,3 +112,19 @@ async def test_conversational_parity_case(case):
         assert q.person_role.value == exp["personRole"]
     if "driverMatchMode" in exp:
         assert q.driver_match_mode.value == exp["driverMatchMode"]
+
+    expected_referents = case.get("expected_referents")
+    if expected_referents is not None:
+        derived = ResultReferentContext.from_search_response(
+            oracle_response(q),
+            previous=referents,
+            query_rallies=q.target_rally_names,
+            query_drivers=q.driver_names,
+            query_person_role=q.person_role,
+        )
+        if "active_rally" in expected_referents:
+            assert derived.active_rally == expected_referents["active_rally"]
+        if "active_driver" in expected_referents:
+            assert derived.active_driver == expected_referents["active_driver"]
+        if "last_winner" in expected_referents:
+            assert derived.last_winner == expected_referents["last_winner"]

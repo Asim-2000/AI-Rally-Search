@@ -1,5 +1,19 @@
 [
   {
+    "transcriptPhrase": "aluksni",
+    "targetExpected": "Rally Al\u016bksne 2026",
+    "entityType": "rally",
+    "generatedPoolSize": 37,
+    "usedFullScanEscape": false,
+    "topCandidateName": "Rally Al\u016bksne 2026",
+    "topCandidateScore": 0.8014,
+    "tokenScore": 0.0,
+    "ngramScore": 0.0,
+    "lexicalScore": 0.0,
+    "phoneticScore": 0.0,
+    "finalResolverOutcome": "RESOLVED: Rally Al\u016bksne 2026"
+  },
+  {
     "transcriptPhrase": "aluksnay",
     "targetExpected": "Rally Al\u016bksne 2026",
     "entityType": "rally",
@@ -129,7 +143,7 @@
     "transcriptPhrase": "kemel berg",
     "targetExpected": "Woodstoxx Kemmelberg 1",
     "entityType": "stage",
-    "generatedPoolSize": 360,
+    "generatedPoolSize": 361,
     "usedFullScanEscape": false,
     "topCandidateName": "Kemmelberg 1",
     "topCandidateScore": 0.814,

@@ -42,6 +42,7 @@ dependencies:
   mysql_client: ^0.0.27
   video_player: ^2.14.0
   record: ^6.2.0
+  speech_to_text: ^7.4.0
 
 dev_dependencies:
   flutter_test:

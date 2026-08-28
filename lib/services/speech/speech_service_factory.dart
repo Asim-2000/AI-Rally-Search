@@ -2,6 +2,7 @@ import 'speech_config.dart';
 import 'speech_to_text_service.dart';
 import 'mock_speech_to_text_service.dart';
 import 'openai_speech_to_text_service.dart';
+import 'native_device_speech_to_text_service.dart';
 import 'speech_vocabulary_context.dart';
 
 /// Factory responsible for instantiating the appropriate Speech-to-Text service adapter.
@@ -16,6 +17,8 @@ class SpeechServiceFactory {
     final speechConfig = config ?? SpeechConfig.fromEnvironment();
 
     switch (speechConfig.providerType) {
+      case SpeechProviderType.nativeDevice:
+        return NativeDeviceSpeechToTextService(config: speechConfig);
       case SpeechProviderType.openAiDirectDev:
       case SpeechProviderType.openAiProxy:
         return OpenAiSpeechToTextService(
@@ -23,7 +26,6 @@ class SpeechServiceFactory {
           vocabularyContext: vocabularyContext,
         );
       case SpeechProviderType.mock:
-      default:
         return MockSpeechToTextService();
     }
   }

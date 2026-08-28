@@ -2,6 +2,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Available Speech-to-Text provider strategies.
 enum SpeechProviderType {
+  /// Native iOS/Android speech-recognition service used by production voice input.
+  nativeDevice,
+
   /// Production backend proxy (safe for client deployment, no API key exposed).
   openAiProxy,
 
@@ -13,6 +16,10 @@ enum SpeechProviderType {
 
   static SpeechProviderType fromString(String? raw) {
     switch (raw?.trim().toLowerCase()) {
+      case 'native_device':
+      case 'native':
+      case 'device':
+        return SpeechProviderType.nativeDevice;
       case 'openai_direct_dev':
       case 'openai_direct':
       case 'direct':
@@ -22,8 +29,9 @@ enum SpeechProviderType {
       case 'openai':
         return SpeechProviderType.openAiProxy;
       case 'mock':
+        return SpeechProviderType.mock;
       default:
-        return SpeechProviderType.openAiProxy;
+        return SpeechProviderType.nativeDevice;
     }
   }
 }
@@ -54,8 +62,9 @@ class SpeechConfig {
   factory SpeechConfig.fromEnvironment({SpeechProviderType? overrideProvider}) {
     if (!dotenv.isInitialized) {
       return const SpeechConfig(
-        providerType: SpeechProviderType.mock,
-        endpointUrl: 'http://localhost:8080/v1/audio/transcriptions',
+        providerType: SpeechProviderType.nativeDevice,
+        endpointUrl: '',
+        model: 'NATIVE_DEVICE_STT',
       );
     }
 
@@ -100,8 +109,15 @@ class SpeechConfig {
           timeout: Duration(seconds: rawTimeout),
           deferTranscriptionToBackend: deferToBackend,
         );
+      case SpeechProviderType.nativeDevice:
+        return SpeechConfig(
+          providerType: SpeechProviderType.nativeDevice,
+          endpointUrl: '',
+          model: 'NATIVE_DEVICE_STT',
+          timeout: Duration(seconds: rawTimeout),
+          deferTranscriptionToBackend: false,
+        );
       case SpeechProviderType.mock:
-      default:
         return SpeechConfig(
           providerType: SpeechProviderType.mock,
           endpointUrl: proxyUrl,

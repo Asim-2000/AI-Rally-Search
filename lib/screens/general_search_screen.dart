@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -464,6 +466,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   }
 
   void _handleClearAll() {
+    unawaited(_speechService.cancelListening());
     setState(() {
       _searchController.clear();
       _session = _session.clearAll();
@@ -971,6 +974,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 }).toList(),
                 onChanged: (lang) {
                   if (lang != null) {
+                    unawaited(_speechService.cancelListening());
                     setState(() {
                       _selectedLanguage = lang;
                       if (_lastNlResult?.query != null) {
@@ -1038,6 +1042,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                           ? IconButton(
                               icon: const Icon(Icons.clear_rounded, size: 18),
                               onPressed: () {
+                                unawaited(_speechService.cancelListening());
                                 setState(() {
                                   _searchController.clear();
                                   // Clearing while a request is in flight is a
@@ -1083,13 +1088,16 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 VoiceSearchButton(
                   speechService: _speechService,
                   selectedLanguage: _selectedLanguage,
-                  onResultDetailed: (speechResult) {
-                    _executeNaturalLanguageSearch(spokenResult: speechResult);
-                  },
                   onTranscriptReceived: (transcript) {
                     if (_searchController.text != transcript) {
-                      _searchController.text = transcript;
-                      _executeNaturalLanguageSearch();
+                      setState(() {
+                        _searchController.value = TextEditingValue(
+                          text: transcript,
+                          selection: TextSelection.collapsed(
+                            offset: transcript.length,
+                          ),
+                        );
+                      });
                     }
                   },
                 ),

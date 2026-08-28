@@ -260,7 +260,7 @@ void main() {
     });
 
     testWidgets(
-      'Voice search triggers searchSpoken, preserves rich metadata into SpokenEntityResolver, and disposes audio',
+      'Native voice populates editable text, disposes unused audio, and waits for typed submission',
       (tester) async {
         setupScreen(tester);
 
@@ -359,39 +359,25 @@ void main() {
 
         expect(mockStt.isListening, isTrue);
 
-        // Stop listening to complete recording and trigger searchSpoken
+        // Stop listening to complete recognition. It must not auto-search.
         await tester.tap(micFinder);
         await tester.pumpAndSettle();
 
-        // Assertions:
-        // A. searchSpoken() was invoked on NaturalLanguageSearchService
-        expect(trackingNlService.searchSpokenCallCount, 1);
-        expect(trackingNlService.lastSearchSpokenArg, isNotNull);
+        expect(trackingNlService.searchSpokenCallCount, 0);
+        expect(trackingNlService.searchTypedCallCount, 0);
+        expect(mockStt.lastDetailedResult?.audioContext?.isDisposed, isTrue);
 
-        // B. SpokenEntityResolver receives SpeechTranscriptionResult
-        expect(spokenResolver.resolveSpokenCallCount, 1);
-        final receivedSpeech = spokenResolver.lastReceivedSpeechResult;
-        expect(receivedSpeech, isNotNull);
-
-        // C. Rich metadata survived intact into the resolver
-        expect(receivedSpeech!.text, 'Donegal rally 2025');
-        expect(receivedSpeech.hypotheses.length, 2);
-        expect(receivedSpeech.hypotheses.first.text, 'Donegal rally 2025');
-        expect(receivedSpeech.words.length, 3);
-        expect(receivedSpeech.words.first.word, 'Donegal');
-        expect(receivedSpeech.words.first.durationMs, 700);
-
-        // D. audioContext was still alive during SpokenEntityResolver resolution
-        expect(spokenResolver.audioContextWasAliveDuringResolution, isTrue);
-
-        // E. audioContext is disposed after resolution completes
-        expect(receivedSpeech.audioContext?.isDisposed, isTrue);
-
-        // G. Search field contains the editable transcript
+        // Search field contains the editable transcript.
         final textFieldFinder = find.byType(TextField);
         expect(textFieldFinder, findsOneWidget);
         final textField = tester.widget<TextField>(textFieldFinder);
         expect(textField.controller?.text, 'Donegal rally 2025');
+
+        // Explicit submission enters the ordinary typed path.
+        await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(trackingNlService.searchTypedCallCount, 1);
+        expect(trackingNlService.searchSpokenCallCount, 0);
       },
     );
 

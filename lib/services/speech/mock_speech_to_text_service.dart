@@ -28,6 +28,7 @@ class MockSpeechToTextService implements ISpeechToTextService {
   List<TranscriptHypothesis> mockHypotheses = [];
   List<SpokenWordTimestamp> mockWords = [];
   bool mockAttachAudioContext = false;
+  SpeechTranscriptionResult? lastDetailedResult;
 
   void Function(String text, bool isFinal)? _activeResultCallback;
   void Function(VoiceState state)? _activeStateCallback;
@@ -62,6 +63,13 @@ class MockSpeechToTextService implements ISpeechToTextService {
 
   void setTranscriptForLanguage(String languageCode, String transcript) {
     _languageTranscripts[languageCode.toLowerCase()] = transcript;
+  }
+
+  /// Emits an operating-system-style interim result for widget tests.
+  void emitPartialResult(String transcript) {
+    if (_currentState == VoiceState.listening) {
+      _activeResultCallback?.call(transcript, false);
+    }
   }
 
   void _setState(VoiceState newState) {
@@ -154,7 +162,7 @@ class MockSpeechToTextService implements ISpeechToTextService {
       );
     }
 
-    return SpeechTranscriptionResult(
+    final result = SpeechTranscriptionResult(
       text: transcript,
       language: lang,
       durationMs: 1500,
@@ -162,6 +170,8 @@ class MockSpeechToTextService implements ISpeechToTextService {
       words: mockWords,
       audioContext: audioContext,
     );
+    lastDetailedResult = result;
+    return result;
   }
 
   @override

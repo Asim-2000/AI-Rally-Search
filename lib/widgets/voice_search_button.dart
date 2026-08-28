@@ -77,10 +77,13 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
       _isAwaitingStopResult = false;
       if (detailed != null &&
           (detailed.text.isNotEmpty || detailed.audioContext != null)) {
+        if (detailed.text.isNotEmpty) {
+          widget.onTranscriptReceived(detailed.text);
+        }
         if (widget.onResultDetailed != null) {
           widget.onResultDetailed!(detailed);
         } else {
-          widget.onTranscriptReceived(detailed.text);
+          detailed.disposeAudio();
         }
       } else if (detailed != null) {
         _showFriendlyVoiceError(
@@ -104,17 +107,18 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
     await widget.speechService.startListening(
       language: widget.selectedLanguage,
       onResult: (transcript, isFinal) {
+        if (transcript.isNotEmpty) {
+          // Native recognizers emit evolving partials. They belong in the same
+          // editable field as typed input and never trigger search by themselves.
+          widget.onTranscriptReceived(transcript);
+        }
         if (isFinal && transcript.isNotEmpty && !_isAwaitingStopResult) {
-          if (widget.onResultDetailed != null) {
-            widget.onResultDetailed!(
-              SpeechTranscriptionResult.textOnly(
-                text: transcript,
-                language: widget.selectedLanguage,
-              ),
-            );
-          } else {
-            widget.onTranscriptReceived(transcript);
-          }
+          widget.onResultDetailed?.call(
+            SpeechTranscriptionResult.textOnly(
+              text: transcript,
+              language: widget.selectedLanguage,
+            ),
+          );
         }
       },
       onStateChanged: _handleStateChanged,
@@ -217,7 +221,6 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
         break;
 
       case VoiceState.idle:
-      default:
         iconWidget = Icon(
           Icons.mic_rounded,
           color: isDark ? Colors.white70 : theme.colorScheme.primary,

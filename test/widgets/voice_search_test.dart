@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:ai_rally_search/l10n/generated/app_localizations.dart';
 import 'package:ai_rally_search/models/search_intent.dart';
 import 'package:ai_rally_search/models/search_query.dart';
@@ -13,6 +17,7 @@ import 'package:ai_rally_search/services/llm/llm_provider_config.dart';
 import 'package:ai_rally_search/services/llm/llm_query_parser.dart';
 import 'package:ai_rally_search/services/llm/query_parse_result.dart';
 import 'package:ai_rally_search/services/search_repository.dart';
+import 'package:ai_rally_search/services/python_search_api_client.dart';
 import 'package:ai_rally_search/services/speech/mock_speech_to_text_service.dart';
 import 'package:ai_rally_search/widgets/voice_search_button.dart';
 
@@ -108,6 +113,7 @@ class FakeLlmParser implements LlmQueryParser {
 Widget createTestApp({
   required ISearchRepository repository,
   required MockSpeechToTextService speechService,
+  PythonSearchApiClient? pythonApiClient,
 }) {
   return MaterialApp(
     localizationsDelegates: const [
@@ -121,6 +127,7 @@ Widget createTestApp({
       repository: repository,
       llmParser: FakeLlmParser(),
       speechService: speechService,
+      pythonApiClient: pythonApiClient,
     ),
   );
 }
@@ -174,6 +181,7 @@ void main() {
           createTestApp(repository: mockRepo, speechService: mockSpeech),
         );
         await tester.pumpAndSettle();
+        mockRepo.lastQuery = null;
 
         // Tap voice button to start listening
         final micButton = find.byType(VoiceSearchButton);
@@ -181,6 +189,13 @@ void main() {
         await tester.pump();
 
         expect(mockSpeech.isListening, isTrue);
+
+        // Native interim results immediately populate the editable field.
+        mockSpeech.emitPartialResult('Show drifts in');
+        await tester.pump();
+        var textField = tester.widget<TextField>(find.byType(TextField).first);
+        expect(textField.controller?.text, 'Show drifts in');
+        expect(mockRepo.lastQuery, isNull);
 
         // Tap voice button again to stop & finish transcription
         await tester.tap(micButton);
@@ -196,8 +211,130 @@ void main() {
               w.controller?.text == 'Show drifts in Galway 2024',
         );
         expect(textFieldFinder, findsOneWidget);
+        expect(mockRepo.lastQuery, isNull);
+
+        // The human-edited text is authoritative and only explicit submission
+        // enters the same typed search path.
+        await tester.enterText(
+          find.byType(TextField).first,
+          'Show edited drifts in Galway 2024',
+        );
+        expect(
+          tester
+              .widget<TextField>(find.byType(TextField).first)
+              .controller
+              ?.text,
+          'Show edited drifts in Galway 2024',
+        );
       },
     );
+
+    testWidgets(
+      'Native transcript uses conversation endpoint only after explicit submission',
+      (tester) async {
+        setupScreen(tester);
+        mockSpeech.defaultTranscript = 'Max McRae at Aluksne';
+        final requestedPaths = <String>[];
+        String? submittedQuery;
+        final pythonClient = PythonSearchApiClient(
+          baseUrl: Uri.parse('https://api.example'),
+          httpClient: MockClient((request) async {
+            requestedPaths.add(request.url.path);
+            submittedQuery =
+                (jsonDecode(request.body) as Map<String, dynamic>)['query']
+                    as String?;
+            final body = jsonDecode(request.body) as Map<String, dynamic>;
+            final requestId = body['requestId'] as int;
+            return http.Response(
+              jsonEncode({
+                'requestId': requestId,
+                'session': {
+                  'activeQuery': const SearchQuery(
+                    intent: SearchIntent.searchRallies,
+                  ).toJson(),
+                  'referents': {},
+                  'history': [],
+                  'inheritedFields': [],
+                  'currentRefinementFields': [],
+                  'activeRequestId': requestId,
+                },
+                'result': {
+                  'error': 'test response',
+                  'friendlyMessage': 'test response',
+                  'referents': {},
+                },
+              }),
+              200,
+            );
+          }),
+        );
+
+        await tester.pumpWidget(
+          createTestApp(
+            repository: mockRepo,
+            speechService: mockSpeech,
+            pythonApiClient: pythonClient,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final mic = find.byType(VoiceSearchButton);
+        await tester.tap(mic);
+        await tester.pump();
+        mockSpeech.emitPartialResult('Max McRae');
+        await tester.pump();
+        expect(requestedPaths, isEmpty);
+
+        await tester.tap(mic);
+        await tester.pumpAndSettle();
+        expect(requestedPaths, isEmpty);
+
+        await tester.enterText(
+          find.byType(TextField).first,
+          'Max McRae at Aluksne edited',
+        );
+        await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+        await tester.pumpAndSettle();
+
+        expect(requestedPaths, ['/v1/conversation/search']);
+        expect(submittedQuery, 'Max McRae at Aluksne edited');
+        expect(requestedPaths, isNot(contains('/v1/voice/search')));
+      },
+    );
+
+    testWidgets('Clear cancels listening and rejects stale partials', (
+      tester,
+    ) async {
+      setupScreen(tester);
+      await tester.pumpWidget(
+        createTestApp(repository: mockRepo, speechService: mockSpeech),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(VoiceSearchButton));
+      await tester.pump();
+      mockSpeech.emitPartialResult('temporary words');
+      await tester.pump();
+      expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller?.text,
+        'temporary words',
+      );
+
+      await tester.tap(find.byIcon(Icons.clear_rounded).first);
+      await tester.pump();
+      expect(mockSpeech.isIdle, isTrue);
+      expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller?.text,
+        isEmpty,
+      );
+
+      mockSpeech.emitPartialResult('late stale words');
+      await tester.pump();
+      expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller?.text,
+        isEmpty,
+      );
+    });
 
     testWidgets(
       'RTL text direction applies when Arabic or Urdu language is selected',

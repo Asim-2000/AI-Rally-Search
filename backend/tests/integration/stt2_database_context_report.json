@@ -1,0 +1,2007 @@
+{
+  "runVersion": "STT2_DATABASE_CONTEXT_V1",
+  "createdAt": "2026-08-28T20:26:23.011195+00:00",
+  "status": "DOMAIN_CONTEXT_NO_MEANINGFUL_GAIN",
+  "productionEnabled": false,
+  "model": "gpt-transcribe",
+  "configuration": {
+    "rawAndContextualStoredSeparately": true,
+    "confidenceCombined": false,
+    "audioPreprocessing": "RAW_NO_OP",
+    "prompt": null,
+    "languageField": "languages[]",
+    "dynamicCandidatesPerEntityType": 3,
+    "globalLatestYearRallyLimit": 8,
+    "globalLocationLimitPerField": 4,
+    "maximumKeywords": 24,
+    "personDatabaseGloballyLoadedIntoRequest": false,
+    "sessionContextAvailableInCorpus": false,
+    "circularEvidenceGuard": "newly hinted exact resolutions downgrade to clarification"
+  },
+  "databaseInventory": {
+    "indexedEntities": 11245,
+    "globalVocabulary": [
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "48890256-1c42-495c-a93f-49520894370e",
+        "value": "Ahmed Away RAlly"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "value": "Alina Test"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "fbaabd20-fa44-4b08-b2e3-ed30e779157b",
+        "value": "AMF Mobilidade Rally Series - Ponte de Lima 2026"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "6e1e1925-f2e0-4319-873a-390d7fa2695a",
+        "value": "Ardeca Ypres Rally 2026"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "720be60d-1965-496f-8380-d51442657ee6",
+        "value": "Ardeca Ypres Rally test"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+        "value": "Assess Ireland International Rally of the Lakes 2026"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "eb262ef4-8f3e-42b1-a3cf-a36f6990fa75",
+        "value": "Barum Czech Rally Zlín 2026"
+      },
+      {
+        "source": "latest_year_rally",
+        "canonicalId": "a1b861b3-5d51-44bc-932d-2bce57580c12",
+        "value": "Bear Competitions Tyrone Stages Rally 2026"
+      },
+      {
+        "source": "latest_year_rally_city",
+        "canonicalId": "",
+        "value": "Benone"
+      },
+      {
+        "source": "latest_year_rally_city",
+        "canonicalId": "",
+        "value": "Islamabad"
+      },
+      {
+        "source": "latest_year_rally_city",
+        "canonicalId": "",
+        "value": "karachi"
+      },
+      {
+        "source": "latest_year_rally_city",
+        "canonicalId": "",
+        "value": "Killarney"
+      },
+      {
+        "source": "latest_year_rally_country",
+        "canonicalId": "",
+        "value": "Belgium"
+      },
+      {
+        "source": "latest_year_rally_country",
+        "canonicalId": "",
+        "value": "Czech Republic"
+      },
+      {
+        "source": "latest_year_rally_country",
+        "canonicalId": "",
+        "value": "Ireland"
+      },
+      {
+        "source": "latest_year_rally_country",
+        "canonicalId": "",
+        "value": "Pakistan"
+      }
+    ]
+  },
+  "rawAggregate": {
+    "normalizedWer": 0.25925925925925924,
+    "entityTokenAccuracy": 0.5555555555555556,
+    "canonicalAccuracy": 0.25,
+    "outcomes": {
+      "CORRECT_CONFIDENT": 1,
+      "CLARIFICATION": 3,
+      "NO_MATCH": 0,
+      "WRONG_CONFIDENT": 1
+    },
+    "averageSttLatencyMs": 868.2286582006782,
+    "p95SttLatencyMs": 983.2785830003559
+  },
+  "contextualAggregate": {
+    "normalizedWer": 0.25925925925925924,
+    "entityTokenAccuracy": 0.5555555555555556,
+    "canonicalAccuracy": 0.25,
+    "outcomes": {
+      "CORRECT_CONFIDENT": 1,
+      "CLARIFICATION": 3,
+      "NO_MATCH": 0,
+      "WRONG_CONFIDENT": 1
+    },
+    "averageSttLatencyMs": 1099.4438417998026,
+    "p95SttLatencyMs": 1675.0252499987255
+  },
+  "incrementalSecondPassLatencyMs": {
+    "average": 3438.0314502006513,
+    "p95": 4914.243875002285
+  },
+  "rows": [
+    {
+      "fixtureId": "human-smoke-001",
+      "audioFile": "test/eval/audio/human/asim1.wav",
+      "reference": "drivers that participated in aluksne rally",
+      "expectedEntityMention": "aluksne rally",
+      "language": "en",
+      "audioDurationMs": 5632,
+      "retrieval": {
+        "candidates": [
+          {
+            "type": "rally",
+            "canonicalId": "92a7a836-1581-4164-8819-96254243cfc1",
+            "canonicalName": "Sligo Stages Rally 2025",
+            "score": 0.666,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "s rally"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6529809523809524,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "05b95085-b30c-4fbe-a075-175566d2252e",
+            "canonicalName": "Ireland Rally Test",
+            "score": 0.6413636363636362,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+            "canonicalName": "Alex Lee",
+            "score": 0.8615238095238095,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:9d1ef7fd-1ce7-450d-af91-8c1b969fd6cb",
+            "canonicalName": "Alex Benn",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+            "canonicalName": "Alex Hill",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b7f64da3-96ef-4e92-846f-217ded0bd4d6",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b94f488e-a154-4266-8101-84aa46dec23a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "bbaca448-1cb2-4a19-b530-be720f89872a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "15c87c5f-07a0-4666-91e3-bf921e60b04c",
+            "canonicalName": "alexpannell",
+            "score": 0.9269999999999999,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "cfedd32c-68ed-474b-9053-ac1f01a4abd7",
+            "canonicalName": "alexbcordeiro",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "909162d7-285f-471d-b280-624d04e5eb30",
+            "canonicalName": "alexkihurani",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          }
+        ],
+        "globalTerms": [
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "48890256-1c42-495c-a93f-49520894370e",
+            "value": "Ahmed Away RAlly"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "value": "Alina Test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "fbaabd20-fa44-4b08-b2e3-ed30e779157b",
+            "value": "AMF Mobilidade Rally Series - Ponte de Lima 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "6e1e1925-f2e0-4319-873a-390d7fa2695a",
+            "value": "Ardeca Ypres Rally 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "720be60d-1965-496f-8380-d51442657ee6",
+            "value": "Ardeca Ypres Rally test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+            "value": "Assess Ireland International Rally of the Lakes 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "eb262ef4-8f3e-42b1-a3cf-a36f6990fa75",
+            "value": "Barum Czech Rally Zlín 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "a1b861b3-5d51-44bc-932d-2bce57580c12",
+            "value": "Bear Competitions Tyrone Stages Rally 2026"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Benone"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Islamabad"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "karachi"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Killarney"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Belgium"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Czech Republic"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Ireland"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Pakistan"
+          }
+        ],
+        "keywords": [
+          "Sligo Stages Rally 2025",
+          "Rally Alūksne 2026",
+          "Ireland Rally Test",
+          "Alex Lee",
+          "Alex Benn",
+          "Alex Hill",
+          "Aalbeke",
+          "alexpannell",
+          "alexbcordeiro",
+          "alexkihurani",
+          "Ahmed Away RAlly",
+          "Alina Test",
+          "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "Ardeca Ypres Rally 2026",
+          "Ardeca Ypres Rally test",
+          "Assess Ireland International Rally of the Lakes 2026",
+          "Barum Czech Rally Zlín 2026",
+          "Bear Competitions Tyrone Stages Rally 2026",
+          "Benone",
+          "Islamabad",
+          "karachi",
+          "Killarney",
+          "Belgium",
+          "Czech Republic"
+        ],
+        "keywordCount": 24,
+        "latencyMs": 3312.6558330004627
+      },
+      "raw": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally."
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2027.33,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        },
+        "sttLatencyMs": 925.7832910006982
+      },
+      "contextual": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally."
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2093.907,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?",
+          "unguardedOutcome": "CLARIFICATION",
+          "circularEvidenceDetected": false,
+          "circularEvidenceNames": [],
+          "circularEvidenceGuardApplied": false
+        },
+        "sttLatencyMs": 847.7637500000128,
+        "incrementalLatencyMs": 4160.4195830004755
+      }
+    },
+    {
+      "fixtureId": "human-smoke-002",
+      "audioFile": "test/eval/audio/human/asim2.wav",
+      "reference": "rallies in aluksne",
+      "expectedEntityMention": "aluksne",
+      "language": "en",
+      "audioDurationMs": 4608,
+      "retrieval": {
+        "candidates": [
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6773015873015873,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "canonicalName": "Alina Test",
+            "score": 0.6485185185185185,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "05b95085-b30c-4fbe-a075-175566d2252e",
+            "canonicalName": "Ireland Rally Test",
+            "score": 0.6413636363636362,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:3a8a68a7-59a9-43a9-9c02-1fc95c8f3d63",
+            "canonicalName": "Lind",
+            "score": 0.7083333333333334,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:7998761a-c347-4672-b7be-470923fab4d4",
+            "canonicalName": "Inês Veiga",
+            "score": 0.6982962962962963,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:2c8cb338-8a64-4622-b1db-b9ed0dedb7b0",
+            "canonicalName": "Inês Braga",
+            "score": 0.6937037037037037,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "14c9e701-a2f3-494b-b5e4-fabaf0771702",
+            "canonicalName": "Ring 1",
+            "score": 0.661111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "4cd1dbea-02f9-46a5-a695-fba74302021c",
+            "canonicalName": "Ring 1",
+            "score": 0.661111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "05b6368d-e9ef-4f05-8668-0d68e9a22781",
+            "canonicalName": "Ring 2",
+            "score": 0.661111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "306d134a-649c-4c43-963c-8a12af070a8d",
+            "canonicalName": "inox",
+            "score": 0.7805333333333334,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "674e8c18-21d8-4b88-b460-16aa175e01a0",
+            "canonicalName": "Rallytubs",
+            "score": 0.7727777777777778,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "d573d2e1-d476-4731-aa27-8878bc38be45",
+            "canonicalName": "RallyTourist",
+            "score": 0.729,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          }
+        ],
+        "globalTerms": [
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "48890256-1c42-495c-a93f-49520894370e",
+            "value": "Ahmed Away RAlly"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "value": "Alina Test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "fbaabd20-fa44-4b08-b2e3-ed30e779157b",
+            "value": "AMF Mobilidade Rally Series - Ponte de Lima 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "6e1e1925-f2e0-4319-873a-390d7fa2695a",
+            "value": "Ardeca Ypres Rally 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "720be60d-1965-496f-8380-d51442657ee6",
+            "value": "Ardeca Ypres Rally test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+            "value": "Assess Ireland International Rally of the Lakes 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "eb262ef4-8f3e-42b1-a3cf-a36f6990fa75",
+            "value": "Barum Czech Rally Zlín 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "a1b861b3-5d51-44bc-932d-2bce57580c12",
+            "value": "Bear Competitions Tyrone Stages Rally 2026"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Benone"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Islamabad"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "karachi"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Killarney"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Belgium"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Czech Republic"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Ireland"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Pakistan"
+          }
+        ],
+        "keywords": [
+          "Rally Alūksne 2026",
+          "Alina Test",
+          "Ireland Rally Test",
+          "Lind",
+          "Inês Veiga",
+          "Inês Braga",
+          "Ring 1",
+          "Ring 2",
+          "inox",
+          "Rallytubs",
+          "RallyTourist",
+          "Ahmed Away RAlly",
+          "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "Ardeca Ypres Rally 2026",
+          "Ardeca Ypres Rally test",
+          "Assess Ireland International Rally of the Lakes 2026",
+          "Barum Czech Rally Zlín 2026",
+          "Bear Competitions Tyrone Stages Rally 2026",
+          "Benone",
+          "Islamabad",
+          "karachi",
+          "Killarney",
+          "Belgium",
+          "Czech Republic"
+        ],
+        "keywordCount": 24,
+        "latencyMs": 710.2163750023465
+      },
+      "raw": {
+        "transcript": "Rallies in Alytus.",
+        "metrics": {
+          "wordErrors": 1,
+          "referenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rallies in Alytus."
+          }
+        },
+        "pipeline": {
+          "outcome": "WRONG_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_RALLIES"
+          ],
+          "intentActual": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": false,
+          "canonicalCorrect": null,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": null,
+          "observedCanonicalNames": [],
+          "resolvedQuery": {
+            "intent": "SEARCH_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [
+              "Alytus"
+            ],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 0,
+          "dbResultIntent": "SEARCH_RALLIES",
+          "pipelineLatencyMs": 1809.877,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "sttLatencyMs": 728.2643750004354
+      },
+      "contextual": {
+        "transcript": "Rallies in Ellucsne.",
+        "metrics": {
+          "wordErrors": 1,
+          "referenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rallies in Ellucsne."
+          }
+        },
+        "pipeline": {
+          "outcome": "WRONG_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_RALLIES"
+          ],
+          "intentActual": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": false,
+          "canonicalCorrect": null,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": null,
+          "observedCanonicalNames": [],
+          "resolvedQuery": {
+            "intent": "SEARCH_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [
+              "Ellucsne"
+            ],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 0,
+          "dbResultIntent": "SEARCH_RALLIES",
+          "pipelineLatencyMs": 1944.966,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null,
+          "unguardedOutcome": "WRONG_CONFIDENT",
+          "circularEvidenceDetected": false,
+          "circularEvidenceNames": [],
+          "circularEvidenceGuardApplied": false
+        },
+        "sttLatencyMs": 1037.0454589974543,
+        "incrementalLatencyMs": 1747.2618339998007
+      }
+    },
+    {
+      "fixtureId": "human-smoke-003",
+      "audioFile": "test/eval/audio/human/asim3.wav",
+      "reference": "drivers that participated in aluksne rally",
+      "expectedEntityMention": "aluksne rally",
+      "language": "en",
+      "audioDurationMs": 5632,
+      "retrieval": {
+        "candidates": [
+          {
+            "type": "rally",
+            "canonicalId": "92a7a836-1581-4164-8819-96254243cfc1",
+            "canonicalName": "Sligo Stages Rally 2025",
+            "score": 0.666,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "s rally"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6529809523809524,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "05b95085-b30c-4fbe-a075-175566d2252e",
+            "canonicalName": "Ireland Rally Test",
+            "score": 0.6413636363636362,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+            "canonicalName": "Alex Lee",
+            "score": 0.8615238095238095,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:9d1ef7fd-1ce7-450d-af91-8c1b969fd6cb",
+            "canonicalName": "Alex Benn",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+            "canonicalName": "Alex Hill",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b7f64da3-96ef-4e92-846f-217ded0bd4d6",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b94f488e-a154-4266-8101-84aa46dec23a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "bbaca448-1cb2-4a19-b530-be720f89872a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "15c87c5f-07a0-4666-91e3-bf921e60b04c",
+            "canonicalName": "alexpannell",
+            "score": 0.9269999999999999,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "cfedd32c-68ed-474b-9053-ac1f01a4abd7",
+            "canonicalName": "alexbcordeiro",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "909162d7-285f-471d-b280-624d04e5eb30",
+            "canonicalName": "alexkihurani",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          }
+        ],
+        "globalTerms": [
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "48890256-1c42-495c-a93f-49520894370e",
+            "value": "Ahmed Away RAlly"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "value": "Alina Test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "fbaabd20-fa44-4b08-b2e3-ed30e779157b",
+            "value": "AMF Mobilidade Rally Series - Ponte de Lima 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "6e1e1925-f2e0-4319-873a-390d7fa2695a",
+            "value": "Ardeca Ypres Rally 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "720be60d-1965-496f-8380-d51442657ee6",
+            "value": "Ardeca Ypres Rally test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+            "value": "Assess Ireland International Rally of the Lakes 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "eb262ef4-8f3e-42b1-a3cf-a36f6990fa75",
+            "value": "Barum Czech Rally Zlín 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "a1b861b3-5d51-44bc-932d-2bce57580c12",
+            "value": "Bear Competitions Tyrone Stages Rally 2026"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Benone"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Islamabad"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "karachi"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Killarney"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Belgium"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Czech Republic"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Ireland"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Pakistan"
+          }
+        ],
+        "keywords": [
+          "Sligo Stages Rally 2025",
+          "Rally Alūksne 2026",
+          "Ireland Rally Test",
+          "Alex Lee",
+          "Alex Benn",
+          "Alex Hill",
+          "Aalbeke",
+          "alexpannell",
+          "alexbcordeiro",
+          "alexkihurani",
+          "Ahmed Away RAlly",
+          "Alina Test",
+          "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "Ardeca Ypres Rally 2026",
+          "Ardeca Ypres Rally test",
+          "Assess Ireland International Rally of the Lakes 2026",
+          "Barum Czech Rally Zlín 2026",
+          "Bear Competitions Tyrone Stages Rally 2026",
+          "Benone",
+          "Islamabad",
+          "karachi",
+          "Killarney",
+          "Belgium",
+          "Czech Republic"
+        ],
+        "keywordCount": 24,
+        "latencyMs": 3239.2186250035593
+      },
+      "raw": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally."
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2044.576,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        },
+        "sttLatencyMs": 813.7129589995311
+      },
+      "contextual": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally."
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 1472.842,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?",
+          "unguardedOutcome": "CLARIFICATION",
+          "circularEvidenceDetected": false,
+          "circularEvidenceNames": [],
+          "circularEvidenceGuardApplied": false
+        },
+        "sttLatencyMs": 1675.0252499987255,
+        "incrementalLatencyMs": 4914.243875002285
+      }
+    },
+    {
+      "fixtureId": "human-smoke-004",
+      "audioFile": "test/eval/audio/human/record_out.wav",
+      "reference": "show me all rallies in which max freeman participated",
+      "expectedEntityMention": "max freeman",
+      "language": "en",
+      "audioDurationMs": 6240,
+      "retrieval": {
+        "candidates": [
+          {
+            "type": "rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "canonicalName": "Alina Test",
+            "score": 0.7347703703703704,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "all rallies in"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "39a04c18-0c49-4749-9ce9-9fa082359edd",
+            "canonicalName": "ME Rallysport Showground Stages 2026",
+            "score": 0.7138213716108455,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "me all rallies"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "838d0839-53a9-4f3a-9c1e-ef8ef771cfe0",
+            "canonicalName": "Mayo Forestry Rally 2025",
+            "score": 0.6990555555555555,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "me"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+            "canonicalName": "Max Freeman",
+            "score": 0.95,
+            "matchedBy": [
+              "character_ngram",
+              "exact",
+              "lexical",
+              "normalized_exact",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max freeman"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:e298d112-c0ea-4e2f-926f-c97eb58c8afc",
+            "canonicalName": "Max Maier",
+            "score": 0.8299821428571428,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:5fb153fe-c524-4b0e-9456-3644003d117f",
+            "canonicalName": "Max Murray",
+            "score": 0.8188888888888889,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "c97d8811-a154-40e1-adec-b152758b5b61",
+            "canonicalName": "Home Stage",
+            "score": 0.783111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "show me"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "80d8088a-73a0-46d9-a7fe-3477838fdeb9",
+            "canonicalName": "Showground A1",
+            "score": 0.7584568764568763,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "show"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "282afdb2-59cd-496b-a433-a9ed8d249c2e",
+            "canonicalName": "Showground A2",
+            "score": 0.7584568764568763,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "show"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "e80d0e20-ede4-46bf-9841-31bc97dd4d8f",
+            "canonicalName": "MaxFreeman",
+            "score": 0.9224,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "7d75e700-00ed-42d0-8e53-58347730afa8",
+            "canonicalName": "MEW",
+            "score": 0.8411111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "me"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "234f586c-f009-4d37-a4e6-70b12525517a",
+            "canonicalName": "max0907",
+            "score": 0.8142361111111112,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          }
+        ],
+        "globalTerms": [
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "48890256-1c42-495c-a93f-49520894370e",
+            "value": "Ahmed Away RAlly"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "value": "Alina Test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "fbaabd20-fa44-4b08-b2e3-ed30e779157b",
+            "value": "AMF Mobilidade Rally Series - Ponte de Lima 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "6e1e1925-f2e0-4319-873a-390d7fa2695a",
+            "value": "Ardeca Ypres Rally 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "720be60d-1965-496f-8380-d51442657ee6",
+            "value": "Ardeca Ypres Rally test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+            "value": "Assess Ireland International Rally of the Lakes 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "eb262ef4-8f3e-42b1-a3cf-a36f6990fa75",
+            "value": "Barum Czech Rally Zlín 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "a1b861b3-5d51-44bc-932d-2bce57580c12",
+            "value": "Bear Competitions Tyrone Stages Rally 2026"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Benone"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Islamabad"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "karachi"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Killarney"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Belgium"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Czech Republic"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Ireland"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Pakistan"
+          }
+        ],
+        "keywords": [
+          "Alina Test",
+          "ME Rallysport Showground Stages 2026",
+          "Mayo Forestry Rally 2025",
+          "Max Freeman",
+          "Max Maier",
+          "Max Murray",
+          "Home Stage",
+          "Showground A1",
+          "Showground A2",
+          "MaxFreeman",
+          "MEW",
+          "max0907",
+          "Ahmed Away RAlly",
+          "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "Ardeca Ypres Rally 2026",
+          "Ardeca Ypres Rally test",
+          "Assess Ireland International Rally of the Lakes 2026",
+          "Barum Czech Rally Zlín 2026",
+          "Bear Competitions Tyrone Stages Rally 2026",
+          "Benone",
+          "Islamabad",
+          "karachi",
+          "Killarney",
+          "Belgium"
+        ],
+        "keywordCount": 24,
+        "latencyMs": 2953.5288749975734
+      },
+      "raw": {
+        "transcript": "Show me all rallies in which Max Freeman participated.",
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated."
+          }
+        },
+        "pipeline": {
+          "outcome": "CORRECT_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "equivalentResolverEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "observedCanonicalIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "expectedCanonicalName": "Max Freeman",
+          "observedCanonicalNames": [
+            "Max Freeman"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "actionTypes": [],
+            "years": [],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 9,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 1858.605,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "sttLatencyMs": 890.1040830023703
+      },
+      "contextual": {
+        "transcript": "Show me all rallies in which Max Freeman participated.",
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated."
+          }
+        },
+        "pipeline": {
+          "outcome": "CORRECT_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "equivalentResolverEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "observedCanonicalIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "expectedCanonicalName": "Max Freeman",
+          "observedCanonicalNames": [
+            "Max Freeman"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "actionTypes": [],
+            "years": [],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 9,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 2172.905,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null,
+          "unguardedOutcome": "CORRECT_CONFIDENT",
+          "circularEvidenceDetected": false,
+          "circularEvidenceNames": [],
+          "circularEvidenceGuardApplied": false
+        },
+        "sttLatencyMs": 976.9782080002187,
+        "incrementalLatencyMs": 3930.507082997792
+      }
+    },
+    {
+      "fixtureId": "human-smoke-005",
+      "audioFile": "test/eval/audio/human/record_out (1).wav",
+      "reference": "rally aluksne drivers",
+      "expectedEntityMention": "rally aluksne",
+      "language": "en",
+      "audioDurationMs": 4980,
+      "retrieval": {
+        "candidates": [
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6769238095238095,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "85ba513d-0df3-4ce7-b952-ae54899d6531",
+            "canonicalName": "Rallye National du Pays de Fayence 2025",
+            "score": 0.6068888888888888,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "38912944-9809-4bfb-84a6-8980d82b06f8",
+            "canonicalName": "Raven's Rock Stages Rally 2025",
+            "score": 0.5821957671957672,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:account:1ca67bff-49a7-45dd-a01f-dcb387f67727",
+            "canonicalName": "New Driver",
+            "score": 0.711111111111111,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "نے drivers"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:2cde0fea-fb16-4f64-9ead-513df3a51f53",
+            "canonicalName": "Dries Vergote",
+            "score": 0.7106944444444445,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:43e5a96e-17d0-44fa-aa7e-10ef7f4a8144",
+            "canonicalName": "Dries Deprez",
+            "score": 0.6984595959595961,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "4c4e9bc3-cb29-4b91-91c8-da04441368d7",
+            "canonicalName": "Metālu Pasaule (Korneti 2)",
+            "score": 0.6020202020202021,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "50691a29-4a0f-4701-83c7-03b0740999be",
+            "canonicalName": "Callan River 1",
+            "score": 0.6013125763125764,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "9e81d9ce-9fb9-4639-8121-f6aa26034682",
+            "canonicalName": "Callan River 2",
+            "score": 0.6013125763125764,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "cdbe1bb8-a0cb-4a18-a515-948382308fa6",
+            "canonicalName": "Lopes",
+            "score": 0.6784444444444444,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "8a6f41ad-8a8e-4517-82c9-d3b8eafc496a",
+            "canonicalName": "lopxs",
+            "score": 0.6784444444444444,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "f230792c-727b-446f-834e-cca0c0a2e442",
+            "canonicalName": "Alves",
+            "score": 0.6625333333333334,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          }
+        ],
+        "globalTerms": [
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "48890256-1c42-495c-a93f-49520894370e",
+            "value": "Ahmed Away RAlly"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "value": "Alina Test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "fbaabd20-fa44-4b08-b2e3-ed30e779157b",
+            "value": "AMF Mobilidade Rally Series - Ponte de Lima 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "6e1e1925-f2e0-4319-873a-390d7fa2695a",
+            "value": "Ardeca Ypres Rally 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "720be60d-1965-496f-8380-d51442657ee6",
+            "value": "Ardeca Ypres Rally test"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
+            "value": "Assess Ireland International Rally of the Lakes 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "eb262ef4-8f3e-42b1-a3cf-a36f6990fa75",
+            "value": "Barum Czech Rally Zlín 2026"
+          },
+          {
+            "source": "latest_year_rally",
+            "canonicalId": "a1b861b3-5d51-44bc-932d-2bce57580c12",
+            "value": "Bear Competitions Tyrone Stages Rally 2026"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Benone"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Islamabad"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "karachi"
+          },
+          {
+            "source": "latest_year_rally_city",
+            "canonicalId": "",
+            "value": "Killarney"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Belgium"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Czech Republic"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Ireland"
+          },
+          {
+            "source": "latest_year_rally_country",
+            "canonicalId": "",
+            "value": "Pakistan"
+          }
+        ],
+        "keywords": [
+          "Rally Alūksne 2026",
+          "Rallye National du Pays de Fayence 2025",
+          "Raven's Rock Stages Rally 2025",
+          "New Driver",
+          "Dries Vergote",
+          "Dries Deprez",
+          "Metālu Pasaule (Korneti 2)",
+          "Callan River 1",
+          "Callan River 2",
+          "Lopes",
+          "lopxs",
+          "Alves",
+          "Ahmed Away RAlly",
+          "Alina Test",
+          "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "Ardeca Ypres Rally 2026",
+          "Ardeca Ypres Rally test",
+          "Assess Ireland International Rally of the Lakes 2026",
+          "Barum Czech Rally Zlín 2026",
+          "Bear Competitions Tyrone Stages Rally 2026",
+          "Benone",
+          "Islamabad",
+          "karachi",
+          "Killarney"
+        ],
+        "keywordCount": 24,
+        "latencyMs": 1477.3183340003015
+      },
+      "raw": {
+        "transcript": "Rally aloops نے drivers.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 3,
+          "normalizedWer": 0.6666666666666666,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rally aloops نے drivers."
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 1742.386,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Did you mean \"Swift Signs & Shirts Yorkshire Dales Rally 2026\"?"
+        },
+        "sttLatencyMs": 983.2785830003559
+      },
+      "contextual": {
+        "transcript": "Rally aloops نے drivers.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 3,
+          "normalizedWer": 0.6666666666666666,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rally aloops نے drivers."
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 1646.151,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Did you mean \"Swift Signs & Shirts Yorkshire Dales Rally 2026\"?",
+          "unguardedOutcome": "CLARIFICATION",
+          "circularEvidenceDetected": false,
+          "circularEvidenceNames": [],
+          "circularEvidenceGuardApplied": false
+        },
+        "sttLatencyMs": 960.4065420026018,
+        "incrementalLatencyMs": 2437.7248760029033
+      }
+    }
+  ],
+  "finalModelBenchmark": "NOT_RUN"
+}

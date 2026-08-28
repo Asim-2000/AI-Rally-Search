@@ -78,11 +78,16 @@ class SpeechConfig {
     final deferToBackend =
         dotenv.env['SEARCH_BACKEND']?.trim().toLowerCase() == 'python';
 
+    final pythonBase = dotenv.env['PYTHON_BACKEND_BASE_URL']?.trim().replaceAll(RegExp(r'/+$'), '');
+    final defaultProxyUrl = (pythonBase != null && pythonBase.isNotEmpty)
+        ? '$pythonBase/v1/voice/transcribe'
+        : 'http://localhost:8080/v1/audio/transcriptions';
+
     // Production proxy endpoint vs dev direct URL
     final proxyUrl =
         dotenv.env['SPEECH_PROXY_URL'] ??
         dotenv.env['API_PROXY_URL'] ??
-        'http://localhost:8080/v1/audio/transcriptions';
+        defaultProxyUrl;
     final directUrl =
         dotenv.env['OPENAI_AUDIO_URL'] ??
         '${dotenv.env['OPENAI_BASE_URL'] ?? 'https://api.openai.com/v1'}/audio/transcriptions';

@@ -12,6 +12,17 @@ class Settings(BaseSettings):
     db_user: str = ""
     db_password: SecretStr = SecretStr("")
     db_use_ssl: bool = False
+    query_understanding_provider: str = "mock"
+    query_understanding_model: str = "mock-parser-v1"
+    query_understanding_temperature: float = 0.0
+    query_understanding_timeout_seconds: float = 30.0
+    query_understanding_max_retries: int = 2
+    openai_api_key: SecretStr = SecretStr("")
+    openai_base_url: str = "https://api.openai.com/v1"
+    gemini_api_key: SecretStr = SecretStr("")
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    anthropic_api_key: SecretStr = SecretStr("")
+    anthropic_base_url: str = "https://api.anthropic.com/v1"
 
     @property
     def database_url(self) -> str:
@@ -26,4 +37,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

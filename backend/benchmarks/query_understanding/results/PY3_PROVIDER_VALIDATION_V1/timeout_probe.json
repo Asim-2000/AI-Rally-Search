@@ -1,0 +1,18 @@
+{
+  "provider": "openai",
+  "model": "gpt-4.1-mini",
+  "succeeded": false,
+  "failureKind": "TIMEOUT",
+  "attempts": 2,
+  "providerRetries": 1,
+  "schemaRetries": 0,
+  "providerLatencyMs": 2.537999000196578,
+  "totalLatencyMs": 2.5435420029680245,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null,
+    "cached_tokens": null,
+    "reasoning_tokens": null,
+    "total_tokens": null
+  }
+}

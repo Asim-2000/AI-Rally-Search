@@ -1,0 +1,22 @@
+{
+  "fixtureVersion": "PY3_PROVIDER_SMOKE_V1",
+  "singleTurn": true,
+  "count": 15,
+  "cases": [
+    {"caseId":"SMOKE-RALLIES","input":"Show rallies in Ireland in 2025","language":"en","category":"intent","expected":{"intent":"SEARCH_RALLIES","countries":["Ireland"],"years":[2025]}},
+    {"caseId":"SMOKE-PARTICIPATION","input":"Which rallies did Josh Moffett participate in?","language":"en","category":"intent","expected":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Josh Moffett"],"personRole":"ANY"}},
+    {"caseId":"SMOKE-DRIVER-ROLE","input":"Show rallies where Josh Moffett drove","language":"en","category":"role","expected":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Josh Moffett"],"personRole":"DRIVER"}},
+    {"caseId":"SMOKE-CODRIVER-ROLE","input":"Show rallies where Max Freeman was co-driver","language":"en","category":"role","expected":{"intent":"SEARCH_DRIVER_RALLIES","driverNames":["Max Freeman"],"personRole":"CO_DRIVER"}},
+    {"caseId":"SMOKE-WINS","input":"Which rallies did Josh Moffett win?","language":"en","category":"intent","expected":{"intent":"SEARCH_DRIVER_WINS","driverNames":["Josh Moffett"]}},
+    {"caseId":"SMOKE-WINNER","input":"Who won the Moonraker Rally?","language":"en","category":"intent","expected":{"intent":"GET_RALLY_RESULTS","rallyNames":["Moonraker Rally"]}},
+    {"caseId":"SMOKE-TOP","input":"Show the top 5 finishers from Moonraker Rally","language":"en","category":"intent","expected":{"intent":"GET_RALLY_TOP_FINISHERS","rallyNames":["Moonraker Rally"],"limit":5}},
+    {"caseId":"SMOKE-ACTIONS","input":"Show jumps and drifts on SS2 at Moonraker Rally","language":"en","category":"multivalue","expected":{"intent":"SEARCH_VIDEO_ACTIONS","rallyNames":["Moonraker Rally"],"stageNumbers":["SS2"],"actionTypes":["jump","drift"]}},
+    {"caseId":"SMOKE-STAGE","input":"Show crash clips from the Gale Rigg stage","language":"en","category":"stage","expected":{"intent":"SEARCH_VIDEO_ACTIONS","stageNames":["Gale Rigg"],"actionTypes":["crash"]}},
+    {"caseId":"SMOKE-DRIVER-VIDEOS","input":"Show videos featuring Josh Moffett","language":"en","category":"intent","expected":{"intent":"SEARCH_DRIVER_VIDEOS","driverNames":["Josh Moffett"]}},
+    {"caseId":"SMOKE-UPLOADERS","input":"Top uploaders for Moonraker Rally","language":"en","category":"intent","expected":{"intent":"GET_TOP_UPLOADERS","rallyNames":["Moonraker Rally"]}},
+    {"caseId":"SMOKE-UPLOADER-NAME","input":"Show jump clips uploaded by Rally Media UK","language":"en","category":"uploader","expected":{"intent":"SEARCH_VIDEO_ACTIONS","uploaders":["Rally Media UK"],"actionTypes":["jump"]}},
+    {"caseId":"SMOKE-TOP-DRIVERS","input":"Which drivers have the most career wins?","language":"en","category":"intent","expected":{"intent":"GET_TOP_DRIVERS_BY_WINS"}},
+    {"caseId":"SMOKE-RANGE","input":"Show rallies between 2022 and 2025","language":"en","category":"range","expected":{"intent":"SEARCH_RALLIES","yearFrom":2022,"yearTo":2025}},
+    {"caseId":"SMOKE-MULTILINGUAL","input":"Zeig mir Sprünge und Drifts von Josh Moffett bei Moonraker aus 2024 und 2025","language":"de","category":"multilingual","expected":{"intent":"SEARCH_VIDEO_ACTIONS","rallyNames":["Moonraker"],"driverNames":["Josh Moffett"],"actionTypes":["jump","drift"],"years":[2024,2025]}}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "version": "pricing_v1",
+  "asOf": "2026-08-28",
+  "currency": "USD",
+  "models": {},
+  "note": "Intentionally empty. Populate explicit provider pricing snapshots before computing costs."
+}

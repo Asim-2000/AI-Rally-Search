@@ -1,0 +1,7 @@
+{
+  "models": [
+    {"provider": "openai", "model": "configure-me", "temperature": 0.0, "maxTokens": 1024, "structuredOutput": true},
+    {"provider": "gemini", "model": "configure-me", "temperature": 0.0, "maxTokens": 1024, "structuredOutput": true},
+    {"provider": "anthropic", "model": "configure-me", "temperature": 0.0, "maxTokens": 1024, "structuredOutput": true}
+  ]
+}

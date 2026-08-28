@@ -21,6 +21,10 @@ markers = [
   "live_db: requires configured live MySQL access",
   "benchmark: frozen entity search benchmarks",
   "parity: compares canonical IDs across implementations",
+  "provider_contract: hermetic provider adapter contract tests",
+  "live_provider: opt-in tests requiring provider credentials",
+  "query_understanding: single-turn query-understanding tests",
+  "e2e_live_db: opt-in natural-language through live database tests",
 ]
 testpaths = ["tests"]
 pythonpath = ["."]

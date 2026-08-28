@@ -1,18 +1,21 @@
-import os, pytest
+import pytest
 from sqlalchemy import text
+from app.config import get_settings
 from app.db.engine import get_engine
 from app.domain.search_intent import SearchIntent
 from app.domain.search_query import SearchQuery
 from app.repositories.search_repository import SearchRepository
 
+HAS_DB_CONFIG = bool(get_settings().db_host)
+
 @pytest.mark.live_db
-@pytest.mark.skipif(not os.getenv("DB_HOST"),reason="DB_HOST not configured")
+@pytest.mark.skipif(not HAS_DB_CONFIG,reason="DB_HOST not configured")
 async def test_live_database_truth_source():
     async with get_engine().connect() as conn:
         assert (await conn.execute(text("SELECT 1"))).scalar_one()==1
 
 @pytest.mark.live_db
-@pytest.mark.skipif(not os.getenv("DB_HOST"),reason="DB_HOST not configured")
+@pytest.mark.skipif(not HAS_DB_CONFIG,reason="DB_HOST not configured")
 @pytest.mark.parametrize("intent",list(SearchIntent))
 async def test_every_intent_executes(intent):
     async with get_engine().connect() as conn:
@@ -22,7 +25,7 @@ async def test_every_intent_executes(intent):
     assert len({(x.kind,str(x)) for x in response.results}) == len(response.results)
 
 @pytest.mark.live_db
-@pytest.mark.skipif(not os.getenv("DB_HOST"),reason="DB_HOST not configured")
+@pytest.mark.skipif(not HAS_DB_CONFIG,reason="DB_HOST not configured")
 @pytest.mark.parametrize("intent",[SearchIntent.SEARCH_VIDEO_ACTIONS,SearchIntent.SEARCH_DRIVER_VIDEOS])
 async def test_stable_non_overlapping_pages(intent):
     async with get_engine().connect() as conn:

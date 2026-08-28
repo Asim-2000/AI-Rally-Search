@@ -1,0 +1,1188 @@
+{
+  "runVersion": "PY3_PROVIDER_SMOKE_V1",
+  "fixture": {
+    "path": "benchmarks/query_understanding/fixtures/provider_smoke_v1.json",
+    "version": "PY3_PROVIDER_SMOKE_V1",
+    "count": 15,
+    "sha256": "024b9615cb099314d1224e1c743e1cd6ef13a56e9e938dd74ac41966649cdf95"
+  },
+  "provider": "openai",
+  "model": "gpt-4.1-mini",
+  "configuration": {
+    "provider": "openai",
+    "model": "gpt-4.1-mini",
+    "temperature": 0.0,
+    "maxTokens": 1024,
+    "timeoutSeconds": 30,
+    "maxRetries": 2,
+    "structuredOutput": true,
+    "seed": null,
+    "reasoning": null,
+    "parameters": {}
+  },
+  "versions": {
+    "prompt": "query_understanding_prompt_v1",
+    "schema": "search_query_py1_v1",
+    "fewShot": "query_understanding_few_shot_v1"
+  },
+  "summary": {
+    "cases": 15,
+    "searchQueryAccuracy": 0.8,
+    "intentAccuracy": 1.0,
+    "fieldPrecision": 0.9310344827586207,
+    "fieldRecall": 0.9,
+    "fieldF1": 0.9152542372881356,
+    "schemaSuccessRate": 1.0,
+    "hallucinatedFilterRate": 0.13333333333333333,
+    "canonicalOutcomes": {},
+    "endToEndExactRate": null,
+    "latencyMs": {
+      "avg": 2154.055969466814,
+      "p50": 2133.589207998739,
+      "p95": 2900.2707500003453,
+      "max": 2900.2707500003453
+    },
+    "totalRetries": 0,
+    "failureCategories": {
+      "EXTRA_ENTITY": 2,
+      "MISSING_ENTITY": 2,
+      "MULTIVALUE_LOSS": 1
+    },
+    "estimatedCostPerQuery": null,
+    "estimatedCompleteBenchmarkCost": null
+  },
+  "records": [
+    {
+      "caseId": "SMOKE-RALLIES",
+      "input": "Show rallies in Ireland in 2025",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_RALLIES",
+        "countries": [
+          "Ireland"
+        ],
+        "years": [
+          2025
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_RALLIES\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[\"Ireland\"],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[],\"years\":[2025],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [
+          "Ireland"
+        ],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [
+          2025
+        ],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2523.12562500083,
+        "validation": 0.1627080018806737,
+        "entitySearch": null,
+        "database": null,
+        "total": 2523.3051249997516
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 83,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1364
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-PARTICIPATION",
+      "input": "Which rallies did Josh Moffett participate in?",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "personRole": "ANY"
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_DRIVER_RALLIES\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[\"Josh Moffett\"],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1829.037208997761,
+        "validation": 0.1255409988516476,
+        "entitySearch": null,
+        "database": null,
+        "total": 1829.182875000697
+      },
+      "usage": {
+        "input_tokens": 1283,
+        "output_tokens": 85,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1368
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-DRIVER-ROLE",
+      "input": "Show rallies where Josh Moffett drove",
+      "language": "en",
+      "category": "role",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "personRole": "DRIVER"
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_DRIVER_RALLIES\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[\"Josh Moffett\"],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"DRIVER\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "DRIVER",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2473.3539999979257,
+        "validation": 0.15404199803015217,
+        "entitySearch": null,
+        "database": null,
+        "total": 2473.52200000023
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 86,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1367
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-CODRIVER-ROLE",
+      "input": "Show rallies where Max Freeman was co-driver",
+      "language": "en",
+      "category": "role",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "driverNames": [
+          "Max Freeman"
+        ],
+        "personRole": "CO_DRIVER"
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_DRIVER_RALLIES\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[\"Max Freeman\"],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"CO_DRIVER\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Max Freeman"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "CO_DRIVER",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2133.4173750001355,
+        "validation": 0.15545800124527887,
+        "entitySearch": null,
+        "database": null,
+        "total": 2133.589207998739
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 84,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1365
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-WINS",
+      "input": "Which rallies did Josh Moffett win?",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_DRIVER_WINS",
+        "driverNames": [
+          "Josh Moffett"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_DRIVER_WINS\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[\"Josh Moffett\"],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_WINS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1637.0423749976908,
+        "validation": 0.14483400082099251,
+        "entitySearch": null,
+        "database": null,
+        "total": 1637.2257080001873
+      },
+      "usage": {
+        "input_tokens": 1282,
+        "output_tokens": 84,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1366
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-WINNER",
+      "input": "Who won the Moonraker Rally?",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "GET_RALLY_RESULTS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"GET_RALLY_RESULTS\",\"rallyNames\":[\"Moonraker Rally\"],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "GET_RALLY_RESULTS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1947.192958999949,
+        "validation": 0.14412500240723602,
+        "entitySearch": null,
+        "database": null,
+        "total": 1947.356500000751
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 84,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1365
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-TOP",
+      "input": "Show the top 5 finishers from Moonraker Rally",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "GET_RALLY_TOP_FINISHERS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ],
+        "limit": 5
+      },
+      "rawResponse": "{\"intent\":\"GET_RALLY_TOP_FINISHERS\",\"rallyNames\":[\"Moonraker\"],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":5,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "GET_RALLY_TOP_FINISHERS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 5,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": false,
+        "fieldCounts": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 1
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2809.6532499985187,
+        "validation": 0.1160829997388646,
+        "entitySearch": null,
+        "database": null,
+        "total": 2809.7875000021304
+      },
+      "usage": {
+        "input_tokens": 1285,
+        "output_tokens": 86,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1371
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [
+        "EXTRA_ENTITY",
+        "MISSING_ENTITY"
+      ],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-ACTIONS",
+      "input": "Show jumps and drifts on SS2 at Moonraker Rally",
+      "language": "en",
+      "category": "multivalue",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ],
+        "stageNumbers": [
+          "SS2"
+        ],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_VIDEO_ACTIONS\",\"rallyNames\":[\"Moonraker Rally\"],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[\"SS2\"],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[\"jump\",\"drift\"],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [
+          "SS2"
+        ],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": false,
+        "fieldCounts": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 1
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2217.1588749988587,
+        "validation": 0.06520800161524676,
+        "entitySearch": null,
+        "database": null,
+        "total": 2217.2350420005387
+      },
+      "usage": {
+        "input_tokens": 1286,
+        "output_tokens": 92,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1378
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [
+        "MULTIVALUE_LOSS"
+      ],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-STAGE",
+      "input": "Show crash clips from the Gale Rigg stage",
+      "language": "en",
+      "category": "stage",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "stageNames": [
+          "Gale Rigg"
+        ],
+        "actionTypes": [
+          "crash"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_VIDEO_ACTIONS\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[\"Gale Rigg\"],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[\"crash\"],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [
+          "Gale Rigg"
+        ],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "crash"
+        ],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2358.269749998726,
+        "validation": 0.12133299969718792,
+        "entitySearch": null,
+        "database": null,
+        "total": 2358.400332999736
+      },
+      "usage": {
+        "input_tokens": 1282,
+        "output_tokens": 87,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1369
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-DRIVER-VIDEOS",
+      "input": "Show videos featuring Josh Moffett",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "driverNames": [
+          "Josh Moffett"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_DRIVER_VIDEOS\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[\"Josh Moffett\"],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1878.5890830004064,
+        "validation": 0.15366700245067477,
+        "entitySearch": null,
+        "database": null,
+        "total": 1878.7575419992208
+      },
+      "usage": {
+        "input_tokens": 1280,
+        "output_tokens": 85,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1365
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-UPLOADERS",
+      "input": "Top uploaders for Moonraker Rally",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "GET_TOP_UPLOADERS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"GET_TOP_UPLOADERS\",\"rallyNames\":[\"Moonraker\"],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "GET_TOP_UPLOADERS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": false,
+        "fieldCounts": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1942.0726250027656,
+        "validation": 0.17212499733432196,
+        "entitySearch": null,
+        "database": null,
+        "total": 1942.2635419978178
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 83,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1364
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [
+        "EXTRA_ENTITY",
+        "MISSING_ENTITY"
+      ],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-UPLOADER-NAME",
+      "input": "Show jump clips uploaded by Rally Media UK",
+      "language": "en",
+      "category": "uploader",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "uploaders": [
+          "Rally Media UK"
+        ],
+        "actionTypes": [
+          "jump"
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_VIDEO_ACTIONS\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[\"jump\"],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[\"Rally Media UK\"],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "jump"
+        ],
+        "years": [],
+        "uploaders": [
+          "Rally Media UK"
+        ],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2900.087458001508,
+        "validation": 0.16383399997721426,
+        "entitySearch": null,
+        "database": null,
+        "total": 2900.2707500003453
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 86,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1367
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-TOP-DRIVERS",
+      "input": "Which drivers have the most career wins?",
+      "language": "en",
+      "category": "intent",
+      "tags": [],
+      "expected": {
+        "intent": "GET_TOP_DRIVERS_BY_WINS"
+      },
+      "rawResponse": "{\"intent\":\"GET_TOP_DRIVERS_BY_WINS\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "GET_TOP_DRIVERS_BY_WINS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1622.3372080021363,
+        "validation": 0.16191699978662655,
+        "entitySearch": null,
+        "database": null,
+        "total": 1622.516583000106
+      },
+      "usage": {
+        "input_tokens": 1281,
+        "output_tokens": 82,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1363
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-RANGE",
+      "input": "Show rallies between 2022 and 2025",
+      "language": "en",
+      "category": "range",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_RALLIES",
+        "yearFrom": 2022,
+        "yearTo": 2025
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_RALLIES\",\"rallyNames\":[],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[],\"driverIds\":[],\"actionTypes\":[],\"years\":[],\"yearFrom\":2022,\"yearTo\":2025,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "yearFrom": 2022,
+        "yearTo": 2025,
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 1857.9805829976976,
+        "validation": 0.14520799959427677,
+        "entitySearch": null,
+        "database": null,
+        "total": 1858.1435000014608
+      },
+      "usage": {
+        "input_tokens": 1283,
+        "output_tokens": 81,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1364
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    },
+    {
+      "caseId": "SMOKE-MULTILINGUAL",
+      "input": "Zeig mir Sprünge und Drifts von Josh Moffett bei Moonraker aus 2024 und 2025",
+      "language": "de",
+      "category": "multilingual",
+      "tags": [],
+      "expected": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ],
+        "years": [
+          2024,
+          2025
+        ]
+      },
+      "rawResponse": "{\"intent\":\"SEARCH_VIDEO_ACTIONS\",\"rallyNames\":[\"Moonraker\"],\"eventNames\":[],\"countries\":[],\"cities\":[],\"stageNames\":[],\"stageNumbers\":[],\"driverNames\":[\"Josh Moffett\"],\"driverIds\":[],\"actionTypes\":[\"jump\",\"drift\"],\"years\":[2024,2025],\"yearFrom\":null,\"yearTo\":null,\"uploaders\":[],\"driverMatchMode\":\"ANY\",\"personRole\":\"ANY\",\"limit\":20,\"offset\":0}",
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ],
+        "years": [
+          2024,
+          2025
+        ],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "validation": {
+        "succeeded": true,
+        "failureKind": null,
+        "error": null
+      },
+      "parserMetrics": {
+        "intentMatch": true,
+        "exactExpectedFieldsMatch": true,
+        "fieldCounts": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "canonicalResolution": null,
+      "databaseResult": null,
+      "latencyMs": {
+        "provider": 2179.116333998536,
+        "validation": 0.14895800268277526,
+        "entitySearch": null,
+        "database": null,
+        "total": 2179.283334000502
+      },
+      "usage": {
+        "input_tokens": 1299,
+        "output_tokens": 98,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 1397
+      },
+      "estimatedCost": null,
+      "attempts": 1,
+      "providerRetries": 0,
+      "schemaRetries": 0,
+      "failureCategories": [],
+      "promptVersion": "query_understanding_prompt_v1",
+      "schemaVersion": "search_query_py1_v1",
+      "fewShotVersion": "query_understanding_few_shot_v1"
+    }
+  ]
+}

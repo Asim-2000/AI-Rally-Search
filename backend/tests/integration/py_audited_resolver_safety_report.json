@@ -570,8 +570,8 @@
   "negativeConfusable": {
     "queries": 106,
     "wrongConfident": 0,
-    "clarification": 31,
-    "rejection": 75,
+    "clarification": 30,
+    "rejection": 76,
     "details": [
       {
         "input": "Josh Smith",
@@ -780,7 +780,7 @@
         "input": "Fafe Classic 1985",
         "type": "rally",
         "resolved": null,
-        "clarification": true,
+        "clarification": false,
         "error": null
       },
       {
@@ -1324,15 +1324,15 @@
     "legacyNoMatch": 173,
     "entitySearchInvoked": 173,
     "entitySearchResolved": 34,
-    "entitySearchClarified": 62,
-    "entitySearchNoMatch": 77,
-    "entitySearchRecoveredLegacyFailure": 96,
+    "entitySearchClarified": 61,
+    "entitySearchNoMatch": 78,
+    "entitySearchRecoveredLegacyFailure": 95,
     "roleConstraintRejected": 49,
     "yearConstraintRejected": 0,
     "duplicateIdentityClarification": 11,
-    "legacyLatencyMicroseconds": 1631,
-    "entitySearchLatencyMicroseconds": 13996486,
-    "totalResolutionLatencyMicroseconds": 14002151
+    "legacyLatencyMicroseconds": 1823,
+    "entitySearchLatencyMicroseconds": 14290662,
+    "totalResolutionLatencyMicroseconds": 14296711
   },
   "nullAccountSafety": [
     {

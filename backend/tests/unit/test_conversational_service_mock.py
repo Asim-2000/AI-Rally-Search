@@ -54,6 +54,16 @@ class MockConversationalLookupRepo(IEntityLookupRepository):
 
     async def lookup_drivers(self, phrase, *, event_id=None, event_name=None, year=None, person_role=None, limit=25):
         lower = phrase.lower().strip()
+        if "max freeman" in lower or "max freemn" in lower:
+            return [
+                EntityCandidate(
+                    id="person-max-freeman",
+                    type=EntityType.DRIVER,
+                    canonical_name="Max Freeman",
+                    score=1.0,
+                    metadata={"driverId": "driver-max-freeman"},
+                )
+            ]
         if "josh" in lower or "moffett" in lower:
             return [
                 EntityCandidate(
@@ -258,6 +268,89 @@ async def test_ambiguous_driver_pronoun_requires_clarification(conversational_se
 
 
 @pytest.mark.unit
+async def test_video_followup_reuses_active_rally_intent_and_canonical_id(conversational_service):
+    session = SearchConversationSession(
+        referents=ResultReferentContext(
+            active_rally="Rally Alūksne 2026",
+            active_rally_id="event-aluksne-2026",
+        )
+    )
+
+    _, result = await conversational_service.search(
+        "Show videos from that rally",
+        session=session,
+    )
+
+    assert result.is_success is True
+    assert result.resolved_query.intent == SearchIntent.SEARCH_VIDEO_ACTIONS
+    assert result.resolved_query.target_rally_names == ["Rally Alūksne 2026"]
+    assert result.search_plan.event_ids == ["event-aluksne-2026"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("name", ["max freeman", "max freemn"])
+async def test_video_action_featuring_person_builds_driver_filtered_plan(name):
+    raw = f"show me jump highlights featuring {name}"
+    provider = MockProvider(
+        ProviderConfig(provider="mock", model="mock-parser-v1"),
+        responses={
+            raw: '{"intent":"SEARCH_VIDEO_ACTIONS","actionTypes":["jump"],'
+                 '"driverNames":[],"rallyNames":[],"stageNames":[],'
+                 '"personRole":"DRIVER"}'
+        },
+    )
+    service = ConversationalSearchService(
+        query_parser=QueryUnderstandingService(provider),
+        entity_resolver=DatabaseEntityResolver(repository=MockConversationalLookupRepo()),
+        repository=MockSearchRepo(),
+    )
+
+    _, result = await service.search(raw)
+
+    assert result.is_success
+    assert result.routing_plan.entity_routes[0].entity_type.value == "person"
+    assert result.resolved_query.driver_names == ["Max Freeman"]
+    assert result.resolved_query.driver_ids == ["driver-max-freeman"]
+    assert result.resolved_query.target_rally_names == []
+    assert result.search_plan.action_types == ["jump"]
+    assert result.search_plan.driver_names == ["Max Freeman"]
+    assert result.search_plan.driver_ids == ["driver-max-freeman"]
+    assert result.search_plan.rally_names == []
+
+
+@pytest.mark.unit
+async def test_video_action_rally_typed_person_recovers_before_rally_clarification():
+    class MisclassifiedPersonLookup(MockConversationalLookupRepo):
+        async def lookup_rallies(self, phrase, **kwargs):
+            return [
+                EntityCandidate(id="r-1", type=EntityType.RALLY, canonical_name="Unrelated Rally One", score=0.82),
+                EntityCandidate(id="r-2", type=EntityType.RALLY, canonical_name="Unrelated Rally Two", score=0.80),
+            ]
+
+    raw = "show me jump highlights featuring max freeman"
+    provider = MockProvider(
+        ProviderConfig(provider="mock", model="mock-parser-v1"),
+        responses={
+            raw: '{"intent":"SEARCH_VIDEO_ACTIONS","actionTypes":["jump"],'
+                 '"driverNames":[],"rallyNames":["max freeman"],'
+                 '"stageNames":[],"personRole":"DRIVER"}'
+        },
+    )
+    service = ConversationalSearchService(
+        query_parser=QueryUnderstandingService(provider),
+        entity_resolver=DatabaseEntityResolver(repository=MisclassifiedPersonLookup()),
+        repository=MockSearchRepo(),
+    )
+
+    _, result = await service.search(raw)
+
+    assert result.is_success
+    assert result.resolved_query.driver_names == ["Max Freeman"]
+    assert result.resolved_query.driver_ids == ["driver-max-freeman"]
+    assert result.search_plan.rally_names == []
+
+
+@pytest.mark.unit
 async def test_special_response_advances_generation_without_committing(conversational_service):
     session = SearchConversationSession()
     updated, result = await conversational_service.search("Hello!", session=session)
@@ -406,11 +499,12 @@ def test_committed_referent_ids_bypass_open_set_reresolution():
         last_winner="Josh Moffett",
         last_winner_driver_id="driver-101",
     )
-    resolution_query, rallies, drivers, driver_ids = (
+    resolution_query, rallies, rally_ids, drivers, driver_ids = (
         ConversationalSearchService._reuse_committed_referent_ids(query, referents)
     )
     assert resolution_query.target_rally_names == []
     assert resolution_query.driver_names == []
     assert rallies == ["Donegal International Rally 2025"]
+    assert rally_ids == ["event-2025"]
     assert drivers == ["Josh Moffett"]
     assert driver_ids == ["driver-101"]

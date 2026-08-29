@@ -9,6 +9,7 @@ import 'package:ai_rally_search/models/search_results.dart';
 import 'package:ai_rally_search/models/video_action.dart';
 import 'package:ai_rally_search/screens/general_search_screen.dart';
 import 'package:ai_rally_search/services/llm/entity_resolution/database_entity_resolver.dart';
+import 'package:ai_rally_search/services/llm/entity_resolution/entity_resolver.dart';
 import 'package:ai_rally_search/services/llm/entity_resolution/entity_lookup_repository.dart';
 import 'package:ai_rally_search/services/llm/natural_language_search_service.dart';
 import 'package:ai_rally_search/services/llm/llm_provider_config.dart';
@@ -132,6 +133,54 @@ class ControlledLlmQueryParser implements LlmQueryParser {
 
   void complete(String text, SearchQuery query) {
     requests[text]!.complete(QueryParseResult(query: query));
+  }
+}
+
+class ClarificationParser implements LlmQueryParser {
+  int calls = 0;
+
+  @override
+  LlmProvider get provider => LlmProvider.mock;
+
+  @override
+  Future<QueryParseResult> parse(
+    String userQuery, {
+    SearchContext? context,
+  }) async {
+    calls++;
+    return const QueryParseResult(
+      query: SearchQuery(
+        intent: SearchIntent.searchVideoActions,
+        actionTypes: ['jump'],
+        rallyNames: ['Rally Ireland'],
+        driverNames: ['karl martin'],
+      ),
+    );
+  }
+}
+
+class PersonClarificationResolver implements EntityResolver {
+  @override
+  Future<EntityResolutionResult> resolve(
+    SearchQuery query, {
+    SearchContext? context,
+  }) async {
+    return EntityResolutionResult.clarification(
+      parsedQuery: query,
+      clarificationQuestion: 'Which person do you mean?',
+      candidates: const [
+        EntityCandidate(
+          id: 'person-carlos-martins',
+          type: EntityType.driver,
+          canonicalName: 'Carlos Martins',
+        ),
+        EntityCandidate(
+          id: 'person-craig-martin',
+          type: EntityType.driver,
+          canonicalName: 'Craig Martin',
+        ),
+      ],
+    );
   }
 }
 
@@ -513,6 +562,46 @@ void main() {
       expect(find.text('Rally France 2026'), findsOneWidget);
       expect(find.text('Rally Germany 2026'), findsNothing);
     });
+
+    testWidgets(
+      'clarification chip preserves pending video action query without another LLM call',
+      (tester) async {
+        final repository = FakeSearchRepository();
+        final parser = ClarificationParser();
+        final service = NaturalLanguageSearchService(
+          parser: parser,
+          entityResolver: PersonClarificationResolver(),
+          repository: repository,
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: GeneralSearchScreen(
+              repository: repository,
+              nlSearchService: service,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byType(TextField).first,
+          'show me jump highlights from karl martin from rally ireland',
+        );
+        await tester.tap(find.text('Search'));
+        await tester.pumpAndSettle();
+        expect(find.text('Carlos Martins'), findsOneWidget);
+
+        await tester.tap(find.text('Carlos Martins'));
+        await tester.pumpAndSettle();
+
+        expect(parser.calls, 1);
+        expect(repository.lastQuery!.intent, SearchIntent.searchVideoActions);
+        expect(repository.lastQuery!.actionTypes, ['jump']);
+        expect(repository.lastQuery!.rallyNames, ['Rally Ireland']);
+        expect(repository.lastQuery!.driverNames, ['Carlos Martins']);
+        expect(repository.lastQuery!.driverIds, ['person-carlos-martins']);
+      },
+    );
 
     testWidgets('clearing input invalidates an in-flight response', (
       tester,

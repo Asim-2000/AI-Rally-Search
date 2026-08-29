@@ -111,14 +111,23 @@ class DatabaseEntityResolver:
         # Empty entity recovery: if no entity fields were populated, check context/routing for unresolved mentions
         if not raw_rallies and not query.driver_names and not query.stage_names and not query.cities:
             unresolved = []
+            routing_plan = None
             if isinstance(context, dict):
                 unresolved = context.get("unresolved_mentions", [])
+                routing_plan = context.get("routing_plan")
             elif hasattr(context, "extra") and isinstance(context.extra, dict):
                 unresolved = context.extra.get("unresolved_mentions", [])
+                routing_plan = context.extra.get("routing_plan")
             elif hasattr(context, "unresolved_mentions"):
                 unresolved = getattr(context, "unresolved_mentions", [])
+            rally_mentions = {
+                str(route.raw_value)
+                for route in getattr(routing_plan, "entity_routes", [])
+                if route.field_name == "unresolved_text"
+                and route.entity_type == SearchEntityType.RALLY
+            }
             for mention in unresolved:
-                if mention and mention.strip():
+                if mention and mention.strip() and mention.strip() in rally_mentions:
                     raw_rallies.append(mention.strip())
 
         if raw_rallies:
@@ -152,7 +161,7 @@ class DatabaseEntityResolver:
                     )
                 )
                 if (
-                    (rally_res.resolved_candidate is None or (rally_res.strategy == "plausible_candidates" and rally_res.confidence < 0.60))
+                    (rally_res.resolved_candidate is None or rally_res.is_ambiguous)
                     and can_recover_person
                     and not query.driver_names
                 ):

@@ -12,7 +12,7 @@ from ..domain.search_plan import SearchPlan
 from ..domain.search_intent import SearchIntent
 from ..domain.search_query import SearchQuery
 from ..domain.summary import generate_interpreted_summary
-from ..entity_search.models import EntityCandidate, EntityResolution
+from ..entity_search.models import EntityCandidate, EntityResolution, SearchEntityType
 from ..entity_search.resolver import DatabaseEntityResolver
 from ..query_understanding.context import SearchContext
 from ..query_understanding.service import QueryUnderstandingService
@@ -143,14 +143,15 @@ class ConversationalSearchService:
     def _reuse_committed_referent_ids(
         query: SearchQuery,
         referents: ResultReferentContext,
-    ) -> tuple[SearchQuery, list[str], list[str], list[str]]:
+    ) -> tuple[SearchQuery, list[str], list[str], list[str], list[str]]:
         """Remove already-canonical session referents from open-set resolution.
 
-        Returns the query to resolve plus trusted rally names, driver names and
-        driver IDs to restore afterward. This is a PY-4 conversation concern;
+        Returns the query to resolve plus trusted rally names and IDs, driver
+        names and IDs to restore afterward. This is a PY-4 conversation concern;
         PY-2 scoring remains unchanged.
         """
         trusted_rallies: list[str] = []
+        trusted_rally_ids: list[str] = []
         trusted_drivers: list[str] = []
         trusted_driver_ids: list[str] = []
         unresolved_rallies: list[str] = []
@@ -163,6 +164,7 @@ class ConversationalSearchService:
                 and name.casefold() == referents.active_rally.casefold()
             ):
                 trusted_rallies.append(name)
+                trusted_rally_ids.append(referents.active_rally_id)
             else:
                 unresolved_rallies.append(name)
 
@@ -192,7 +194,7 @@ class ConversationalSearchService:
             "driver_names": unresolved_drivers,
             "driver_ids": [],
         })
-        return resolution_query, trusted_rallies, trusted_drivers, trusted_driver_ids
+        return resolution_query, trusted_rallies, trusted_rally_ids, trusted_drivers, trusted_driver_ids
 
     async def search(
         self,
@@ -293,16 +295,57 @@ class ConversationalSearchService:
         candidates: list[EntityCandidate] = []
         resolutions: dict[str, EntityResolution] = {}
         er_ms = 0.0
+        trusted_rally_ids: list[str] = []
 
         # Step 2: Intent & Resolution Routing
         routing_plan = self.router.route(parsed_query, raw_text=clean)
         search_context.extra["routing_plan"] = routing_plan
         search_context.extra["unresolved_mentions"] = routing_plan.unresolved_text_mentions
 
+        # Materialize typed residual recovery into the same structured fields
+        # used by explicit QU output. This keeps resolver lookup type aligned
+        # with the router instead of implicitly treating every residual as a rally.
+        residual_updates: dict[str, list[str]] = {}
+        for route in routing_plan.entity_routes:
+            if route.field_name != "unresolved_text":
+                continue
+            if route.entity_type == SearchEntityType.PERSON:
+                residual_updates.setdefault("driver_names", []).append(str(route.raw_value))
+            elif route.entity_type == SearchEntityType.RALLY:
+                residual_updates.setdefault("rally_names", []).append(str(route.raw_value))
+            elif route.entity_type == SearchEntityType.STAGE:
+                residual_updates.setdefault("stage_names", []).append(str(route.raw_value))
+            elif route.entity_type == SearchEntityType.UPLOADER:
+                residual_updates.setdefault("uploaders", []).append(str(route.raw_value))
+        if residual_updates:
+            parsed_query = parsed_query.model_copy(update={
+                field: [*getattr(parsed_query, field), *values]
+                for field, values in residual_updates.items()
+            })
+        ambiguous_residuals = [
+            str(route.raw_value)
+            for route in routing_plan.entity_routes
+            if route.field_name == "unresolved_text" and route.entity_type is None
+        ]
+        if ambiguous_residuals:
+            elapsed = (time.perf_counter() - started) * 1000
+            return request_session, ConversationalSearchResult(
+                parsed_query=parsed_query,
+                routing_plan=routing_plan,
+                requires_clarification=True,
+                clarification_question=(
+                    f'Is "{ambiguous_residuals[0]}" a rally, person, stage, or uploader?'
+                ),
+                neutralized_temporal_filters=neutralized_temporal_filters,
+                referents=request_session.referents,
+                parse_latency_ms=parse_ms,
+                total_latency_ms=elapsed,
+            )
+
         # Step 3: Deterministic Entity Resolution
         if self.entity_resolver is not None:
             er_start = time.perf_counter()
-            resolution_query, trusted_rallies, trusted_drivers, trusted_driver_ids = (
+            resolution_query, trusted_rallies, trusted_rally_ids, trusted_drivers, trusted_driver_ids = (
                 self._reuse_committed_referent_ids(parsed_query, request_session.referents)
             )
             resolution_result = await self.entity_resolver.resolve(
@@ -354,6 +397,10 @@ class ConversationalSearchService:
         # Step 4: Deterministic SearchPlan Compilation & Validation
         try:
             search_plan = self.plan_builder.build(resolved_query, resolutions=resolutions)
+            if trusted_rally_ids:
+                search_plan = search_plan.model_copy(update={
+                    "event_ids": [*trusted_rally_ids, *search_plan.event_ids],
+                })
         except UnresolvedEntityError as exc:
             elapsed = (time.perf_counter() - started) * 1000
             result = ConversationalSearchResult(

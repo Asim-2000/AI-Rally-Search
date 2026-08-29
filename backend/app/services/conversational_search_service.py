@@ -319,6 +319,7 @@ class ConversationalSearchService:
             parsed_query=parsed_query,
             resolved_query=resolved_query,
             search_response=search_response,
+            candidates=candidates,
             interpreted_summary=summary,
             referents=derived_referents,
             resolutions=resolutions,

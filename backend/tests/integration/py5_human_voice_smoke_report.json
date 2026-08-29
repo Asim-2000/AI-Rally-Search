@@ -5,31 +5,31 @@
   "rows": [
     {
       "fixtureId": "human-smoke-001",
-      "transcript": "Drivers that participated in Alex Newell",
+      "transcript": "Drivers that participated in Aleut's narrative.",
       "expectedCanonicalName": "Rally Al\u016bksne 2026",
       "topCandidateId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
       "topCandidateName": "Assess Ireland International Rally of the Lakes 2026",
-      "topScore": 0.5761179271708684,
+      "topScore": 0.5489708982738395,
       "outcome": "CLARIFICATION",
       "model": "whisper-1"
     },
     {
       "fixtureId": "human-smoke-002",
-      "transcript": "Raleigh's in Alusna",
+      "transcript": "Raleigh is an Aleutian name.",
       "expectedCanonicalName": null,
-      "topCandidateId": "e798cea6-b66b-451b-93e0-44c3ec61c641",
-      "topCandidateName": "Race & Rally Stages 2026",
-      "topScore": 0.5544940476190476,
+      "topCandidateId": "92893879-1718-4e95-9e61-59a6d51fa1ef",
+      "topCandidateName": "Rally Internazionale Golfo dell'Asinara 2026",
+      "topScore": 0.5995418243259323,
       "outcome": "AMBIGUOUS_NOT_SCORED",
       "model": "whisper-1"
     },
     {
       "fixtureId": "human-smoke-003",
-      "transcript": "Drivers that participated in Alex Newell",
+      "transcript": "Drivers that participated in Aleut's narrative.",
       "expectedCanonicalName": "Rally Al\u016bksne 2026",
       "topCandidateId": "1ec50ac2-9408-47ac-a650-1287568ecce2",
       "topCandidateName": "Assess Ireland International Rally of the Lakes 2026",
-      "topScore": 0.5761179271708684,
+      "topScore": 0.5489708982738395,
       "outcome": "CLARIFICATION",
       "model": "whisper-1"
     },
@@ -45,11 +45,11 @@
     },
     {
       "fixtureId": "human-smoke-005",
-      "transcript": "Raleigh Aluksne, Drivers",
+      "transcript": "rally Alusne drivers",
       "expectedCanonicalName": "Rally Al\u016bksne 2026",
       "topCandidateId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
       "topCandidateName": "Rally Al\u016bksne 2026",
-      "topScore": 0.6171720969089391,
+      "topScore": 0.7148717948717948,
       "outcome": "RESOLVED",
       "model": "whisper-1"
     }

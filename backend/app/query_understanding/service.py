@@ -59,6 +59,22 @@ class QueryUnderstandingService:
             validation_started = time.perf_counter()
             try:
                 query = validate_provider_output(last_raw)
+                if (
+                    query is not None
+                    and not query.rally_names
+                    and not query.event_names
+                    and not query.driver_names
+                    and not query.cities
+                    and not query.countries
+                    and not query.stage_names
+                    and not query.action_types
+                    and not query.years
+                ):
+                    clean_text = natural_language_query.strip()
+                    words = clean_text.split()
+                    if 1 <= len(words) <= 4 and clean_text.lower() not in {"all", "rallies", "all rallies", "results", "videos", "clips", "drivers", "top drivers", "help"}:
+                        query = query.model_copy(update={"rally_names": [clean_text]})
+
                 req_clarify = False
                 clarify_q = None
                 try:

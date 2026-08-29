@@ -605,6 +605,21 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     _executeDeterministicSearch(resetPage: true);
   }
 
+  IconData _getCandidateIcon(EntityType type) {
+    switch (type) {
+      case EntityType.driver:
+        return Icons.person_rounded;
+      case EntityType.rally:
+        return Icons.flag_rounded;
+      case EntityType.stage:
+        return Icons.alt_route_rounded;
+      case EntityType.city:
+        return Icons.location_city_rounded;
+      case EntityType.uploader:
+        return Icons.cloud_upload_rounded;
+    }
+  }
+
   void _handleSuggestionSelected(FollowUpSuggestion suggestion) {
     if (suggestion.targetQuery != null) {
       setState(() {
@@ -1502,8 +1517,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     if (_errorMessage != null) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1531,9 +1546,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     if (_searchResponse == null || _searchResponse!.results.isEmpty) {
+      final theme = Theme.of(context);
+      final availableCandidates = _lastNlResult?.candidates ?? const [];
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1545,7 +1562,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               const SizedBox(height: 16),
               Text(
                 _emptyResultsMessage ?? 'No search results found',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -1554,6 +1571,39 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),
+              if (availableCandidates.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Did you mean?',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  children: availableCandidates.map((cand) {
+                    final icon = _getCandidateIcon(cand.type);
+                    return ActionChip(
+                      avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
+                      label: Text(
+                        cand.subtitle != null
+                            ? '${cand.canonicalName} (${cand.subtitle})'
+                            : cand.canonicalName,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () => _onSelectCandidate(cand),
+                    );
+                  }).toList(),
+                ),
+              ],
               const SizedBox(height: 20),
               Wrap(
                 spacing: 8,

@@ -317,9 +317,14 @@ class DatabaseEntityResolver:
                     resolutions["city"] = city_res
 
                 if city_res.is_ambiguous:
+                    if city_res.strategy == "plausible_candidates" and city_res.candidate_options:
+                        question = f'Did you mean "{city_res.candidate_options[0].canonical_name}"?'
+                    else:
+                        question = f'Which location named "{raw_city.strip()}" do you mean?'
+
                     return EntityResolutionResult.clarification(
                         parsed_query=query,
-                        clarification_question=f'Which location named "{raw_city.strip()}" do you mean?',
+                        clarification_question=question,
                         candidates=city_res.candidate_options,
                         resolutions=resolutions,
                     )
@@ -331,10 +336,21 @@ class DatabaseEntityResolver:
 
             working_query = working_query.model_copy(update={"cities": resolved_cities})
 
+        all_candidates: list[EntityCandidate] = []
+        for res in resolutions.values():
+            if res.candidate_options:
+                for cand in res.candidate_options:
+                    if cand.id not in {c.id for c in all_candidates}:
+                        all_candidates.append(cand)
+            elif res.resolved_candidate:
+                if res.resolved_candidate.id not in {c.id for c in all_candidates}:
+                    all_candidates.append(res.resolved_candidate)
+
         return EntityResolutionResult(
             parsed_query=query,
             resolved_query=working_query,
             requires_clarification=False,
+            candidates=all_candidates,
             resolutions=resolutions,
         )
 
@@ -529,6 +545,22 @@ class DatabaseEntityResolver:
         )
 
         if not candidates:
+            if target_rally_name is None:
+                rally_matches = await self.repository.lookup_rallies(phrase, limit=5)
+                scored_rallies = self._score_candidates(phrase, rally_matches) if rally_matches else []
+                plausible = [r for r in scored_rallies if r.score >= 0.60]
+                if plausible:
+                    res = EntityResolution(
+                        type=EntityType.RALLY,
+                        raw_phrase=phrase,
+                        confidence=plausible[0].score,
+                        strategy="plausible_candidates",
+                        is_ambiguous=True,
+                        candidate_options=plausible[:5],
+                    )
+                    self._resolution_cache[cache_key] = res
+                    return res
+
             res = EntityResolution(
                 type=EntityType.CITY,
                 raw_phrase=phrase,

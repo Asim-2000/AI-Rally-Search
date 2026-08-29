@@ -58,6 +58,9 @@ CRITICAL RULES:
    - Never use world knowledge to enrich entities.
    - LINGUISTIC NORMALIZATION FOR INFLECTED PROPER PERSON NAMES:
      * In languages that grammatically inflect proper names (including Polish, Croatian, Czech, Slovak, Latvian, Lithuanian, and similar languages), recover the base / nominative form of a proper person's name when confidently possible (e.g. "Josha Moffetta" -> "Josh Moffett", "Philipem Squires" -> "Philip Squires", "Krisa Meeka" -> "Kris Meeke").
+   - UNRECOGNIZED ENTITY TERMS & TYPO PRESERVATION:
+     * When the user inputs a single word, proper noun, noisy mention, or typo (e.g. "aluqsne", "aluksnay", "donegl", "Moonraker", "Moffett") without explicit category keywords:
+     * ALWAYS preserve the exact mention in `rallyNames` (or `driverNames` if driver-oriented) so it reaches downstream OpenEntity resolution. NEVER omit or drop the term into empty filter arrays.
 
 5. GEOGRAPHIC DISCOVERY VS EVENT REFERENCES:
    - When the grammatical construction means "rallies located in X" (e.g. "Rallies in Donegal", "Rajdy w Donegal", "Rallyes à Donegal", "Reliji u Donegalu", "ڈونیگال میں ریلیز"), extract X as a geographic filter (`cities` or `countries`) rather than assuming it is a `rallyNames`.

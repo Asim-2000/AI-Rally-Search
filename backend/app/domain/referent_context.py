@@ -100,6 +100,8 @@ class ResultReferentContext(BaseModel):
         query_driver: str | None = None,
         query_rallies: list[str] | None = None,
         query_drivers: list[str] | None = None,
+        query_driver_ids: list[str] | None = None,
+        query_rally_ids: list[str] | None = None,
         query_person_role: PersonRole | None = None,
     ) -> "ResultReferentContext":
         prev = previous or cls()
@@ -125,20 +127,38 @@ class ResultReferentContext(BaseModel):
             if active_rally not in active_rallies:
                 active_rallies = [active_rally, *active_rallies]
 
+        if query_rally_ids and len(query_rally_ids) > 0 and query_rally_ids[0]:
+            active_rally_id = str(query_rally_ids[0])
+
         if query_drivers and len(query_drivers) > 0:
             active_drivers = list(query_drivers)
             active_driver = query_drivers[0]
+            # ACC-3: pin the canonical driver identity so follow-ups reuse it
+            # instead of re-resolving by fuzzy match. A new driver without a
+            # resolved id clears the previous id rather than keeping a stale one.
+            active_driver_id = (
+                str(query_driver_ids[0])
+                if query_driver_ids and query_driver_ids[0]
+                else None
+            )
         elif query_driver and query_driver.strip():
             active_driver = query_driver.strip()
             if active_driver not in active_drivers:
                 active_drivers = [active_driver, *active_drivers]
+            active_driver_id = (
+                str(query_driver_ids[0])
+                if query_driver_ids and query_driver_ids[0]
+                else None
+            )
 
         results = response.results
         if not results:
             return prev.copy_with(
                 active_rally=active_rally,
+                active_rally_id=active_rally_id,
                 active_rallies=active_rallies,
                 active_driver=active_driver,
+                active_driver_id=active_driver_id,
                 active_drivers=active_drivers,
                 active_person_role=active_person_role,
             )

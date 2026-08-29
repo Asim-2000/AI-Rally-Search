@@ -1,0 +1,18 @@
+{
+  "timestamp": "20260829_212927",
+  "purpose": "Downstream-only re-evaluation after accuracy hardening (ACC-1/2/3/4/6). Cached frozen Flash-Lite outputs replayed through current downstream code; no new paid QU run.",
+  "git_commit_HEAD": "cd2d68c5d27800e8b6b61d699ff2f3e9a2ff425a",
+  "dataset_count": 392,
+  "dataset_sha256": "b7fd39226592281c565c0e835c16b460654f43cd2da4bc09655a5abf06972662",
+  "prompt_sha256": "c82c75d4d10017478084b4c37ee0be005b910bd67cb6c45cf64452d3a2e2c09b",
+  "frozen_output_source": "benchmarks/results/full_20260829_053539/qu_raw_results.jsonl (model=gemini-3.5-flash-lite, 392 cases)",
+  "evaluator": "benchmarks/scoring/system_scoring.evaluate_system_pipeline (UNCHANGED)",
+  "qu_model": "gemini-3.5-flash-lite",
+  "qu_provider": "gemini",
+  "stt_model": "whisper-1",
+  "stt_status": "PROVISIONAL",
+  "open_entity_entities": 11245,
+  "method": "A/B via git-stash: baseline = pre-ACC working tree; current = post-ACC working tree; same evaluator/dataset/DB. Repo restored to current after measurement (net-zero change).",
+  "paid_calls": "Frozen replay: 0 LLM calls. Live validation: 26 real Gemini Flash-Lite calls (~$0.0085). No STT calls. No full 392-case paid rerun.",
+  "prompt_unchanged_vs_frozen": true
+}

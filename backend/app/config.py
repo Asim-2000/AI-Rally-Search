@@ -7,23 +7,31 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
 
+    # Pinned per-provider default models. Only the explicit
+    # QUERY_UNDERSTANDING_MODEL wins over these; there is deliberately no
+    # fallback to a stale/unbenchmarked model or to a legacy provider-specific
+    # env var (e.g. OPENAI_MODEL/GEMINI_MODEL). Gemini is pinned to the single
+    # benchmarked production model.
+    _PINNED_MODELS = {
+        "gemini": "gemini-3.5-flash-lite",
+        "google": "gemini-3.5-flash-lite",
+    }
+
     @model_validator(mode="before")
     @classmethod
     def _apply_env_fallbacks(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            provider = data.get("query_understanding_provider") or data.get("QUERY_UNDERSTANDING_PROVIDER") or data.get("llm_provider") or data.get("LLM_PROVIDER")
+            # Only the explicit QUERY_UNDERSTANDING_* variables are authoritative.
+            # Stale legacy selectors (LLM_PROVIDER / OPENAI_MODEL / GEMINI_MODEL /
+            # ANTHROPIC_MODEL) are intentionally NOT consulted for selection.
+            provider = data.get("query_understanding_provider") or data.get("QUERY_UNDERSTANDING_PROVIDER")
             if provider:
                 data.setdefault("query_understanding_provider", provider)
-                p_lower = str(provider).lower()
-                if p_lower == "openai":
-                    m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("openai_model") or data.get("OPENAI_MODEL") or "gpt-4o-mini"
-                    data.setdefault("query_understanding_model", m)
-                elif p_lower in ("gemini", "google"):
-                    m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("gemini_model") or data.get("GEMINI_MODEL") or "gemini-3.6-flash"
-                    data.setdefault("query_understanding_model", m)
-                elif p_lower == "anthropic":
-                    m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("anthropic_model") or data.get("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022"
-                    data.setdefault("query_understanding_model", m)
+                has_explicit_model = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL")
+                if not has_explicit_model:
+                    pinned = cls._PINNED_MODELS.get(str(provider).lower())
+                    if pinned:
+                        data.setdefault("query_understanding_model", pinned)
             fb = data.get("entity_search_fallback_mode") or data.get("ENTITY_SEARCH_FALLBACK_MODE")
             if fb:
                 data.setdefault("entity_search_fallback_mode", fb)
@@ -38,6 +46,10 @@ class Settings(BaseSettings):
     entity_search_fallback_mode: str = "FALLBACK"
     query_understanding_provider: str = "mock"
     query_understanding_model: str = "mock-parser-v1"
+    # The mock parser must never activate silently in production. It is only
+    # permitted when explicitly opted in (tests set this true, or construct the
+    # MockProvider directly). See _build_query_service.
+    allow_mock_query_understanding: bool = False
     query_understanding_temperature: float = 0.0
     query_understanding_timeout_seconds: float = 30.0
     query_understanding_max_retries: int = 2

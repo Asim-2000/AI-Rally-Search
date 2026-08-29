@@ -129,3 +129,20 @@ Router/OpenEntity = canonicalization
 SearchPlan = execution contract
 Repository/DB = truth
 ```
+
+## Lessons from the Python cutover + accuracy-hardening cycle
+
+1. Conversation correctness cannot depend entirely on the LLM re-emitting prior context; deterministic protections are needed as a net.
+2. Deterministic downstream recovery is most valuable when it restores facts explicitly grounded in the raw text or in trusted canonical context — never invented.
+3. Recovery must not invent semantic information; only literal, grounded values may be restored.
+4. Canonical IDs should persist across follow-ups so identity is stable turn to turn.
+5. Fuzzy re-resolution of an already-resolved identity creates avoidable drift and re-clarification risk.
+6. Strong, grounded intent cues can act as a conservative safety net when the model's intent is incompatible with the explicit request — scoped narrowly so broad searches are untouched.
+7. Valid ambiguity should beat cross-type recovery. But the rule must be graded on match *confidence*: a blanket "any ambiguous rally blocks person recovery" also blocks correct recoveries when the rally match is spurious/low-confidence. The post-hardening benchmark showed exactly this — 2 correct person recoveries became safe clarifications. Prefer gating on confidence, not the ambiguity flag alone.
+8. Safe clarification is better than wrong-confident substitution — and a lenient evaluator can score a wrong-entity execution as "success," hiding a real safety defect that a stricter rule then "regresses." Read the case traces, not just the aggregate.
+9. Zero-result is better than silently changing entity or intent.
+10. Cached model-output replay is the correct experiment for downstream-only changes; an A/B through the identical frozen evaluator isolates the pipeline's effect from model noise.
+11. Raw model accuracy and final system accuracy are different metrics and must be reported separately; the model can be frozen while system success moves.
+12. Removing the legacy production search path removes a dual-source-of-truth and a class of semantic drift; retaining it only as a test seam keeps coverage without runtime risk.
+13. Benchmark hardening must preserve historical model results rather than rewriting them — "same frozen outputs, newer pipeline changed system success from X to Y," never "the model improved."
+14. Single-turn benchmarks barely exercise conversation features; validate ACC-style conversation fixes with a dedicated multi-turn benchmark and a small live run, not only the frozen single-turn set.

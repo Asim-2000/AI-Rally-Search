@@ -13,19 +13,8 @@ import '../models/search_results.dart';
 import '../models/supported_language.dart';
 import '../models/video_action.dart';
 import '../models/speech/speech_transcription_result.dart';
-import '../services/llm/entity_resolution/database_entity_resolver.dart';
-import '../services/llm/entity_resolution/spoken_entity_resolver.dart';
-import '../services/llm/entity_resolution/entity_lookup_repository.dart';
-import '../services/entity_search/controlled_fallback_entity_resolver.dart';
-import '../services/entity_search/entity_search_lookup_adapter.dart';
-import '../services/entity_search/in_memory_entity_search_service.dart';
-import '../services/entity_search/mysql_entity_search_data_source.dart';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import '../services/llm/follow_up_suggestion_engine.dart';
 import '../services/llm/llm_query_parser.dart';
-import '../services/llm/llm_query_parser_factory.dart';
 import '../services/llm/natural_language_search_service.dart';
 import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
@@ -85,8 +74,13 @@ class GeneralSearchScreen extends StatefulWidget {
 }
 
 class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
-  late final ISearchRepository _repository;
-  late final NaturalLanguageSearchService _nlSearchService;
+  // Python FastAPI is authoritative. `_repository` is a Python-backed
+  // repository in production, or a caller-injected fake in tests; it is null
+  // only when the backend is unconfigured (a clean error is shown then).
+  late final ISearchRepository? _repository;
+  // Legacy in-app NL search is retained ONLY as a test seam and is never
+  // constructed in production.
+  late final NaturalLanguageSearchService? _nlSearchService;
   late final ISpeechToTextService _nativeSpeechService;
   late final ISpeechToTextService _cloudSpeechService;
   PythonSearchApiClient? _pythonApiClient;
@@ -136,49 +130,19 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   void initState() {
     super.initState();
     final backendConfig = SearchBackendConfig.fromEnvironment();
-    _usePythonBackend =
-        widget.pythonApiClient != null ||
-        backendConfig.backend == SearchBackend.python;
-    _pythonApiClient =
-        widget.pythonApiClient ??
-        (_usePythonBackend
-            ? PythonSearchApiClient.fromConfig(backendConfig)
-            : null);
+    // Python FastAPI is the sole authoritative search backend. There is no
+    // runtime legacy switch and no silent in-app Dart fallback: when the Python
+    // backend is unreachable/unconfigured the UI shows a clean error instead of
+    // executing the legacy engine.
+    _pythonApiClient = widget.pythonApiClient ?? backendConfig.tryCreateClient();
+    _usePythonBackend = _pythonApiClient != null;
     _repository =
         widget.repository ??
         (_pythonApiClient != null
             ? PythonSearchRepository(_pythonApiClient!)
-            : SearchRepository());
-    final parser = widget.llmParser ?? LlmQueryParserFactory.create();
-    final lookupRepo = DatabaseEntityLookupRepository();
-    final fallbackMetrics = EntitySearchFallbackMetrics();
-    final controlledResolver = ControlledFallbackEntityResolver(
-      legacyResolver: DatabaseEntityResolver(repository: lookupRepo),
-      entitySearchResolver: DatabaseEntityResolver(
-        repository: EntitySearchLookupAdapter(
-          searchService: InMemoryEntitySearchService(
-            dataSource: MySqlEntitySearchDataSource(),
-          ),
-          cityFallback: lookupRepo,
-          metrics: fallbackMetrics,
-        ),
-      ),
-      config: EntitySearchFallbackConfig.fromValue(
-        dotenv.isInitialized ? dotenv.env['ENTITY_SEARCH_FALLBACK_MODE'] : null,
-      ),
-      metrics: fallbackMetrics,
-    );
-    final resolver = SpokenEntityResolver(
-      repository: lookupRepo,
-      baseResolver: controlledResolver,
-    );
-    _nlSearchService =
-        widget.nlSearchService ??
-        NaturalLanguageSearchService(
-          parser: parser,
-          entityResolver: resolver,
-          repository: _repository,
-        );
+            : null);
+    // Legacy in-app NL search is a test-only seam; production is Python-only.
+    _nlSearchService = widget.nlSearchService;
     _nativeSpeechService = widget.nativeSpeechService ??
         widget.speechService ??
         SpeechServiceFactory.createNative();
@@ -323,15 +287,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         }
         backendSession = response.session;
         result = response.result;
-      } else if (spokenResult != null) {
-        result = await _nlSearchService.searchSpoken(
-          spokenResult,
-          context: searchContext,
-        );
+      } else if (_nlSearchService != null) {
+        // Test-only injected in-app search path.
+        result = spokenResult != null
+            ? await _nlSearchService.searchSpoken(
+                spokenResult,
+                context: searchContext,
+              )
+            : await _nlSearchService.search(queryText, context: searchContext);
       } else {
-        result = await _nlSearchService.search(
-          queryText,
-          context: searchContext,
+        // No backend configured: surface a clean error instead of any legacy
+        // fallback.
+        throw const PythonApiException(
+          'config',
+          'Search backend is not configured (PYTHON_BACKEND_BASE_URL missing).',
         );
       }
 
@@ -489,6 +458,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _emptyResultsMessage = null;
     });
 
+    final repository = _repository;
+    if (repository == null) {
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+      setState(() {
+        _errorMessage = const FriendlyResponseService().responseFor(
+          FriendlyResponseCategory.serverError,
+        );
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
       final offset = (_currentPage - 1) * _pageSize;
       final queryToExecute = _session.activeQuery.copyWith(
@@ -496,7 +477,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         offset: offset,
       );
 
-      final response = await _repository.search(queryToExecute);
+      final response = await repository.search(queryToExecute);
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
 

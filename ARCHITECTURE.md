@@ -6,6 +6,16 @@
 
 AI Rally Search separates language understanding, conversation semantics, entity resolution, execution planning, and relational execution.
 
+## Production topology
+
+The Flutter app is a client only. It owns UI, text input, voice recording, session state for the API contract, rendering, clarification selection, and networking. It does **not** own production LLM, search, entity-resolution, planning, or SQL execution — those are authoritative in the Python FastAPI backend. There is no legacy in-app search engine at runtime and no `SEARCH_BACKEND` switch; a missing/unreachable backend yields a clean error, never an in-app fallback.
+
+```text
+Flutter (client)
+  ↓ HTTPS
+Python FastAPI (authoritative for AI search)
+```
+
 ## End-to-end flow
 
 ```text
@@ -15,7 +25,7 @@ Query Understanding (`gemini-3.5-flash-lite`)
   ↓
 SearchQuery
   ↓
-Conversation Semantics
+Deterministic recovery + Conversation Semantics
   ↓
 IntentResolutionRouter
   ↓
@@ -239,6 +249,18 @@ Clarification candidate selection is deterministic: preserve the pending query a
 ## Ungrounded temporal guard
 
 `gemini-3.5-flash-lite` occasionally invented season years. Model-produced `years`, `yearFrom`, or `yearTo` must be grounded in the current raw text or valid conversation context before they can constrain execution.
+
+## Deterministic recovery and conversation protections
+
+Conversation correctness must not depend solely on the model re-emitting prior context. The pipeline applies deterministic, raw-text- and canonical-context-grounded protections between parsing and routing. Each is a general architectural principle, not a one-off:
+
+- **Grounded direct-filter recovery** — explicit direct filters (known country names, 4-digit years) present in the raw text but omitted by the model are restored. Only literal raw-text values are restored; nothing is inferred, correct model values are never overwritten, and a token inside a resolved entity phrase is not treated as a filter.
+- **Follow-up intent correction** — a strong grounded follow-up semantic (a video/action cue about the active rally) may override an incompatible model intent, conservatively: it only fires when the turn is clearly scoped to a rally (explicit or active referent), so broad discovery searches are untouched.
+- **Canonical identity persistence** — a confidently-resolved rally/driver keeps its canonical ID (`activeRallyId`/`activeDriverId`) across follow-ups; follow-ups reuse the ID directly instead of re-resolving by fuzzy match. A new explicit entity replaces the prior referent (and clears a stale ID).
+- **Referent before clarification** — a missing required subject consults a type-compatible active referent before clarifying (a driver referent is never used as a rally, or vice versa).
+- **Ambiguity beats cross-type recovery** — valid entity ambiguity clarifies rather than being substituted across types; cross-type PERSON recovery is permitted only on a true rally no-match.
+
+Selected clarification candidate IDs are likewise reused directly (no re-parse, no fuzzy re-resolution). Confidence thresholds are never lowered to force resolution.
 
 ## Voice
 

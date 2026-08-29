@@ -21,17 +21,17 @@ import 'friendly_response_service.dart';
 import 'llm/natural_language_search_service.dart';
 import 'llm/query_parse_result.dart';
 
-enum SearchBackend { legacy, python }
-
+/// Configuration for the Python FastAPI backend, which is the sole
+/// authoritative search backend. There is deliberately no legacy/python runtime
+/// switch: the only configuration is the backend origin URL. When it is absent
+/// the app surfaces a clean error rather than falling back to any in-app engine.
 class SearchBackendConfig {
-  final SearchBackend backend;
   final Uri? pythonBaseUrl;
   final Duration typedTimeout;
   final Duration voiceTimeout;
   final Map<String, String> headers;
 
   const SearchBackendConfig({
-    required this.backend,
     this.pythonBaseUrl,
     this.typedTimeout = const Duration(seconds: 35),
     this.voiceTimeout = const Duration(seconds: 75),
@@ -39,14 +39,27 @@ class SearchBackendConfig {
   });
 
   factory SearchBackendConfig.fromEnvironment() {
-    if (!dotenv.isInitialized) {
-      return const SearchBackendConfig(backend: SearchBackend.legacy);
-    }
-    final raw = dotenv.env['SEARCH_BACKEND']?.trim().toLowerCase();
-    final url = dotenv.env['PYTHON_BACKEND_BASE_URL']?.trim();
+    final url = dotenv.isInitialized
+        ? dotenv.env['PYTHON_BACKEND_BASE_URL']?.trim()
+        : null;
     return SearchBackendConfig(
-      backend: raw == 'python' ? SearchBackend.python : SearchBackend.legacy,
-      pythonBaseUrl: url == null || url.isEmpty ? null : Uri.parse(url),
+      pythonBaseUrl: (url == null || url.isEmpty) ? null : Uri.parse(url),
+    );
+  }
+
+  bool get hasPythonBackend => pythonBaseUrl != null;
+
+  /// Builds a client when a backend URL is configured, otherwise returns null
+  /// so the caller can present a clean configuration error.
+  PythonSearchApiClient? tryCreateClient({http.Client? httpClient}) {
+    final base = pythonBaseUrl;
+    if (base == null) return null;
+    return PythonSearchApiClient(
+      baseUrl: base,
+      httpClient: httpClient,
+      typedTimeout: typedTimeout,
+      voiceTimeout: voiceTimeout,
+      headers: headers,
     );
   }
 }

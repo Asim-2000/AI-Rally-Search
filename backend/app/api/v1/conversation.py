@@ -37,6 +37,26 @@ class ConversationSearchResponse(BaseModel):
 
 def _build_query_service(settings: Settings) -> QueryUnderstandingService:
     name = settings.query_understanding_provider.lower()
+
+    provider_types = {
+        "openai": OpenAIProvider,
+        "gemini": GeminiProvider,
+        "google": GeminiProvider,
+        "anthropic": AnthropicProvider,
+        "mock": MockProvider,
+    }
+    if name not in provider_types:
+        raise ValueError(f"unsupported query understanding provider: {name!r}")
+
+    # The mock parser must never activate silently in production. It is only
+    # allowed when explicitly opted in via ALLOW_MOCK_QUERY_UNDERSTANDING.
+    if name == "mock" and not settings.allow_mock_query_understanding:
+        raise ValueError(
+            "Query understanding provider is 'mock', which is not permitted in "
+            "production. Set QUERY_UNDERSTANDING_PROVIDER to a real provider "
+            "(e.g. 'gemini'), or set ALLOW_MOCK_QUERY_UNDERSTANDING=true for tests."
+        )
+
     secrets = {
         "openai": settings.openai_api_key,
         "gemini": settings.gemini_api_key,
@@ -49,24 +69,29 @@ def _build_query_service(settings: Settings) -> QueryUnderstandingService:
         "google": settings.gemini_base_url,
         "anthropic": settings.anthropic_base_url,
     }
+
+    api_key = None
+    if name in secrets:
+        secret = secrets[name]
+        api_key = secret.get_secret_value() if secret else None
+        # Fail fast on a real provider that has no API key, rather than
+        # surfacing an opaque error at the first request.
+        if not api_key:
+            env_var = "GEMINI_API_KEY" if name in ("gemini", "google") else f"{name.upper()}_API_KEY"
+            raise ValueError(
+                f"Query understanding provider is {name!r} but {env_var} is "
+                "missing. Provide the API key or change the provider."
+            )
+
     config = ProviderConfig(
         provider=name,
         model=settings.query_understanding_model,
-        api_key=secrets[name].get_secret_value() if name in secrets and secrets[name] else None,
+        api_key=api_key,
         base_url=urls.get(name),
         temperature=settings.query_understanding_temperature,
         timeout_seconds=settings.query_understanding_timeout_seconds,
         max_retries=settings.query_understanding_max_retries,
     )
-    provider_types = {
-        "openai": OpenAIProvider,
-        "gemini": GeminiProvider,
-        "google": GeminiProvider,
-        "anthropic": AnthropicProvider,
-        "mock": MockProvider,
-    }
-    if name not in provider_types:
-        raise ValueError(f"unsupported query understanding provider: {name}")
     return QueryUnderstandingService(provider_types[name](config))
 
 

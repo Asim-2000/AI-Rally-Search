@@ -1,0 +1,14 @@
+{
+  "label": "previous",
+  "model": "gemini-3.5-flash-lite",
+  "total": 392,
+  "system_success": 314,
+  "system_success_pct": 0.801,
+  "false_confident": 0,
+  "correct_clarification": 25,
+  "correct_no_match": 0,
+  "p_success_given_exact": 0.8452,
+  "exact_n": 252,
+  "p_success_given_intent": 0.8127,
+  "p_success_given_f1_ge_095": 0.8398
+}

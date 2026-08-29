@@ -160,8 +160,13 @@ class DatabaseEntityResolver:
                         or capability.allowed_recovery_transitions.get(SearchEntityType.RALLY) == SearchEntityType.PERSON
                     )
                 )
+                # ACC-6: cross-type PERSON recovery is only allowed on a TRUE
+                # rally no-match. If the rally phrase is genuinely ambiguous
+                # (e.g. multiple editions), a correct RALLY clarification must
+                # win rather than being silently hijacked into a person search.
                 if (
-                    (rally_res.resolved_candidate is None or rally_res.is_ambiguous)
+                    rally_res.resolved_candidate is None
+                    and not rally_res.is_ambiguous
                     and can_recover_person
                     and not query.driver_names
                 ):

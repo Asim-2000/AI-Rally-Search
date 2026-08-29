@@ -20,6 +20,35 @@ from ..repositories.search_repository import SearchRepository
 from .search_plan_builder import SearchPlanBuilder, SearchPlanError, UnresolvedEntityError
 from .special_query import match_special_query
 
+# Deterministic direct-filter recovery (ACC-2). Canonical country names present
+# in the dataset gazetteer (repositories/sql.py COUNTRIES). Only full names are
+# used so that a stray two-letter token cannot be mistaken for a country.
+_RECOVERABLE_COUNTRIES: dict[str, str] = {
+    "ireland": "Ireland", "portugal": "Portugal", "united kingdom": "United Kingdom",
+    "france": "France", "austria": "Austria", "norway": "Norway", "poland": "Poland",
+    "belgium": "Belgium", "spain": "Spain", "italy": "Italy", "latvia": "Latvia",
+    "czech republic": "Czech Republic", "germany": "Germany", "kenya": "Kenya",
+    "croatia": "Croatia", "netherlands": "Netherlands", "new zealand": "New Zealand",
+    "lithuania": "Lithuania", "slovakia": "Slovakia", "qatar": "Qatar",
+    "pakistan": "Pakistan", "barbados": "Barbados", "sweden": "Sweden",
+    "finland": "Finland", "estonia": "Estonia",
+}
+
+# Follow-up video/action intent recovery cues (ACC-1).
+_VIDEO_INTENT_CUES: frozenset[str] = frozenset({
+    "video", "videos", "footage", "clip", "clips",
+    "highlight", "highlights", "moment", "moments",
+})
+# Raw action cue token -> canonical action taxonomy value.
+_ACTION_INTENT_CUES: dict[str, str] = {
+    "jump": "jump", "jumps": "jump", "jumping": "jump", "jumped": "jump",
+    "crash": "crash", "crashes": "crash", "crashing": "crash", "crashed": "crash",
+    "drift": "drift", "drifts": "drift", "drifting": "drift", "drifted": "drift",
+    "spin": "spin", "spins": "spin", "spinning": "spin", "spun": "spin",
+    "donut": "donut", "donuts": "donut",
+    "roll": "roll", "rolls": "roll", "rolling": "roll", "rolled": "roll",
+}
+
 
 class ConversationalSearchResult(BaseModel):
     """Complete result of a multi-turn natural language search turn,
@@ -123,6 +152,138 @@ class ConversationalSearchService:
             "year_from": year_from,
             "year_to": year_to,
         }), removed
+
+    @staticmethod
+    def _recover_grounded_direct_filters(
+        query: SearchQuery,
+        raw_text: str,
+    ) -> SearchQuery:
+        """ACC-2: re-attach direct filters the model dropped but that are
+        explicitly grounded in the raw text (known country names, 4-digit years).
+
+        Rules: only ADD, never overwrite correct model values; deduplicate; never
+        treat a token as a country when it is part of an already-extracted entity
+        phrase; never treat a year embedded in an entity phrase as a filter.
+        """
+        lowered = raw_text.lower()
+        updates: dict[str, Any] = {}
+
+        # Entity phrases already present; used to avoid double-counting tokens
+        # that belong to a resolved/extracted entity (e.g. "Rally Ireland").
+        entity_blob = " ".join(
+            p.lower()
+            for p in (
+                *query.rally_names, *query.event_names,
+                *query.driver_names, *query.stage_names,
+            )
+        )
+
+        # --- Countries ---
+        existing_countries = {c.strip().lower() for c in query.countries}
+        recovered_countries: list[str] = []
+        # Longer phrases first so "czech republic" wins over "czech".
+        for phrase in sorted(_RECOVERABLE_COUNTRIES, key=len, reverse=True):
+            if re.search(rf"\b{re.escape(phrase)}\b", lowered) and phrase not in entity_blob:
+                canonical = _RECOVERABLE_COUNTRIES[phrase]
+                if canonical.lower() not in existing_countries:
+                    existing_countries.add(canonical.lower())
+                    recovered_countries.append(canonical)
+        if recovered_countries:
+            updates["countries"] = [*query.countries, *recovered_countries]
+
+        # --- Years --- only recover when the model produced no temporal fields
+        # at all, so we never fight edition years or model-provided ranges.
+        if not query.years and query.year_from is None and query.year_to is None:
+            raw_years = [
+                int(v) for v in re.findall(r"(?<!\d)(?:19|20)\d{2}(?!\d)", raw_text)
+            ]
+            recovered_years: list[int] = []
+            for yr in raw_years:
+                if str(yr) in entity_blob:
+                    continue  # part of an entity phrase (e.g. an edition year)
+                if yr not in recovered_years:
+                    recovered_years.append(yr)
+            if recovered_years:
+                updates["years"] = recovered_years
+
+        if not updates:
+            return query
+        return query.model_copy(update=updates)
+
+    @staticmethod
+    def _recover_followup_video_intent(
+        query: SearchQuery,
+        raw_text: str,
+        referents: ResultReferentContext,
+    ) -> SearchQuery:
+        """ACC-1: correct a model-misclassified follow-up.
+
+        When the model returns SEARCH_RALLIES but the raw text carries a strong
+        video/action cue AND the turn is about a specific rally (explicit or the
+        active referent), route to SEARCH_VIDEO_ACTIONS. Conservative: broad rally
+        discovery like "rallies in Ireland" has no video cue and is untouched.
+        """
+        if query.intent != SearchIntent.SEARCH_RALLIES:
+            return query
+
+        tokens = set(re.findall(r"[a-z]+", raw_text.lower()))
+        action_hits = [
+            _ACTION_INTENT_CUES[t] for t in tokens if t in _ACTION_INTENT_CUES
+        ]
+        has_video_cue = bool(tokens & _VIDEO_INTENT_CUES)
+        if not action_hits and not has_video_cue and not query.action_types:
+            return query
+
+        # Only correct when the query is clearly scoped to a rally, so we never
+        # hijack a broad rally search that merely happens to mention a cue word.
+        has_rally_subject = bool(query.target_rally_names) or bool(
+            referents.active_rally and referents.active_rally.strip()
+        )
+        if not has_rally_subject:
+            return query
+
+        updates: dict[str, Any] = {"intent": SearchIntent.SEARCH_VIDEO_ACTIONS}
+        if action_hits and not query.action_types:
+            updates["action_types"] = list(dict.fromkeys(action_hits))
+        # Scope to the active rally when the model relied on a pronoun ("that
+        # rally") and omitted the rally name.
+        if not query.target_rally_names and referents.active_rally:
+            updates["rally_names"] = [referents.active_rally]
+        return query.model_copy(update=updates)
+
+    @staticmethod
+    def _apply_referent_fallback(
+        query: SearchQuery,
+        referents: ResultReferentContext,
+    ) -> SearchQuery:
+        """ACC-4: before deciding a required subject is missing, fall back to a
+        type-compatible active referent (e.g. "who won it?" reuses the active
+        rally). A driver referent is never used as a rally, or vice versa.
+        """
+        updates: dict[str, Any] = {}
+        if query.intent in {
+            SearchIntent.GET_RALLY_RESULTS,
+            SearchIntent.GET_RALLY_TOP_FINISHERS,
+        }:
+            if (
+                not query.target_rally_names
+                and not query.stage_names
+                and referents.active_rally
+                and referents.active_rally.strip()
+            ):
+                updates["rally_names"] = [referents.active_rally]
+        elif query.intent in {
+            SearchIntent.SEARCH_DRIVER_RALLIES,
+            SearchIntent.SEARCH_DRIVER_WINS,
+            SearchIntent.SEARCH_DRIVER_VIDEOS,
+        }:
+            if not query.driver_names and not query.driver_ids:
+                driver = referents.active_driver or referents.last_winner
+                if driver and driver.strip():
+                    updates["driver_names"] = [driver]
+        if not updates:
+            return query
+        return query.model_copy(update=updates)
 
     @staticmethod
     def _missing_required_subject(query: SearchQuery) -> str | None:
@@ -278,6 +439,19 @@ class ConversationalSearchService:
             parse_result.query,
             clean,
             request_session,
+        )
+        # ACC-2: re-attach direct filters the model dropped but are grounded in
+        # the raw text (known countries, explicit years).
+        parsed_query = self._recover_grounded_direct_filters(parsed_query, clean)
+        # ACC-1: correct a follow-up the model misclassified as SEARCH_RALLIES
+        # when it is clearly a video/action request about the active rally.
+        parsed_query = self._recover_followup_video_intent(
+            parsed_query, clean, request_session.referents
+        )
+        # ACC-4: reuse a type-compatible active referent before deciding a
+        # required subject is missing.
+        parsed_query = self._apply_referent_fallback(
+            parsed_query, request_session.referents
         )
         missing_subject_question = self._missing_required_subject(parsed_query)
         if missing_subject_question is not None:
@@ -479,6 +653,8 @@ class ConversationalSearchService:
             query_driver=resolved_query.driver_name,
             query_rallies=resolved_query.target_rally_names,
             query_drivers=resolved_query.driver_names,
+            query_driver_ids=resolved_query.driver_ids,
+            query_rally_ids=trusted_rally_ids,
             query_person_role=resolved_query.person_role,
         )
 

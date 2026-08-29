@@ -1,0 +1,208 @@
+{
+  "total": 22,
+  "passed": 21,
+  "failed": 1,
+  "safe_clarifications": 7,
+  "safe_no_match": 1,
+  "wrong_confident": 0,
+  "cases": [
+    {
+      "label": "typo_rally_aluqsne",
+      "category": "typo",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 1,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "typo_rally_aluksnay",
+      "category": "typo",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 1,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "typo_person_maxfreemn",
+      "category": "typo",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 9,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "edition_ambig_mayo",
+      "category": "rally_edition",
+      "expect": "CLARIFY",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "ambig_rally_donegal",
+      "category": "rally_ambig",
+      "expect": "CLARIFY",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "exact_rally_aluksne2026",
+      "category": "exact",
+      "expect": "RESOLVE",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": false,
+      "wrong_confident": false
+    },
+    {
+      "label": "partial_person_max",
+      "category": "partial_person",
+      "expect": "CLARIFY",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "exact_person_maxfreeman",
+      "category": "exact_person",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 9,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "direct_country_ireland",
+      "category": "direct",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 35,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "direct_year_2025",
+      "category": "direct",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 52,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "direct_country_year",
+      "category": "direct",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 24,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "zero_country_antarctica",
+      "category": "zero",
+      "expect": "ZERO",
+      "actual": "ZERO",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "zero_person_nobody",
+      "category": "zero",
+      "expect": "CLARIFY",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "videoactions_person",
+      "category": "multi_entity",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 9,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "videoactions_person_rally",
+      "category": "multi_entity",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 5,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "crossrecover_person_in_rally",
+      "category": "cross_type",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 9,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "acc2_crashes_ireland_2025",
+      "category": "acc2",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 574,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "acc6_ambig_rally_not_person",
+      "category": "acc6",
+      "expect": "CLARIFY",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "top_drivers_wins",
+      "category": "ranking",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 5,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "top_uploaders",
+      "category": "ranking",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 259,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "results_missing_subject",
+      "category": "missing",
+      "expect": "CLARIFY",
+      "actual": "CLARIFY",
+      "count": 0,
+      "ok": true,
+      "wrong_confident": false
+    },
+    {
+      "label": "driver_wins_moffett",
+      "category": "driver_wins",
+      "expect": "RESOLVE",
+      "actual": "RESOLVE",
+      "count": 1,
+      "ok": true,
+      "wrong_confident": false
+    }
+  ]
+}

@@ -232,10 +232,8 @@ class DatabaseEntityResolver:
                     resolved_rallies.append(rally_res.resolved_candidate.canonical_name)
                 else:
                     is_entity_required_intent = query.intent in (
-                        SearchIntent.SEARCH_VIDEO_ACTIONS,
                         SearchIntent.GET_RALLY_RESULTS,
                         SearchIntent.GET_RALLY_TOP_FINISHERS,
-                        SearchIntent.GET_TOP_UPLOADERS,
                     )
                     if is_entity_required_intent:
                         return EntityResolutionResult.failure(
@@ -455,13 +453,25 @@ class DatabaseEntityResolver:
         if cache_key in self._resolution_cache:
             return self._resolution_cache[cache_key]
 
+        phrase_year = extract_year(phrase)
+        lookup_year = phrase_year if phrase_year is not None else effective_year
+
         candidates = await self.repository.lookup_rallies(
             phrase,
-            year=effective_year,
+            year=lookup_year,
             country=effective_country,
             city=city,
             limit=35,
         )
+
+        if not candidates and lookup_year is not None:
+            candidates = await self.repository.lookup_rallies(
+                phrase,
+                year=None,
+                country=effective_country,
+                city=city,
+                limit=35,
+            )
 
         if not candidates:
             res = EntityResolution(

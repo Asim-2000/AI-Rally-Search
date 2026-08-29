@@ -1,0 +1,4 @@
+Model,TotalInputTokens,TotalOutputTokens,TotalCachedTokens,AvgCostPerQuery,CostPer1k,CostPer100k
+gpt-5.6-luna,422051,22874,420520,0.001086,1.0857,108.57
+claude-haiku-4-5,561425,8584,0,0.001511,1.5108,151.08
+claude-sonnet-5,748753,11164,0,0.024137,24.1372,2413.72

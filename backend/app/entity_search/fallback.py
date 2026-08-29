@@ -27,14 +27,19 @@ class EntitySearchFallbackConfig:
 
     @classmethod
     def from_value(cls, value: str | None) -> EntitySearchFallbackConfig:
-        if not value:
-            return cls(mode=EntitySearchFallbackMode.OFF)
+        if value is None or not value.strip():
+            return cls(mode=EntitySearchFallbackMode.FALLBACK)
         v = value.strip().lower()
         if v == "shadow":
             return cls(mode=EntitySearchFallbackMode.SHADOW)
         if v == "fallback":
             return cls(mode=EntitySearchFallbackMode.FALLBACK)
-        return cls(mode=EntitySearchFallbackMode.OFF)
+        if v == "off":
+            return cls(mode=EntitySearchFallbackMode.OFF)
+        raise ValueError(
+            f"Unsupported entity search fallback mode: '{value}'. "
+            "Supported modes are: OFF, SHADOW, FALLBACK."
+        )
 
 
 class EntityResolverProtocol(Protocol):

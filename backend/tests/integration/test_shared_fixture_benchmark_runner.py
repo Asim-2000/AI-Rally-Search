@@ -89,8 +89,8 @@ async def test_python_shared_fixture_benchmark_runner():
     reciprocal_sum_803 = 0.0
     escapes_803 = 0
 
-    for c in cases803:
-        case_id = c["caseId"]
+    for idx, c in enumerate(cases803):
+        case_id = c.get("caseId", f"case803_{idx}")
         target_id = c["targetCanonicalId"]
         target_name = c["targetCanonicalName"]
         type_ = parse_entity_type(c["entityType"])

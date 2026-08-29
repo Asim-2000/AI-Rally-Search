@@ -1,8 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Union
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
+from ..domain.search_plan import SearchPlan
 from ..domain.search_query import PersonRole, SearchQuery
+
+PlanOrQuery = Union[SearchPlan, SearchQuery]
 
 COUNTRIES = {
     "ireland": ["ireland", "ie", "irl", "republic of ireland"], "portugal": ["portugal", "pt", "prt"],
@@ -36,7 +39,7 @@ class Filters:
     def dimension(self, expressions: list[str]) -> None:
         if expressions: self.clauses.append("(" + " OR ".join(expressions) + ")")
 
-    def common(self, q: SearchQuery, ev: str = "ev", stages: bool = False) -> "Filters":
+    def common(self, q: PlanOrQuery, ev: str = "ev", stages: bool = False) -> "Filters":
         aliases: list[str] = []
         for country in q.countries:
             clean = country.lower().strip()
@@ -60,7 +63,7 @@ class Filters:
             self.dimension([f"(stg.stage_number = {self.bind(x.lower().replace('ss','').strip(), 'stage_no')} OR LOWER(stg.stage_name) LIKE {self.bind('%stage '+x.lower().replace('ss','').strip()+'%', 'stage_no_like')})" for x in q.stage_numbers])
         return self
 
-    def people(self, q: SearchQuery, dp: str = "dp", cdp: str = "cdp", el: str = "el") -> list[str]:
+    def people(self, q: PlanOrQuery, dp: str = "dp", cdp: str = "cdp", el: str = "el") -> list[str]:
         expressions = []
         for raw in q.driver_ids:
             val = self.bind(raw, "person_id")

@@ -6,6 +6,7 @@ from ..domain.conversation_reducer import reduce_turn
 from ..domain.conversation_session import SearchConversationSession
 from ..domain.referent_context import ResultReferentContext
 from ..domain.results import SearchResponse
+from ..domain.router import IntentResolutionPlan, IntentResolutionRouter
 from ..domain.search_plan import SearchPlan
 from ..domain.search_query import SearchQuery
 from ..domain.summary import generate_interpreted_summary
@@ -27,6 +28,7 @@ class ConversationalSearchResult(BaseModel):
 
     parsed_query: SearchQuery | None = Field(default=None, alias="parsedQuery")
     resolved_query: SearchQuery | None = Field(default=None, alias="resolvedQuery")
+    routing_plan: IntentResolutionPlan | None = Field(default=None, alias="routingPlan")
     search_plan: SearchPlan | None = Field(default=None, alias="searchPlan")
     search_response: SearchResponse | None = Field(default=None, alias="searchResponse")
     requires_clarification: bool = Field(default=False, alias="requiresClarification")
@@ -57,10 +59,11 @@ class ConversationalSearchService:
     """Orchestrates multi-turn conversational search:
 
     1. Parses natural-language queries into structured SearchQuery with SearchContext.
-    2. Resolves entities via DatabaseEntityResolver (PY-2).
-    3. Executes database search via SearchRepository (PY-1).
-    4. Deterministically extracts referents (ResultReferentContext).
-    5. Advances session state via deterministic reducer (SearchConversationSession).
+    2. Routes fields deterministically via IntentResolutionRouter.
+    3. Resolves entities via DatabaseEntityResolver (PY-2).
+    4. Executes database search via SearchRepository (PY-1).
+    5. Deterministically extracts referents (ResultReferentContext).
+    6. Advances session state via deterministic reducer (SearchConversationSession).
     """
 
     def __init__(
@@ -70,11 +73,13 @@ class ConversationalSearchService:
         entity_resolver: DatabaseEntityResolver | None = None,
         repository: SearchRepository | None = None,
         plan_builder: SearchPlanBuilder | None = None,
+        router: IntentResolutionRouter | None = None,
     ) -> None:
         self.query_parser = query_parser
         self.entity_resolver = entity_resolver
         self.repository = repository
         self.plan_builder = plan_builder or SearchPlanBuilder()
+        self.router = router or IntentResolutionRouter()
 
     @staticmethod
     def _reuse_committed_referent_ids(
@@ -215,7 +220,12 @@ class ConversationalSearchService:
         resolutions: dict[str, EntityResolution] = {}
         er_ms = 0.0
 
-        # Step 2: Deterministic Entity Resolution
+        # Step 2: Intent & Resolution Routing
+        routing_plan = self.router.route(parsed_query, raw_text=clean)
+        search_context.extra["routing_plan"] = routing_plan
+        search_context.extra["unresolved_mentions"] = routing_plan.unresolved_text_mentions
+
+        # Step 3: Deterministic Entity Resolution
         if self.entity_resolver is not None:
             er_start = time.perf_counter()
             resolution_query, trusted_rallies, trusted_drivers, trusted_driver_ids = (
@@ -233,6 +243,7 @@ class ConversationalSearchService:
                 elapsed = (time.perf_counter() - started) * 1000
                 result = ConversationalSearchResult(
                     parsed_query=parsed_query,
+                    routing_plan=routing_plan,
                     requires_clarification=True,
                     clarification_question=resolution_result.clarification_question or "Please clarify the entity.",
                     candidates=candidates,
@@ -248,6 +259,7 @@ class ConversationalSearchService:
                 elapsed = (time.perf_counter() - started) * 1000
                 result = ConversationalSearchResult(
                     parsed_query=parsed_query,
+                    routing_plan=routing_plan,
                     error=resolution_result.error,
                     error_code="ENTITY_RESOLUTION_FAILED",
                     referents=request_session.referents,
@@ -265,7 +277,7 @@ class ConversationalSearchService:
                 "driver_ids": [*trusted_driver_ids, *resolved_query.driver_ids],
             })
 
-        # Step 3: Deterministic SearchPlan Compilation & Validation
+        # Step 4: Deterministic SearchPlan Compilation & Validation
         try:
             search_plan = self.plan_builder.build(resolved_query, resolutions=resolutions)
         except UnresolvedEntityError as exc:
@@ -273,6 +285,7 @@ class ConversationalSearchService:
             result = ConversationalSearchResult(
                 parsed_query=parsed_query,
                 resolved_query=resolved_query,
+                routing_plan=routing_plan,
                 error=str(exc),
                 error_code="UNRESOLVED_ENTITY",
                 friendly_message="We couldn't resolve the entity mentioned in your query.",
@@ -289,6 +302,7 @@ class ConversationalSearchService:
             result = ConversationalSearchResult(
                 parsed_query=parsed_query,
                 resolved_query=resolved_query,
+                routing_plan=routing_plan,
                 error=str(exc),
                 error_code="INVALID_SEARCH_PLAN",
                 friendly_message="Invalid search parameters.",
@@ -301,7 +315,7 @@ class ConversationalSearchService:
             )
             return request_session, result
 
-        # Step 4: Deterministic Database Search via SearchPlan
+        # Step 5: Deterministic Database Search via SearchPlan
         db_ms = 0.0
         search_response: SearchResponse | None = None
         if self.repository is not None:
@@ -314,6 +328,7 @@ class ConversationalSearchService:
                 result = ConversationalSearchResult(
                     parsed_query=parsed_query,
                     resolved_query=resolved_query,
+                    routing_plan=routing_plan,
                     search_plan=search_plan,
                     error=f"Database execution error: {exc}",
                     error_code="DATABASE_ERROR",
@@ -334,7 +349,7 @@ class ConversationalSearchService:
                 offset=search_plan.offset,
             )
 
-        # Step 5: Interpret Summary and Referents
+        # Step 6: Interpret Summary and Referents
         summary = generate_interpreted_summary(resolved_query)
         derived_referents = ResultReferentContext.from_search_response(
             search_response,
@@ -346,7 +361,7 @@ class ConversationalSearchService:
             query_person_role=resolved_query.person_role,
         )
 
-        # Step 6: Advance State Machine via Pure Reducer
+        # Step 7: Advance State Machine via Pure Reducer
         updated_session = reduce_turn(
             request_session,
             query=resolved_query,
@@ -360,6 +375,7 @@ class ConversationalSearchService:
         result = ConversationalSearchResult(
             parsed_query=parsed_query,
             resolved_query=resolved_query,
+            routing_plan=routing_plan,
             search_plan=search_plan,
             search_response=search_response,
             candidates=candidates,

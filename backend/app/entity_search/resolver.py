@@ -105,7 +105,21 @@ class DatabaseEntityResolver:
         # =========================================================================
         # STEP 1: RESOLVE RALLIES / EVENTS
         # =========================================================================
-        raw_rallies = query.target_rally_names
+        raw_rallies = list(query.target_rally_names)
+
+        # Empty entity recovery: if no entity fields were populated, check context/routing for unresolved mentions
+        if not raw_rallies and not query.driver_names and not query.stage_names and not query.cities:
+            unresolved = []
+            if isinstance(context, dict):
+                unresolved = context.get("unresolved_mentions", [])
+            elif hasattr(context, "extra") and isinstance(context.extra, dict):
+                unresolved = context.extra.get("unresolved_mentions", [])
+            elif hasattr(context, "unresolved_mentions"):
+                unresolved = getattr(context, "unresolved_mentions", [])
+            for mention in unresolved:
+                if mention and mention.strip():
+                    raw_rallies.append(mention.strip())
+
         if raw_rallies:
             is_video_search = query.intent in (
                 SearchIntent.SEARCH_VIDEO_ACTIONS,
@@ -123,6 +137,64 @@ class DatabaseEntityResolver:
                     city=query.cities[0] if len(query.cities) == 1 else None,
                     is_video_search=is_video_search,
                 )
+
+                # Cross-type recovery: If rally match is weak/missing, check if it is a driver (if intent is person-capable)
+                is_person_capable_intent = query.intent in (
+                    SearchIntent.SEARCH_RALLIES,
+                    SearchIntent.SEARCH_DRIVER_RALLIES,
+                    SearchIntent.SEARCH_DRIVER_WINS,
+                    SearchIntent.SEARCH_DRIVER_VIDEOS,
+                    SearchIntent.SEARCH_VIDEO_ACTIONS,
+                    SearchIntent.GET_TOP_DRIVERS_BY_WINS,
+                )
+                if (
+                    (rally_res.resolved_candidate is None or (rally_res.strategy == "plausible_candidates" and rally_res.confidence < 0.60))
+                    and is_person_capable_intent
+                    and not query.driver_names
+                ):
+                    driver_check = await self._resolve_driver(
+                        raw_rally.strip(),
+                        year=query.years[0] if len(query.years) == 1 else None,
+                        years=query.years,
+                        person_role=query.person_role,
+                    )
+                    if driver_check.resolved_candidate is not None and driver_check.confidence >= self.min_confidence_threshold:
+                        cand = driver_check.resolved_candidate
+                        meta = cand.metadata or {}
+                        driver_id = meta.get("driverId") or meta.get("driver_id")
+                        codriver_id = meta.get("codriverId") or meta.get("codriver_id")
+                        driver_id_clean = str(driver_id).strip() if driver_id is not None and str(driver_id).strip().lower() != "null" else None
+                        codriver_id_clean = str(codriver_id).strip() if codriver_id is not None and str(codriver_id).strip().lower() != "null" else None
+
+                        match working_query.person_role:
+                            case PersonRole.DRIVER:
+                                if driver_id_clean:
+                                    resolved_driver_ids.append(driver_id_clean)
+                            case PersonRole.CO_DRIVER:
+                                if codriver_id_clean:
+                                    resolved_driver_ids.append(codriver_id_clean)
+                            case PersonRole.ANY:
+                                if driver_id_clean:
+                                    resolved_driver_ids.append(driver_id_clean)
+                                if codriver_id_clean:
+                                    resolved_driver_ids.append(codriver_id_clean)
+                                if not resolved_driver_ids:
+                                    resolved_driver_ids.append(cand.id)
+
+                        resolved_drivers.append(cand.canonical_name)
+                        resolutions[f"driver:{raw_rally}"] = driver_check
+                        resolutions["driver"] = driver_check
+                        new_intent = SearchIntent.SEARCH_DRIVER_RALLIES if working_query.intent == SearchIntent.SEARCH_RALLIES else working_query.intent
+                        working_query = working_query.model_copy(
+                            update={
+                                "intent": new_intent,
+                                "driver_names": resolved_drivers,
+                                "driver_ids": resolved_driver_ids,
+                                "rally_names": [],
+                                "event_names": [],
+                            }
+                        )
+                        continue
 
                 resolutions[f"rally:{raw_rally}"] = rally_res
                 if len(raw_rallies) == 1:
@@ -330,11 +402,16 @@ class DatabaseEntityResolver:
                     )
 
                 if city_res.resolved_candidate is not None:
-                    resolved_cities.append(city_res.resolved_candidate.canonical_name)
-                else:
+                    if city_res.resolved_candidate.type == EntityType.RALLY:
+                        resolved_rallies.append(city_res.resolved_candidate.canonical_name)
+                    else:
+                        resolved_cities.append(city_res.resolved_candidate.canonical_name)
+                elif city_res.strategy != "none":
                     resolved_cities.append(raw_city.strip())
 
-            working_query = working_query.model_copy(update={"cities": resolved_cities})
+            working_query = working_query.model_copy(
+                update={"cities": resolved_cities, "rally_names": resolved_rallies, "event_names": resolved_rallies}
+            )
 
         all_candidates: list[EntityCandidate] = []
         for res in resolutions.values():
@@ -548,18 +625,31 @@ class DatabaseEntityResolver:
             if target_rally_name is None:
                 rally_matches = await self.repository.lookup_rallies(phrase, limit=5)
                 scored_rallies = self._score_candidates(phrase, rally_matches) if rally_matches else []
-                plausible = [r for r in scored_rallies if r.score >= 0.60]
-                if plausible:
-                    res = EntityResolution(
-                        type=EntityType.RALLY,
-                        raw_phrase=phrase,
-                        confidence=plausible[0].score,
-                        strategy="plausible_candidates",
-                        is_ambiguous=True,
-                        candidate_options=plausible[:5],
-                    )
-                    self._resolution_cache[cache_key] = res
-                    return res
+                if scored_rallies:
+                    top_rally = scored_rallies[0]
+                    if top_rally.score >= self.min_confidence_threshold:
+                        if len(scored_rallies) == 1 or (top_rally.score - scored_rallies[1].score) >= self.min_score_gap:
+                            res = EntityResolution(
+                                type=EntityType.RALLY,
+                                raw_phrase=phrase,
+                                resolved_candidate=top_rally,
+                                confidence=top_rally.score,
+                                strategy="clear_winner",
+                            )
+                            self._resolution_cache[cache_key] = res
+                            return res
+                    plausible = [r for r in scored_rallies if r.score >= 0.60]
+                    if plausible:
+                        res = EntityResolution(
+                            type=EntityType.RALLY,
+                            raw_phrase=phrase,
+                            confidence=plausible[0].score,
+                            strategy="plausible_candidates",
+                            is_ambiguous=True,
+                            candidate_options=plausible[:5],
+                        )
+                        self._resolution_cache[cache_key] = res
+                        return res
 
             res = EntityResolution(
                 type=EntityType.CITY,

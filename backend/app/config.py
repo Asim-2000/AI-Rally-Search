@@ -1,6 +1,6 @@
 from functools import lru_cache
 from typing import Any
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,6 +24,9 @@ class Settings(BaseSettings):
                 elif p_lower == "anthropic":
                     m = data.get("query_understanding_model") or data.get("QUERY_UNDERSTANDING_MODEL") or data.get("anthropic_model") or data.get("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022"
                     data.setdefault("query_understanding_model", m)
+            fb = data.get("entity_search_fallback_mode") or data.get("ENTITY_SEARCH_FALLBACK_MODE")
+            if fb:
+                data.setdefault("entity_search_fallback_mode", fb)
         return data
 
     db_host: str = ""
@@ -32,6 +35,7 @@ class Settings(BaseSettings):
     db_user: str = ""
     db_password: SecretStr = SecretStr("")
     db_use_ssl: bool = False
+    entity_search_fallback_mode: str = "FALLBACK"
     query_understanding_provider: str = "mock"
     query_understanding_model: str = "mock-parser-v1"
     query_understanding_temperature: float = 0.0
@@ -48,6 +52,19 @@ class Settings(BaseSettings):
     speech_timeout_seconds: float = 30.0
     speech_dynamic_top3_enabled: bool = False
     speech_preprocessing_strategy: str = "raw"
+
+    @field_validator("entity_search_fallback_mode")
+    @classmethod
+    def _validate_fallback_mode(cls, v: str) -> str:
+        if not v:
+            return "FALLBACK"
+        clean = str(v).strip().upper()
+        if clean not in ("OFF", "SHADOW", "FALLBACK"):
+            raise ValueError(
+                f"Unsupported ENTITY_SEARCH_FALLBACK_MODE: '{v}'. "
+                "Supported modes are: OFF, SHADOW, FALLBACK."
+            )
+        return clean
 
     @property
     def database_url(self) -> str:

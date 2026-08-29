@@ -1,0 +1,1548 @@
+{
+  "runVersion": "URGENT_STT_QUALITY_BAKEOFF_V1",
+  "createdAt": "2026-08-28T20:14:16.948221+00:00",
+  "primaryCorpus": "REAL_LABELED_HUMAN_AUDIO_ONLY",
+  "fixtureManifest": "test/eval/entity_search/human_voice_smoke_manifest.json",
+  "fixtureCount": 5,
+  "syntheticPrimaryData": false,
+  "sharedConditions": {
+    "preprocessing": "RAW_NO_OP",
+    "hintsOrContext": false,
+    "aliasesAdded": false,
+    "downstream": "PY-3.1 -> PY-2 Entity Search -> resolver -> PY-1 live MySQL",
+    "queryUnderstandingProvider": "openai",
+    "queryUnderstandingModel": "gpt-4.1-mini",
+    "queryUnderstandingTemperature": 0.0
+  },
+  "models": [
+    {
+      "model": "whisper-1",
+      "status": "ACCESSIBLE",
+      "accessError": null,
+      "settings": {
+        "languageFromFixture": true,
+        "timeoutSeconds": 60,
+        "preprocessing": "RAW_NO_OP",
+        "hintsOrContext": false
+      },
+      "rows": [
+        {
+          "fixtureId": "human-smoke-001",
+          "audioFile": "test/eval/audio/human/asim1.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Aleut's narrative.",
+          "rawWordErrors": 3,
+          "rawReferenceWords": 6,
+          "wer": 0.5,
+          "normalizedWordErrors": 3,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.5,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in Aleut's narrative."
+          },
+          "sttLatencyMs": 1384.405,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 2369.97,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Rally Internazionale Golfo dell'Asinara 2026\"?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-002",
+          "audioFile": "test/eval/audio/human/asim2.wav",
+          "audioDurationMs": 4608,
+          "language": "en",
+          "entityType": "city",
+          "referenceTranscriptRaw": "rallies in aluksne",
+          "referenceTranscriptNormalized": "rallies in aluksne",
+          "transcript": "Raleigh is an Aleutian name.",
+          "rawWordErrors": 5,
+          "rawReferenceWords": 3,
+          "wer": 1.6666666666666667,
+          "normalizedWordErrors": 5,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 1.6666666666666667,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Raleigh is an Aleutian name."
+          },
+          "sttLatencyMs": 1582.634,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "SEARCH_RALLIES"
+            ],
+            "intentActual": "SEARCH_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": false,
+            "canonicalCorrect": null,
+            "expectedCanonicalIds": [],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": null,
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1522.138,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Race & Rally Stages 2026\"?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-003",
+          "audioFile": "test/eval/audio/human/asim3.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Aleut's narrative.",
+          "rawWordErrors": 3,
+          "rawReferenceWords": 6,
+          "wer": 0.5,
+          "normalizedWordErrors": 3,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.5,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in Aleut's narrative."
+          },
+          "sttLatencyMs": 1269.692,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1437.432,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Rally Internazionale Golfo dell'Asinara 2026\"?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-004",
+          "audioFile": "test/eval/audio/human/record_out.wav",
+          "audioDurationMs": 6240,
+          "language": "en",
+          "entityType": "person",
+          "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+          "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+          "transcript": "Show me all rallies in which Max Freeman participated.",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 9,
+          "wer": 0.1111111111111111,
+          "normalizedWordErrors": 0,
+          "normalizedReferenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated."
+          },
+          "sttLatencyMs": 790.915,
+          "pipeline": {
+            "outcome": "CORRECT_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_DRIVER_RALLIES"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": true,
+            "canonicalCorrect": true,
+            "expectedCanonicalIds": [
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "equivalentResolverEntityIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "observedCanonicalIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "expectedCanonicalName": "Max Freeman",
+            "observedCanonicalNames": [
+              "Max Freeman"
+            ],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [],
+              "eventNames": [],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [
+                "Max Freeman"
+              ],
+              "driverIds": [
+                "7a633b52-950e-49ef-8cab-34cd43e99366"
+              ],
+              "actionTypes": [],
+              "years": [],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 9,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 2092.378,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-005",
+          "audioFile": "test/eval/audio/human/record_out (1).wav",
+          "audioDurationMs": 4980,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "rally aluksne drivers",
+          "referenceTranscriptNormalized": "rally aluksne drivers",
+          "transcript": "Rally a Luke's name drivers",
+          "rawWordErrors": 4,
+          "rawReferenceWords": 3,
+          "wer": 1.3333333333333333,
+          "normalizedWordErrors": 4,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 1.3333333333333333,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rally a Luke's name drivers"
+          },
+          "sttLatencyMs": 1564.19,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1383.768,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Rally Alūksne 2026\"?"
+          }
+        }
+      ],
+      "aggregate": {
+        "filesAttempted": 5,
+        "filesTranscribed": 5,
+        "overallWer": 0.5925925925925926,
+        "normalizedWer": 0.5555555555555556,
+        "entityTokenAccuracy": 0.3333333333333333,
+        "entityPhraseAccuracyByType": {
+          "rally": {
+            "correct": 0,
+            "total": 3
+          },
+          "city": {
+            "correct": 0,
+            "total": 1
+          },
+          "person": {
+            "correct": 1,
+            "total": 1
+          }
+        },
+        "intentAccuracy": 0.4,
+        "canonicalAccuracy": 0.25,
+        "outcomes": {
+          "CORRECT_CONFIDENT": 1,
+          "CLARIFICATION": 4,
+          "NO_MATCH": 0,
+          "WRONG_CONFIDENT": 0
+        },
+        "averageSttLatencyMs": 1318.3672,
+        "p95SttLatencyMs": 1582.634,
+        "audioMinutes": 0.45153333333333334,
+        "estimatedCostUsd": 0.0027092,
+        "estimatedCostPerMinuteUsd": 0.006
+      }
+    },
+    {
+      "model": "gpt-4o-mini-transcribe",
+      "status": "ACCESSIBLE",
+      "accessError": null,
+      "settings": {
+        "languageFromFixture": true,
+        "timeoutSeconds": 60,
+        "preprocessing": "RAW_NO_OP",
+        "hintsOrContext": false
+      },
+      "rows": [
+        {
+          "fixtureId": "human-smoke-001",
+          "audioFile": "test/eval/audio/human/asim1.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Alex Neary.",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 6,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 2,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in Alex Neary."
+          },
+          "sttLatencyMs": 814.447,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1517.774,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Rally Alūksne 2026\"?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-002",
+          "audioFile": "test/eval/audio/human/asim2.wav",
+          "audioDurationMs": 4608,
+          "language": "en",
+          "entityType": "city",
+          "referenceTranscriptRaw": "rallies in aluksne",
+          "referenceTranscriptNormalized": "rallies in aluksne",
+          "transcript": "rallies in Olympics",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 3,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 1,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "rallies in Olympics"
+          },
+          "sttLatencyMs": 745.913,
+          "pipeline": {
+            "outcome": "WRONG_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_RALLIES"
+            ],
+            "intentActual": "SEARCH_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": false,
+            "canonicalCorrect": null,
+            "expectedCanonicalIds": [],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": null,
+            "observedCanonicalNames": [],
+            "resolvedQuery": {
+              "intent": "SEARCH_RALLIES",
+              "rallyNames": [
+                "Olympics"
+              ],
+              "eventNames": [
+                "Olympics"
+              ],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 0,
+            "dbResultIntent": "SEARCH_RALLIES",
+            "pipelineLatencyMs": 1492.994,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-003",
+          "audioFile": "test/eval/audio/human/asim3.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Alex near",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 6,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 2,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in Alex near"
+          },
+          "sttLatencyMs": 728.686,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1282.159,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Which rally event named \"Alex\" do you mean?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-004",
+          "audioFile": "test/eval/audio/human/record_out.wav",
+          "audioDurationMs": 6240,
+          "language": "en",
+          "entityType": "person",
+          "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+          "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+          "transcript": "Show me all rallies in which Max Freeman participated.",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 9,
+          "wer": 0.1111111111111111,
+          "normalizedWordErrors": 0,
+          "normalizedReferenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated."
+          },
+          "sttLatencyMs": 883.904,
+          "pipeline": {
+            "outcome": "CORRECT_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_DRIVER_RALLIES"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": true,
+            "canonicalCorrect": true,
+            "expectedCanonicalIds": [
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "equivalentResolverEntityIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "observedCanonicalIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "expectedCanonicalName": "Max Freeman",
+            "observedCanonicalNames": [
+              "Max Freeman"
+            ],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [],
+              "eventNames": [],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [
+                "Max Freeman"
+              ],
+              "driverIds": [
+                "7a633b52-950e-49ef-8cab-34cd43e99366"
+              ],
+              "actionTypes": [],
+              "years": [],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 9,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1500.132,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-005",
+          "audioFile": "test/eval/audio/human/record_out (1).wav",
+          "audioDurationMs": 4980,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "rally aluksne drivers",
+          "referenceTranscriptNormalized": "rally aluksne drivers",
+          "transcript": "رالی الپس نے ڈرائیورز",
+          "rawWordErrors": 4,
+          "rawReferenceWords": 3,
+          "wer": 1.3333333333333333,
+          "normalizedWordErrors": 4,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 1.3333333333333333,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "rally",
+              "aluksne"
+            ],
+            "observedTranscript": "رالی الپس نے ڈرائیورز"
+          },
+          "sttLatencyMs": 789.655,
+          "pipeline": {
+            "outcome": "WRONG_CONFIDENT",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [
+                "رالی الپس"
+              ],
+              "eventNames": [
+                "رالی الپس"
+              ],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [
+                2026
+              ],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 0,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1530.279,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        }
+      ],
+      "aggregate": {
+        "filesAttempted": 5,
+        "filesTranscribed": 5,
+        "overallWer": 0.37037037037037035,
+        "normalizedWer": 0.3333333333333333,
+        "entityTokenAccuracy": 0.2222222222222222,
+        "entityPhraseAccuracyByType": {
+          "rally": {
+            "correct": 0,
+            "total": 3
+          },
+          "city": {
+            "correct": 0,
+            "total": 1
+          },
+          "person": {
+            "correct": 1,
+            "total": 1
+          }
+        },
+        "intentAccuracy": 0.4,
+        "canonicalAccuracy": 0.25,
+        "outcomes": {
+        "CORRECT_CONFIDENT": 1,
+          "CLARIFICATION": 2,
+          "NO_MATCH": 0,
+        "WRONG_CONFIDENT": 2
+        },
+        "averageSttLatencyMs": 792.521,
+        "p95SttLatencyMs": 883.904,
+        "audioMinutes": 0.45153333333333334,
+        "estimatedCostUsd": 0.0013546,
+        "estimatedCostPerMinuteUsd": 0.003
+      }
+    },
+    {
+      "model": "gpt-4o-transcribe",
+      "status": "ACCESSIBLE",
+      "accessError": null,
+      "settings": {
+        "languageFromFixture": true,
+        "timeoutSeconds": 60,
+        "preprocessing": "RAW_NO_OP",
+        "hintsOrContext": false
+      },
+      "rows": [
+        {
+          "fixtureId": "human-smoke-001",
+          "audioFile": "test/eval/audio/human/asim1.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in elites narrowly.",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 6,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 2,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in elites narrowly."
+          },
+          "sttLatencyMs": 781.739,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1361.343,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Which rally event named \"Elites\" do you mean?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-002",
+          "audioFile": "test/eval/audio/human/asim2.wav",
+          "audioDurationMs": 4608,
+          "language": "en",
+          "entityType": "city",
+          "referenceTranscriptRaw": "rallies in aluksne",
+          "referenceTranscriptNormalized": "rallies in aluksne",
+          "transcript": "Rallies in Alūksne.",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 3,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 0,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": true,
+            "correctTokens": 1,
+            "totalTokens": 1,
+            "missingTokens": [],
+            "observedTranscript": "Rallies in Alūksne."
+          },
+          "sttLatencyMs": 1510.384,
+          "pipeline": {
+            "outcome": "CORRECT_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_RALLIES"
+            ],
+            "intentActual": "SEARCH_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": false,
+            "canonicalCorrect": null,
+            "expectedCanonicalIds": [],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": null,
+            "observedCanonicalNames": [],
+            "resolvedQuery": {
+              "intent": "SEARCH_RALLIES",
+              "rallyNames": [],
+              "eventNames": [],
+              "countries": [],
+              "cities": [
+                "Alūksne"
+              ],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [
+                2026
+              ],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 2,
+            "dbResultIntent": "SEARCH_RALLIES",
+            "pipelineLatencyMs": 1416.578,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-003",
+          "audioFile": "test/eval/audio/human/asim3.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Alutsne Rally.",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 6,
+          "wer": 0.16666666666666666,
+          "normalizedWordErrors": 1,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.16666666666666666,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alutsne Rally."
+          },
+          "sttLatencyMs": 784.534,
+          "pipeline": {
+            "outcome": "WRONG_CONFIDENT",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": true,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [
+              "Rally Alūksne 2026"
+            ],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [
+                "Rally Alūksne 2026"
+              ],
+              "eventNames": [
+                "Rally Alūksne 2026"
+              ],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [
+                2026
+              ],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 1,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1513.642,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-004",
+          "audioFile": "test/eval/audio/human/record_out.wav",
+          "audioDurationMs": 6240,
+          "language": "en",
+          "entityType": "person",
+          "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+          "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+          "transcript": "Show me all rallies in which Max Freemann participated.",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 9,
+          "wer": 0.2222222222222222,
+          "normalizedWordErrors": 1,
+          "normalizedReferenceWords": 9,
+          "normalizedWer": 0.1111111111111111,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "freeman"
+            ],
+            "observedTranscript": "Show me all rallies in which Max Freemann participated."
+          },
+          "sttLatencyMs": 768.403,
+          "pipeline": {
+            "outcome": "CORRECT_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_DRIVER_RALLIES"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": true,
+            "canonicalCorrect": true,
+            "expectedCanonicalIds": [
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "equivalentResolverEntityIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "observedCanonicalIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "expectedCanonicalName": "Max Freeman",
+            "observedCanonicalNames": [
+              "Max Freeman"
+            ],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [],
+              "eventNames": [],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [
+                "Max Freeman"
+              ],
+              "driverIds": [
+                "7a633b52-950e-49ef-8cab-34cd43e99366"
+              ],
+              "actionTypes": [],
+              "years": [],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 9,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1814.494,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-005",
+          "audioFile": "test/eval/audio/human/record_out (1).wav",
+          "audioDurationMs": 4980,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "rally aluksne drivers",
+          "referenceTranscriptNormalized": "rally aluksne drivers",
+          "transcript": "ریلی الوپس نے ڈرائیورز.",
+          "rawWordErrors": 4,
+          "rawReferenceWords": 3,
+          "wer": 1.3333333333333333,
+          "normalizedWordErrors": 4,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 1.3333333333333333,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "rally",
+              "aluksne"
+            ],
+            "observedTranscript": "ریلی الوپس نے ڈرائیورز."
+          },
+          "sttLatencyMs": 970.273,
+          "pipeline": {
+            "outcome": "WRONG_CONFIDENT",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [
+                "الوپس"
+              ],
+              "eventNames": [
+                "الوپس"
+              ],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [
+                2026
+              ],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 0,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1546.179,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        }
+      ],
+      "aggregate": {
+        "filesAttempted": 5,
+        "filesTranscribed": 5,
+        "overallWer": 0.37037037037037035,
+        "normalizedWer": 0.2962962962962963,
+        "entityTokenAccuracy": 0.3333333333333333,
+        "entityPhraseAccuracyByType": {
+          "rally": {
+            "correct": 0,
+            "total": 3
+          },
+          "city": {
+            "correct": 1,
+            "total": 1
+          },
+          "person": {
+            "correct": 0,
+            "total": 1
+          }
+        },
+        "intentAccuracy": 0.4,
+        "canonicalAccuracy": 0.5,
+        "outcomes": {
+          "CORRECT_CONFIDENT": 2,
+          "CLARIFICATION": 1,
+          "NO_MATCH": 0,
+          "WRONG_CONFIDENT": 2
+        },
+        "averageSttLatencyMs": 963.0666,
+        "p95SttLatencyMs": 1510.384,
+        "audioMinutes": 0.45153333333333334,
+        "estimatedCostUsd": 0.0027092,
+        "estimatedCostPerMinuteUsd": 0.006
+      }
+    },
+    {
+      "model": "gpt-transcribe",
+      "status": "ACCESSIBLE",
+      "accessError": null,
+      "settings": {
+        "languageFromFixture": true,
+        "timeoutSeconds": 60,
+        "preprocessing": "RAW_NO_OP",
+        "hintsOrContext": false
+      },
+      "rows": [
+        {
+          "fixtureId": "human-smoke-001",
+          "audioFile": "test/eval/audio/human/asim1.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Alex Nerelli.",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 6,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 2,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in Alex Nerelli."
+          },
+          "sttLatencyMs": 695.747,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1387.974,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Rally Alūksne 2026\"?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-002",
+          "audioFile": "test/eval/audio/human/asim2.wav",
+          "audioDurationMs": 4608,
+          "language": "en",
+          "entityType": "city",
+          "referenceTranscriptRaw": "rallies in aluksne",
+          "referenceTranscriptNormalized": "rallies in aluksne",
+          "transcript": "Rallies in Alytus.",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 3,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 1,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rallies in Alytus."
+          },
+          "sttLatencyMs": 935.709,
+          "pipeline": {
+            "outcome": "WRONG_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_RALLIES"
+            ],
+            "intentActual": "SEARCH_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": false,
+            "canonicalCorrect": null,
+            "expectedCanonicalIds": [],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": null,
+            "observedCanonicalNames": [],
+            "resolvedQuery": {
+              "intent": "SEARCH_RALLIES",
+              "rallyNames": [],
+              "eventNames": [],
+              "countries": [],
+              "cities": [
+                "Alytus"
+              ],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [
+                2026
+              ],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 0,
+            "dbResultIntent": "SEARCH_RALLIES",
+            "pipelineLatencyMs": 1461.117,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-003",
+          "audioFile": "test/eval/audio/human/asim3.wav",
+          "audioDurationMs": 5632,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+          "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+          "transcript": "Drivers that participated in Alex Nerelli.",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 6,
+          "wer": 0.3333333333333333,
+          "normalizedWordErrors": 2,
+          "normalizedReferenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne",
+              "rally"
+            ],
+            "observedTranscript": "Drivers that participated in Alex Nerelli."
+          },
+          "sttLatencyMs": 905.265,
+          "pipeline": {
+            "outcome": "CLARIFICATION",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": null,
+            "dbExecuted": false,
+            "dbResultCount": null,
+            "dbResultIntent": null,
+            "pipelineLatencyMs": 1419.081,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": "Did you mean \"Rally Alūksne 2026\"?"
+          }
+        },
+        {
+          "fixtureId": "human-smoke-004",
+          "audioFile": "test/eval/audio/human/record_out.wav",
+          "audioDurationMs": 6240,
+          "language": "en",
+          "entityType": "person",
+          "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+          "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+          "transcript": "Show me all rallies in which Max Freeman participated.",
+          "rawWordErrors": 1,
+          "rawReferenceWords": 9,
+          "wer": 0.1111111111111111,
+          "normalizedWordErrors": 0,
+          "normalizedReferenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated."
+          },
+          "sttLatencyMs": 679.025,
+          "pipeline": {
+            "outcome": "CORRECT_CONFIDENT",
+            "intentExpected": [
+              "SEARCH_DRIVER_RALLIES"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": true,
+            "canonicalScorable": true,
+            "canonicalCorrect": true,
+            "expectedCanonicalIds": [
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "equivalentResolverEntityIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "observedCanonicalIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+            ],
+            "expectedCanonicalName": "Max Freeman",
+            "observedCanonicalNames": [
+              "Max Freeman"
+            ],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [],
+              "eventNames": [],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [
+                "Max Freeman"
+              ],
+              "driverIds": [
+                "7a633b52-950e-49ef-8cab-34cd43e99366"
+              ],
+              "actionTypes": [],
+              "years": [],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 9,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1736.611,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        },
+        {
+          "fixtureId": "human-smoke-005",
+          "audioFile": "test/eval/audio/human/record_out (1).wav",
+          "audioDurationMs": 4980,
+          "language": "en",
+          "entityType": "rally",
+          "referenceTranscriptRaw": "rally aluksne drivers",
+          "referenceTranscriptNormalized": "rally aluksne drivers",
+          "transcript": "Rally eloops نے drivers.",
+          "rawWordErrors": 2,
+          "rawReferenceWords": 3,
+          "wer": 0.6666666666666666,
+          "normalizedWordErrors": 2,
+          "normalizedReferenceWords": 3,
+          "normalizedWer": 0.6666666666666666,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rally eloops نے drivers."
+          },
+          "sttLatencyMs": 742.391,
+          "pipeline": {
+            "outcome": "WRONG_CONFIDENT",
+            "intentExpected": [
+              "GET_RALLY_TOP_FINISHERS"
+            ],
+            "intentActual": "SEARCH_DRIVER_RALLIES",
+            "intentCorrect": false,
+            "canonicalScorable": true,
+            "canonicalCorrect": false,
+            "expectedCanonicalIds": [
+              "0cea6942-72e3-4257-a8c1-0f8148747d82"
+            ],
+            "equivalentResolverEntityIds": [],
+            "observedCanonicalIds": [],
+            "expectedCanonicalName": "Rally Alūksne 2026",
+            "observedCanonicalNames": [],
+            "resolvedQuery": {
+              "intent": "SEARCH_DRIVER_RALLIES",
+              "rallyNames": [
+                "eloops"
+              ],
+              "eventNames": [
+                "eloops"
+              ],
+              "countries": [],
+              "cities": [],
+              "stageNames": [],
+              "stageNumbers": [],
+              "driverNames": [],
+              "driverIds": [],
+              "actionTypes": [],
+              "years": [
+                2026
+              ],
+              "yearFrom": null,
+              "yearTo": null,
+              "uploaders": [],
+              "driverMatchMode": "ANY",
+              "personRole": "ANY",
+              "limit": 20,
+              "offset": 0
+            },
+            "dbExecuted": true,
+            "dbResultCount": 0,
+            "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+            "pipelineLatencyMs": 1544.234,
+            "errorCode": null,
+            "error": null,
+            "clarificationQuestion": null
+          }
+        }
+      ],
+      "aggregate": {
+        "filesAttempted": 5,
+        "filesTranscribed": 5,
+        "overallWer": 0.2962962962962963,
+        "normalizedWer": 0.25925925925925924,
+        "entityTokenAccuracy": 0.3333333333333333,
+        "entityPhraseAccuracyByType": {
+          "rally": {
+            "correct": 0,
+            "total": 3
+          },
+          "city": {
+            "correct": 0,
+            "total": 1
+          },
+          "person": {
+            "correct": 1,
+            "total": 1
+          }
+        },
+        "intentAccuracy": 0.4,
+        "canonicalAccuracy": 0.25,
+        "outcomes": {
+          "CORRECT_CONFIDENT": 1,
+          "CLARIFICATION": 2,
+          "NO_MATCH": 0,
+          "WRONG_CONFIDENT": 2
+        },
+        "averageSttLatencyMs": 791.6274,
+        "p95SttLatencyMs": 935.709,
+        "audioMinutes": 0.45153333333333334,
+        "estimatedCostUsd": 0.0020318999999999997,
+        "estimatedCostPerMinuteUsd": 0.0045
+      }
+    }
+  ],
+  "specialDiagnostics": {
+    "aluksneFixtures": [
+      "human-smoke-001",
+      "human-smoke-002",
+      "human-smoke-003",
+      "human-smoke-005"
+    ],
+    "maxFreemanFixtures": [
+      "human-smoke-004"
+    ],
+    "instruction": "See each model row's verbatim transcript and entity diagnostic."
+  },
+  "recommendation": "RAW_STT_INSUFFICIENT",
+  "pricingNote": "Static official list-price estimates; actual billing may vary.",
+  "finalModelBenchmark": "DEFERRED"
+}

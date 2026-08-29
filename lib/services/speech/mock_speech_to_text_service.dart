@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import '../../models/speech/speech_transcription_result.dart';
+import '../../models/speech/speech_transcription_context.dart';
 import '../../models/speech/spoken_audio_context.dart';
 import '../../models/speech/spoken_word_timestamp.dart';
 import '../../models/speech/transcript_hypothesis.dart';
@@ -11,8 +12,12 @@ import 'speech_to_text_service.dart';
 
 /// Mock speech recognition service for unit tests, widget tests, and CI.
 class MockSpeechToTextService implements ISpeechToTextService {
+  @override
+  SpeechTranscriptionCapabilities get transcriptionCapabilities =>
+      const SpeechTranscriptionCapabilities();
   VoiceState _currentState = VoiceState.idle;
-  final StreamController<VoiceState> _stateController = StreamController<VoiceState>.broadcast();
+  final StreamController<VoiceState> _stateController =
+      StreamController<VoiceState>.broadcast();
 
   bool permissionGranted = true;
   bool shouldFailTranscription = false;
@@ -23,6 +28,7 @@ class MockSpeechToTextService implements ISpeechToTextService {
   List<TranscriptHypothesis> mockHypotheses = [];
   List<SpokenWordTimestamp> mockWords = [];
   bool mockAttachAudioContext = false;
+  SpeechTranscriptionResult? lastDetailedResult;
 
   void Function(String text, bool isFinal)? _activeResultCallback;
   void Function(VoiceState state)? _activeStateCallback;
@@ -57,6 +63,13 @@ class MockSpeechToTextService implements ISpeechToTextService {
 
   void setTranscriptForLanguage(String languageCode, String transcript) {
     _languageTranscripts[languageCode.toLowerCase()] = transcript;
+  }
+
+  /// Emits an operating-system-style interim result for widget tests.
+  void emitPartialResult(String transcript) {
+    if (_currentState == VoiceState.listening) {
+      _activeResultCallback?.call(transcript, false);
+    }
   }
 
   void _setState(VoiceState newState) {
@@ -120,7 +133,8 @@ class MockSpeechToTextService implements ISpeechToTextService {
 
     if (shouldFailTranscription || simulatedError != null) {
       _setState(VoiceState.error);
-      final error = simulatedError ??
+      final error =
+          simulatedError ??
           const VoiceError(
             code: VoiceError.transcriptionFailed,
             message: 'Mock transcription failure',
@@ -131,7 +145,10 @@ class MockSpeechToTextService implements ISpeechToTextService {
 
     final lang = _activeLanguage ?? SupportedLanguages.defaultLanguage;
     final langCode = lang.languageCode.toLowerCase();
-    final transcript = _languageTranscripts[langCode] ?? defaultTranscript ?? 'Show rallies in 2025';
+    final transcript =
+        _languageTranscripts[langCode] ??
+        defaultTranscript ??
+        'Show rallies in 2025';
 
     _activeResultCallback?.call(transcript, true);
     _setState(VoiceState.idle);
@@ -145,7 +162,7 @@ class MockSpeechToTextService implements ISpeechToTextService {
       );
     }
 
-    return SpeechTranscriptionResult(
+    final result = SpeechTranscriptionResult(
       text: transcript,
       language: lang,
       durationMs: 1500,
@@ -153,6 +170,8 @@ class MockSpeechToTextService implements ISpeechToTextService {
       words: mockWords,
       audioContext: audioContext,
     );
+    lastDetailedResult = result;
+    return result;
   }
 
   @override
@@ -168,8 +187,14 @@ class MockSpeechToTextService implements ISpeechToTextService {
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
+    SpeechTranscriptionContext? context,
   }) async {
-    final detailed = await transcribeAudioBytesDetailed(bytes, language: language, filename: filename);
+    final detailed = await transcribeAudioBytesDetailed(
+      bytes,
+      language: language,
+      filename: filename,
+      context: context,
+    );
     return detailed?.text;
   }
 
@@ -178,12 +203,16 @@ class MockSpeechToTextService implements ISpeechToTextService {
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
+    SpeechTranscriptionContext? context,
   }) async {
     if (shouldFailTranscription || simulatedError != null) {
       return null;
     }
     final langCode = language.languageCode.toLowerCase();
-    final transcript = _languageTranscripts[langCode] ?? defaultTranscript ?? 'Show rallies in 2025';
+    final transcript =
+        _languageTranscripts[langCode] ??
+        defaultTranscript ??
+        'Show rallies in 2025';
 
     SpokenAudioContext? audioContext;
     if (mockAttachAudioContext || bytes.isNotEmpty) {
@@ -208,8 +237,9 @@ class MockSpeechToTextService implements ISpeechToTextService {
   Future<String?> transcribeAudioFile(
     dynamic file, {
     required SupportedLanguage language,
+    SpeechTranscriptionContext? context,
   }) async {
-    return transcribeAudioBytes([], language: language);
+    return transcribeAudioBytes([], language: language, context: context);
   }
 
   @override

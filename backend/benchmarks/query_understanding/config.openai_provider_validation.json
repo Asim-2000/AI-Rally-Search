@@ -1,0 +1,14 @@
+{
+  "pricing": "benchmarks/query_understanding/pricing_v1.json",
+  "models": [
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "temperature": 0.0,
+      "maxTokens": 1024,
+      "timeoutSeconds": 30,
+      "maxRetries": 2,
+      "structuredOutput": true
+    }
+  ]
+}

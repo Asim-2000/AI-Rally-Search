@@ -1,0 +1,1917 @@
+{
+  "runVersion": "STT3_AUDIO_GROUNDING_V1",
+  "createdAt": "2026-08-28T20:39:12.179478+00:00",
+  "status": "AUDIO_GROUNDING_INSUFFICIENT",
+  "model": "gpt-audio",
+  "modelAccessible": true,
+  "audioCalls": 5,
+  "productionEnabled": false,
+  "configuration": {
+    "rawEvidenceSource": "backend/tests/integration/stt2_database_context_report.json",
+    "forcedFunction": "interpret_spoken_search",
+    "pydanticValidation": true,
+    "canonicalIdsSent": false,
+    "maximumCandidatesPerEntityGroup": 3,
+    "maximumLocations": 4,
+    "fullPersonDatabaseSent": false,
+    "aliasesOrTypoRules": false,
+    "confidenceCombination": false
+  },
+  "rawAggregate": {
+    "normalizedWer": 0.25925925925925924,
+    "entityTokenAccuracy": 0.5555555555555556,
+    "entityCorrect": 1,
+    "intentAccuracy": 0.4,
+    "canonicalAccuracy": 0.25,
+    "outcomes": {
+      "CORRECT_CONFIDENT": 1,
+      "CLARIFICATION": 3,
+      "NO_MATCH": 0,
+      "WRONG_CONFIDENT": 1
+    }
+  },
+  "audioGroundingAggregateBeforeSafety": {
+    "normalizedWer": 0.18518518518518517,
+    "entityTokenAccuracy": 0.6666666666666666,
+    "entityCorrect": 2,
+    "intentAccuracy": 0.4,
+    "canonicalAccuracy": 0.5,
+    "outcomes": {
+      "CORRECT_CONFIDENT": 1,
+      "CLARIFICATION": 2,
+      "NO_MATCH": 0,
+      "WRONG_CONFIDENT": 2
+    }
+  },
+  "finalAggregateAfterSafety": {
+    "normalizedWer": 0.18518518518518517,
+    "entityTokenAccuracy": 0.6666666666666666,
+    "entityCorrect": 2,
+    "intentAccuracy": 0.4,
+    "canonicalAccuracy": 0.5,
+    "outcomes": {
+      "CORRECT_CONFIDENT": 1,
+      "CLARIFICATION": 3,
+      "NO_MATCH": 0,
+      "WRONG_CONFIDENT": 1
+    }
+  },
+  "latencyMs": {
+    "averageRawStt": 868.2286582006782,
+    "averageCandidateRetrieval": 2351.109699800145,
+    "averageGptAudio": 1674.6233752004628,
+    "p95GptAudio": 3438.7555419998534,
+    "averageTotal": 6706.219533201286,
+    "p95Total": 9611.582458001018
+  },
+  "rows": [
+    {
+      "fixtureId": "human-smoke-001",
+      "audioFile": "test/eval/audio/human/asim1.wav",
+      "reference": "drivers that participated in aluksne rally",
+      "candidateRetrieval": {
+        "latencyMs": 3207.5726250004664,
+        "candidatesWithLocalProvenance": [
+          {
+            "type": "rally",
+            "canonicalId": "92a7a836-1581-4164-8819-96254243cfc1",
+            "canonicalName": "Sligo Stages Rally 2025",
+            "score": 0.666,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "s rally"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6529809523809524,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "05b95085-b30c-4fbe-a075-175566d2252e",
+            "canonicalName": "Ireland Rally Test",
+            "score": 0.6413636363636362,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+            "canonicalName": "Alex Lee",
+            "score": 0.8615238095238095,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:9d1ef7fd-1ce7-450d-af91-8c1b969fd6cb",
+            "canonicalName": "Alex Benn",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+            "canonicalName": "Alex Hill",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b7f64da3-96ef-4e92-846f-217ded0bd4d6",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b94f488e-a154-4266-8101-84aa46dec23a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "bbaca448-1cb2-4a19-b530-be720f89872a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "15c87c5f-07a0-4666-91e3-bf921e60b04c",
+            "canonicalName": "alexpannell",
+            "score": 0.9269999999999999,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "cfedd32c-68ed-474b-9053-ac1f01a4abd7",
+            "canonicalName": "alexbcordeiro",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "909162d7-285f-471d-b280-624d04e5eb30",
+            "canonicalName": "alexkihurani",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          }
+        ],
+        "displayTermsSent": {
+          "rally_names": [
+            "Sligo Stages Rally 2025",
+            "Rally Alūksne 2026",
+            "Ireland Rally Test"
+          ],
+          "driver_names": [
+            "Alex Lee",
+            "Alex Benn",
+            "Alex Hill"
+          ],
+          "stage_names": [
+            "Aalbeke"
+          ],
+          "location_names": [
+            "Sligo",
+            "Ireland",
+            "Alūksne",
+            "Latvia"
+          ]
+        },
+        "idsSent": false
+      },
+      "raw": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2027.33,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        },
+        "sttLatencyMs": 925.7832910006982
+      },
+      "audioGrounding": {
+        "heardText": "Drivers that participated in Alex's rally.",
+        "normalizedTranscript": "Drivers that participated in Alex's rally.",
+        "rallyNames": [],
+        "driverNames": [],
+        "stageNames": [],
+        "locationNames": [],
+        "uncertainTerms": [],
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2039.471,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        },
+        "latencyMs": 3438.7555419998534,
+        "usage": {
+          "promptTokens": 368,
+          "completionTokens": 35,
+          "totalTokens": 403
+        },
+        "pydanticValidated": true
+      },
+      "safetyGate": {
+        "candidateMembershipPassed": true,
+        "resolverAcceptedTextualEntity": false,
+        "correctionTrusted": true,
+        "violations": [],
+        "fallback": null
+      },
+      "final": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2039.471,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        }
+      },
+      "totalLatencyMs": 9611.582458001018
+    },
+    {
+      "fixtureId": "human-smoke-002",
+      "audioFile": "test/eval/audio/human/asim2.wav",
+      "reference": "rallies in aluksne",
+      "candidateRetrieval": {
+        "latencyMs": 666.2675830011722,
+        "candidatesWithLocalProvenance": [
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6773015873015873,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "canonicalName": "Alina Test",
+            "score": 0.6485185185185185,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "05b95085-b30c-4fbe-a075-175566d2252e",
+            "canonicalName": "Ireland Rally Test",
+            "score": 0.6413636363636362,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:3a8a68a7-59a9-43a9-9c02-1fc95c8f3d63",
+            "canonicalName": "Lind",
+            "score": 0.7083333333333334,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:7998761a-c347-4672-b7be-470923fab4d4",
+            "canonicalName": "Inês Veiga",
+            "score": 0.6982962962962963,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:2c8cb338-8a64-4622-b1db-b9ed0dedb7b0",
+            "canonicalName": "Inês Braga",
+            "score": 0.6937037037037037,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "14c9e701-a2f3-494b-b5e4-fabaf0771702",
+            "canonicalName": "Ring 1",
+            "score": 0.661111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "4cd1dbea-02f9-46a5-a695-fba74302021c",
+            "canonicalName": "Ring 1",
+            "score": 0.661111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "05b6368d-e9ef-4f05-8668-0d68e9a22781",
+            "canonicalName": "Ring 2",
+            "score": 0.661111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "306d134a-649c-4c43-963c-8a12af070a8d",
+            "canonicalName": "inox",
+            "score": 0.7805333333333334,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "rallies in"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "674e8c18-21d8-4b88-b460-16aa175e01a0",
+            "canonicalName": "Rallytubs",
+            "score": 0.7727777777777778,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "d573d2e1-d476-4731-aa27-8878bc38be45",
+            "canonicalName": "RallyTourist",
+            "score": 0.729,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alytus"
+          }
+        ],
+        "displayTermsSent": {
+          "rally_names": [
+            "Rally Alūksne 2026",
+            "Alina Test",
+            "Ireland Rally Test"
+          ],
+          "driver_names": [
+            "Lind",
+            "Inês Veiga",
+            "Inês Braga"
+          ],
+          "stage_names": [
+            "Ring 1",
+            "Ring 2"
+          ],
+          "location_names": [
+            "Alūksne",
+            "Latvia",
+            "Islamabad",
+            "Pakistan"
+          ]
+        },
+        "idsSent": false
+      },
+      "raw": {
+        "transcript": "Rallies in Alytus.",
+        "metrics": {
+          "wordErrors": 1,
+          "referenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rallies in Alytus.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "WRONG_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_RALLIES"
+          ],
+          "intentActual": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": false,
+          "canonicalCorrect": null,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": null,
+          "observedCanonicalNames": [],
+          "resolvedQuery": {
+            "intent": "SEARCH_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [
+              "Alytus"
+            ],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 0,
+          "dbResultIntent": "SEARCH_RALLIES",
+          "pipelineLatencyMs": 1809.877,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "sttLatencyMs": 728.2643750004354
+      },
+      "audioGrounding": {
+        "heardText": "Rallies in Alytus.",
+        "normalizedTranscript": "Rallies in Alytus.",
+        "rallyNames": [],
+        "driverNames": [],
+        "stageNames": [],
+        "locationNames": [],
+        "uncertainTerms": [],
+        "metrics": {
+          "wordErrors": 1,
+          "referenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rallies in Alytus.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "WRONG_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_RALLIES"
+          ],
+          "intentActual": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": false,
+          "canonicalCorrect": null,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": null,
+          "observedCanonicalNames": [],
+          "resolvedQuery": {
+            "intent": "SEARCH_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [
+              "Alytus"
+            ],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 0,
+          "dbResultIntent": "SEARCH_RALLIES",
+          "pipelineLatencyMs": 1813.26,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "latencyMs": 1237.452209003095,
+        "usage": {
+          "promptTokens": 359,
+          "completionTokens": 46,
+          "totalTokens": 405
+        },
+        "pydanticValidated": true
+      },
+      "safetyGate": {
+        "candidateMembershipPassed": false,
+        "resolverAcceptedTextualEntity": true,
+        "correctionTrusted": false,
+        "violations": [
+          {
+            "field": "location_names",
+            "value": "Alytus"
+          }
+        ],
+        "fallback": "RAW_PATH_OR_CLARIFICATION_UNLISTED_ENTITY"
+      },
+      "final": {
+        "transcript": "Rallies in Alytus.",
+        "metrics": {
+          "wordErrors": 1,
+          "referenceWords": 3,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne",
+            "correct": false,
+            "correctTokens": 0,
+            "totalTokens": 1,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rallies in Alytus.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "SEARCH_RALLIES"
+          ],
+          "intentActual": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": false,
+          "canonicalCorrect": null,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": null,
+          "observedCanonicalNames": [],
+          "resolvedQuery": {
+            "intent": "SEARCH_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [
+              "Alytus"
+            ],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 0,
+          "dbResultIntent": "SEARCH_RALLIES",
+          "pipelineLatencyMs": 1813.26,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Please clarify the spoken entity."
+        }
+      },
+      "totalLatencyMs": 4445.244167004703
+    },
+    {
+      "fixtureId": "human-smoke-003",
+      "audioFile": "test/eval/audio/human/asim3.wav",
+      "reference": "drivers that participated in aluksne rally",
+      "candidateRetrieval": {
+        "latencyMs": 3417.6408749990514,
+        "candidatesWithLocalProvenance": [
+          {
+            "type": "rally",
+            "canonicalId": "92a7a836-1581-4164-8819-96254243cfc1",
+            "canonicalName": "Sligo Stages Rally 2025",
+            "score": 0.666,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "s rally"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6529809523809524,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "05b95085-b30c-4fbe-a075-175566d2252e",
+            "canonicalName": "Ireland Rally Test",
+            "score": 0.6413636363636362,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "in"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+            "canonicalName": "Alex Lee",
+            "score": 0.8615238095238095,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:9d1ef7fd-1ce7-450d-af91-8c1b969fd6cb",
+            "canonicalName": "Alex Benn",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+            "canonicalName": "Alex Hill",
+            "score": 0.8471666666666666,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b7f64da3-96ef-4e92-846f-217ded0bd4d6",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "b94f488e-a154-4266-8101-84aa46dec23a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "bbaca448-1cb2-4a19-b530-be720f89872a",
+            "canonicalName": "Aalbeke",
+            "score": 0.7051436507936509,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "15c87c5f-07a0-4666-91e3-bf921e60b04c",
+            "canonicalName": "alexpannell",
+            "score": 0.9269999999999999,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "cfedd32c-68ed-474b-9053-ac1f01a4abd7",
+            "canonicalName": "alexbcordeiro",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "909162d7-285f-471d-b280-624d04e5eb30",
+            "canonicalName": "alexkihurani",
+            "score": 0.9216923076923077,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "alex"
+          }
+        ],
+        "displayTermsSent": {
+          "rally_names": [
+            "Sligo Stages Rally 2025",
+            "Rally Alūksne 2026",
+            "Ireland Rally Test"
+          ],
+          "driver_names": [
+            "Alex Lee",
+            "Alex Benn",
+            "Alex Hill"
+          ],
+          "stage_names": [
+            "Aalbeke"
+          ],
+          "location_names": [
+            "Sligo",
+            "Ireland",
+            "Alūksne",
+            "Latvia"
+          ]
+        },
+        "idsSent": false
+      },
+      "raw": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 2044.576,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        },
+        "sttLatencyMs": 813.7129589995311
+      },
+      "audioGrounding": {
+        "heardText": "Drivers that participated in Alex's rally.",
+        "normalizedTranscript": "Drivers that participated in Alex's rally.",
+        "rallyNames": [],
+        "driverNames": [],
+        "stageNames": [],
+        "locationNames": [],
+        "uncertainTerms": [],
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 1831.116,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        },
+        "latencyMs": 1123.1372080001165,
+        "usage": {
+          "promptTokens": 368,
+          "completionTokens": 35,
+          "totalTokens": 403
+        },
+        "pydanticValidated": true
+      },
+      "safetyGate": {
+        "candidateMembershipPassed": true,
+        "resolverAcceptedTextualEntity": false,
+        "correctionTrusted": true,
+        "violations": [],
+        "fallback": null
+      },
+      "final": {
+        "transcript": "Drivers that participated in Alex's rally.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 6,
+          "normalizedWer": 0.3333333333333333,
+          "entity": {
+            "expectedPhrase": "aluksne rally",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Drivers that participated in Alex's rally.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 1831.116,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Which rally event named \"Alex's rally\" do you mean?"
+        }
+      },
+      "totalLatencyMs": 7185.607041998699
+    },
+    {
+      "fixtureId": "human-smoke-004",
+      "audioFile": "test/eval/audio/human/record_out.wav",
+      "reference": "show me all rallies in which max freeman participated",
+      "candidateRetrieval": {
+        "latencyMs": 2938.7945410016982,
+        "candidatesWithLocalProvenance": [
+          {
+            "type": "rally",
+            "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+            "canonicalName": "Alina Test",
+            "score": 0.7347703703703704,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "all rallies in"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "39a04c18-0c49-4749-9ce9-9fa082359edd",
+            "canonicalName": "ME Rallysport Showground Stages 2026",
+            "score": 0.7138213716108455,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "me all rallies"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "838d0839-53a9-4f3a-9c1e-ef8ef771cfe0",
+            "canonicalName": "Mayo Forestry Rally 2025",
+            "score": 0.6990555555555555,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "me"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+            "canonicalName": "Max Freeman",
+            "score": 0.95,
+            "matchedBy": [
+              "character_ngram",
+              "exact",
+              "lexical",
+              "normalized_exact",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max freeman"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:e298d112-c0ea-4e2f-926f-c97eb58c8afc",
+            "canonicalName": "Max Maier",
+            "score": 0.8299821428571428,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:5fb153fe-c524-4b0e-9456-3644003d117f",
+            "canonicalName": "Max Murray",
+            "score": 0.8188888888888889,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "c97d8811-a154-40e1-adec-b152758b5b61",
+            "canonicalName": "Home Stage",
+            "score": 0.783111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "show me"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "80d8088a-73a0-46d9-a7fe-3477838fdeb9",
+            "canonicalName": "Showground A1",
+            "score": 0.7584568764568763,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "show"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "282afdb2-59cd-496b-a433-a9ed8d249c2e",
+            "canonicalName": "Showground A2",
+            "score": 0.7584568764568763,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "show"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "e80d0e20-ede4-46bf-9841-31bc97dd4d8f",
+            "canonicalName": "MaxFreeman",
+            "score": 0.9224,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "7d75e700-00ed-42d0-8e53-58347730afa8",
+            "canonicalName": "MEW",
+            "score": 0.8411111111111111,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "me"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "234f586c-f009-4d37-a4e6-70b12525517a",
+            "canonicalName": "max0907",
+            "score": 0.8142361111111112,
+            "matchedBy": [
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "max"
+          }
+        ],
+        "displayTermsSent": {
+          "rally_names": [
+            "Alina Test",
+            "ME Rallysport Showground Stages 2026",
+            "Mayo Forestry Rally 2025"
+          ],
+          "driver_names": [
+            "Max Freeman",
+            "Max Maier",
+            "Max Murray"
+          ],
+          "stage_names": [
+            "Home Stage",
+            "Showground A1",
+            "Showground A2"
+          ],
+          "location_names": [
+            "Islamabad",
+            "Pakistan",
+            "Builth Wells",
+            "United Kingdom"
+          ]
+        },
+        "idsSent": false
+      },
+      "raw": {
+        "transcript": "Show me all rallies in which Max Freeman participated.",
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated.",
+            "allEntityTokensPresent": true
+          }
+        },
+        "pipeline": {
+          "outcome": "CORRECT_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "equivalentResolverEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "observedCanonicalIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "expectedCanonicalName": "Max Freeman",
+          "observedCanonicalNames": [
+            "Max Freeman"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "actionTypes": [],
+            "years": [],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 9,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 1858.605,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "sttLatencyMs": 890.1040830023703
+      },
+      "audioGrounding": {
+        "heardText": "Show me all rallies in which Max Freeman participated.",
+        "normalizedTranscript": "Show me all rallies in which Max Freeman participated.",
+        "rallyNames": [],
+        "driverNames": [
+          "Max Freeman"
+        ],
+        "stageNames": [],
+        "locationNames": [],
+        "uncertainTerms": [],
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated.",
+            "allEntityTokensPresent": true
+          }
+        },
+        "pipeline": {
+          "outcome": "CORRECT_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "equivalentResolverEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "observedCanonicalIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "expectedCanonicalName": "Max Freeman",
+          "observedCanonicalNames": [
+            "Max Freeman"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "actionTypes": [],
+            "years": [],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 9,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 1761.876,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "latencyMs": 1269.3005000000994,
+        "usage": {
+          "promptTokens": 386,
+          "completionTokens": 49,
+          "totalTokens": 435
+        },
+        "pydanticValidated": true
+      },
+      "safetyGate": {
+        "candidateMembershipPassed": true,
+        "resolverAcceptedTextualEntity": true,
+        "correctionTrusted": true,
+        "violations": [],
+        "fallback": null
+      },
+      "final": {
+        "transcript": "Show me all rallies in which Max Freeman participated.",
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 9,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "max freeman",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Show me all rallies in which Max Freeman participated.",
+            "allEntityTokensPresent": true
+          }
+        },
+        "pipeline": {
+          "outcome": "CORRECT_CONFIDENT",
+          "intentExpected": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "equivalentResolverEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "observedCanonicalIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87"
+          ],
+          "expectedCanonicalName": "Max Freeman",
+          "observedCanonicalNames": [
+            "Max Freeman"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [],
+            "eventNames": [],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "actionTypes": [],
+            "years": [],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 9,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 1761.876,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        }
+      },
+      "totalLatencyMs": 6860.075124004168
+    },
+    {
+      "fixtureId": "human-smoke-005",
+      "audioFile": "test/eval/audio/human/record_out (1).wav",
+      "reference": "rally aluksne drivers",
+      "candidateRetrieval": {
+        "latencyMs": 1525.2728749983362,
+        "candidatesWithLocalProvenance": [
+          {
+            "type": "rally",
+            "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+            "canonicalName": "Rally Alūksne 2026",
+            "score": 0.6769238095238095,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "85ba513d-0df3-4ce7-b952-ae54899d6531",
+            "canonicalName": "Rallye National du Pays de Fayence 2025",
+            "score": 0.6068888888888888,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "rally",
+            "canonicalId": "38912944-9809-4bfb-84a6-8980d82b06f8",
+            "canonicalName": "Raven's Rock Stages Rally 2025",
+            "score": 0.5821957671957672,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:account:1ca67bff-49a7-45dd-a01f-dcb387f67727",
+            "canonicalName": "New Driver",
+            "score": 0.711111111111111,
+            "matchedBy": [
+              "character_ngram",
+              "lexical",
+              "phonetic",
+              "token"
+            ],
+            "retrievalSpan": "نے drivers"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:2cde0fea-fb16-4f64-9ead-513df3a51f53",
+            "canonicalName": "Dries Vergote",
+            "score": 0.7106944444444445,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "person",
+            "canonicalId": "person:driver:43e5a96e-17d0-44fa-aa7e-10ef7f4a8144",
+            "canonicalName": "Dries Deprez",
+            "score": 0.6984595959595961,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "4c4e9bc3-cb29-4b91-91c8-da04441368d7",
+            "canonicalName": "Metālu Pasaule (Korneti 2)",
+            "score": 0.6020202020202021,
+            "matchedBy": [
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "50691a29-4a0f-4701-83c7-03b0740999be",
+            "canonicalName": "Callan River 1",
+            "score": 0.6013125763125764,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "stage",
+            "canonicalId": "9e81d9ce-9fb9-4639-8121-f6aa26034682",
+            "canonicalName": "Callan River 2",
+            "score": 0.6013125763125764,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "drivers"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "cdbe1bb8-a0cb-4a18-a515-948382308fa6",
+            "canonicalName": "Lopes",
+            "score": 0.6784444444444444,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "8a6f41ad-8a8e-4517-82c9-d3b8eafc496a",
+            "canonicalName": "lopxs",
+            "score": 0.6784444444444444,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          },
+          {
+            "type": "uploader",
+            "canonicalId": "f230792c-727b-446f-834e-cca0c0a2e442",
+            "canonicalName": "Alves",
+            "score": 0.6625333333333334,
+            "matchedBy": [
+              "lexical",
+              "phonetic"
+            ],
+            "retrievalSpan": "rally aloops"
+          }
+        ],
+        "displayTermsSent": {
+          "rally_names": [
+            "Rally Alūksne 2026",
+            "Rallye National du Pays de Fayence 2025",
+            "Raven's Rock Stages Rally 2025"
+          ],
+          "driver_names": [
+            "New Driver",
+            "Dries Vergote",
+            "Dries Deprez"
+          ],
+          "stage_names": [
+            "Metālu Pasaule (Korneti 2)",
+            "Callan River 1",
+            "Callan River 2"
+          ],
+          "location_names": [
+            "Alūksne",
+            "Latvia",
+            "Fayence",
+            "France"
+          ]
+        },
+        "idsSent": false
+      },
+      "raw": {
+        "transcript": "Rally aloops نے drivers.",
+        "metrics": {
+          "wordErrors": 2,
+          "referenceWords": 3,
+          "normalizedWer": 0.6666666666666666,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": false,
+            "correctTokens": 1,
+            "totalTokens": 2,
+            "missingTokens": [
+              "aluksne"
+            ],
+            "observedTranscript": "Rally aloops نے drivers.",
+            "allEntityTokensPresent": false
+          }
+        },
+        "pipeline": {
+          "outcome": "CLARIFICATION",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": false,
+          "entityMentionCorrect": false,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [],
+          "resolvedQuery": null,
+          "dbExecuted": false,
+          "dbResultCount": null,
+          "dbResultIntent": null,
+          "pipelineLatencyMs": 1742.386,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": "Did you mean \"Swift Signs & Shirts Yorkshire Dales Rally 2026\"?"
+        },
+        "sttLatencyMs": 983.2785830003559
+      },
+      "audioGrounding": {
+        "heardText": "Rally aloops نے drivers.",
+        "normalizedTranscript": "Rally Alūksne drivers.",
+        "rallyNames": [
+          "Rally Alūksne 2026"
+        ],
+        "driverNames": [],
+        "stageNames": [],
+        "locationNames": [],
+        "uncertainTerms": [
+          "aloops"
+        ],
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 3,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Rally Alūksne drivers.",
+            "allEntityTokensPresent": true
+          }
+        },
+        "pipeline": {
+          "outcome": "WRONG_CONFIDENT",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [
+            "Rally Alūksne 2026"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [
+              "Rally Alūksne 2026"
+            ],
+            "eventNames": [
+              "Rally Alūksne 2026"
+            ],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 1,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 1615.566,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        },
+        "latencyMs": 1304.4714169991494,
+        "usage": {
+          "promptTokens": 396,
+          "completionTokens": 63,
+          "totalTokens": 459
+        },
+        "pydanticValidated": true
+      },
+      "safetyGate": {
+        "candidateMembershipPassed": true,
+        "resolverAcceptedTextualEntity": true,
+        "correctionTrusted": true,
+        "violations": [],
+        "fallback": null
+      },
+      "final": {
+        "transcript": "Rally Alūksne drivers.",
+        "metrics": {
+          "wordErrors": 0,
+          "referenceWords": 3,
+          "normalizedWer": 0.0,
+          "entity": {
+            "expectedPhrase": "rally aluksne",
+            "correct": true,
+            "correctTokens": 2,
+            "totalTokens": 2,
+            "missingTokens": [],
+            "observedTranscript": "Rally Alūksne drivers.",
+            "allEntityTokensPresent": true
+          }
+        },
+        "pipeline": {
+          "outcome": "WRONG_CONFIDENT",
+          "intentExpected": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "intentActual": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "canonicalScorable": true,
+          "canonicalCorrect": true,
+          "entityMentionCorrect": true,
+          "expectedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "equivalentResolverEntityIds": [],
+          "observedCanonicalIds": [
+            "0cea6942-72e3-4257-a8c1-0f8148747d82"
+          ],
+          "expectedCanonicalName": "Rally Alūksne 2026",
+          "observedCanonicalNames": [
+            "Rally Alūksne 2026"
+          ],
+          "resolvedQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "rallyNames": [
+              "Rally Alūksne 2026"
+            ],
+            "eventNames": [
+              "Rally Alūksne 2026"
+            ],
+            "countries": [],
+            "cities": [],
+            "stageNames": [],
+            "stageNumbers": [],
+            "driverNames": [],
+            "driverIds": [],
+            "actionTypes": [],
+            "years": [
+              2026
+            ],
+            "yearFrom": null,
+            "yearTo": null,
+            "uploaders": [],
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "dbExecuted": true,
+          "dbResultCount": 1,
+          "dbResultIntent": "SEARCH_DRIVER_RALLIES",
+          "pipelineLatencyMs": 1615.566,
+          "errorCode": null,
+          "error": null,
+          "clarificationQuestion": null
+        }
+      },
+      "totalLatencyMs": 5428.588874997841
+    }
+  ],
+  "finalModelBenchmark": "NOT_RUN"
+}

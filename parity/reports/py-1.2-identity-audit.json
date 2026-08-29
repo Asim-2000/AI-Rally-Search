@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0",
+  "summary": {
+    "identities": 5,
+    "cases": 45,
+    "exact": true
+  },
+  "identities": [
+    {
+      "alias": "IDENTITY_CODRIVER_ONLY_01",
+      "category": "CODRIVER_ONLY_ACCOUNT_BACKED",
+      "driverCount": 0,
+      "codriverCount": 2,
+      "intersectionCount": 0,
+      "anyCount": 2,
+      "unionExact": true,
+      "roleIsolationExact": true,
+      "videosHaveUsableData": false,
+      "actionsHaveUsableData": false,
+      "allRuntimeCasesExact": true
+    },
+    {
+      "alias": "IDENTITY_DRIVER_ONLY_01",
+      "category": "DRIVER_ONLY_ACCOUNT_BACKED",
+      "driverCount": 9,
+      "codriverCount": 0,
+      "intersectionCount": 0,
+      "anyCount": 9,
+      "unionExact": true,
+      "roleIsolationExact": true,
+      "videosHaveUsableData": true,
+      "actionsHaveUsableData": true,
+      "allRuntimeCasesExact": true
+    },
+    {
+      "alias": "IDENTITY_DUAL_ROLE_01",
+      "category": "DUAL_ROLE_ACCOUNT_BACKED",
+      "driverCount": 5,
+      "codriverCount": 11,
+      "intersectionCount": 5,
+      "anyCount": 11,
+      "unionExact": true,
+      "roleIsolationExact": true,
+      "videosHaveUsableData": true,
+      "actionsHaveUsableData": true,
+      "allRuntimeCasesExact": true
+    },
+    {
+      "alias": "IDENTITY_NULL_CODRIVER_01",
+      "category": "NULL_ACCOUNT_CODRIVER",
+      "driverCount": 0,
+      "codriverCount": 2,
+      "intersectionCount": 0,
+      "anyCount": 2,
+      "unionExact": true,
+      "roleIsolationExact": true,
+      "videosHaveUsableData": false,
+      "actionsHaveUsableData": false,
+      "allRuntimeCasesExact": true
+    },
+    {
+      "alias": "IDENTITY_NULL_DRIVER_01",
+      "category": "NULL_ACCOUNT_DRIVER",
+      "driverCount": 1,
+      "codriverCount": 0,
+      "intersectionCount": 0,
+      "anyCount": 1,
+      "unionExact": true,
+      "roleIsolationExact": true,
+      "videosHaveUsableData": false,
+      "actionsHaveUsableData": false,
+      "allRuntimeCasesExact": true
+    }
+  ]
+}

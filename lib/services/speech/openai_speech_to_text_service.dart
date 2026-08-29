@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
 
 import '../../models/speech/speech_transcription_result.dart';
+import '../../models/speech/speech_transcription_context.dart';
 import '../../models/speech/spoken_audio_context.dart';
 import '../../models/speech/spoken_word_timestamp.dart';
 import '../../models/speech/transcript_hypothesis.dart';
@@ -20,13 +22,25 @@ import 'speech_vocabulary_context.dart';
 /// Speech-to-Text service implementation communicating with a production backend proxy
 /// or directly with OpenAI Whisper in explicit local dev mode.
 class OpenAiSpeechToTextService implements ISpeechToTextService {
+  bool get _isGptTranscribe => config.model == 'gpt-transcribe';
+
+  @override
+  SpeechTranscriptionCapabilities get transcriptionCapabilities =>
+      _isGptTranscribe
+      ? const SpeechTranscriptionCapabilities(
+          freeFormContext: true,
+          keywordHints: true,
+          multipleLanguageHints: true,
+        )
+      : const SpeechTranscriptionCapabilities(freeFormContext: true);
   final SpeechConfig config;
   final SpeechVocabularyContext vocabularyContext;
   final http.Client _httpClient;
   AudioRecorder? _recorder;
 
   VoiceState _currentState = VoiceState.idle;
-  final StreamController<VoiceState> _stateController = StreamController<VoiceState>.broadcast();
+  final StreamController<VoiceState> _stateController =
+      StreamController<VoiceState>.broadcast();
 
   void Function(String text, bool isFinal)? _onResult;
   void Function(VoiceState state)? _onStateChanged;
@@ -40,9 +54,10 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     SpeechVocabularyContext? vocabularyContext,
     http.Client? httpClient,
     AudioRecorder? recorder,
-  })  : vocabularyContext = vocabularyContext ?? DefaultSpeechVocabularyContext(),
-        _httpClient = httpClient ?? http.Client(),
-        _recorder = recorder;
+  }) : vocabularyContext =
+           vocabularyContext ?? DefaultSpeechVocabularyContext(),
+       _httpClient = httpClient ?? http.Client(),
+       _recorder = recorder;
 
   AudioRecorder get _activeRecorder => _recorder ??= AudioRecorder();
 
@@ -219,6 +234,18 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
         localFilePath: recordedPath,
       );
 
+      // In Python cutover mode the same audio is sent once to /v1/voice/search,
+      // where transcription and conversational search are one atomic request.
+      if (config.deferTranscriptionToBackend) {
+        _setState(VoiceState.idle);
+        return SpeechTranscriptionResult(
+          text: '',
+          language: _activeLanguage ?? SupportedLanguages.defaultLanguage,
+          audioContext: spokenContext,
+          durationMs: durationMs,
+        );
+      }
+
       final result = await _transcribeAudioBytesDetailed(
         audioBytes: audioBytes,
         filename: 'query.m4a',
@@ -261,11 +288,13 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
+    SpeechTranscriptionContext? context,
   }) async {
     final detailed = await transcribeAudioBytesDetailed(
       bytes,
       language: language,
       filename: filename,
+      context: context,
     );
     return detailed?.text;
   }
@@ -275,6 +304,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     List<int> bytes, {
     required SupportedLanguage language,
     String filename = 'audio.m4a',
+    SpeechTranscriptionContext? context,
   }) async {
     final spokenContext = SpokenAudioContext(
       bytes: Uint8List.fromList(bytes),
@@ -290,6 +320,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
       language: language,
       audioContext: spokenContext,
       durationMs: 0,
+      context: context,
     );
   }
 
@@ -297,18 +328,23 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
   Future<String?> transcribeAudioFile(
     dynamic file, {
     required SupportedLanguage language,
+    SpeechTranscriptionContext? context,
   }) async {
     List<int> bytes;
     String filename = 'audio.m4a';
     String? path;
     if (file is File) {
       bytes = await file.readAsBytes();
-      filename = file.uri.pathSegments.isNotEmpty ? file.uri.pathSegments.last : 'audio.m4a';
+      filename = file.uri.pathSegments.isNotEmpty
+          ? file.uri.pathSegments.last
+          : 'audio.m4a';
       path = file.path;
     } else if (file is String) {
       final f = File(file);
       bytes = await f.readAsBytes();
-      filename = f.uri.pathSegments.isNotEmpty ? f.uri.pathSegments.last : 'audio.m4a';
+      filename = f.uri.pathSegments.isNotEmpty
+          ? f.uri.pathSegments.last
+          : 'audio.m4a';
       path = file;
     } else {
       throw ArgumentError('file must be File or String path');
@@ -329,6 +365,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
       language: language,
       audioContext: spokenContext,
       durationMs: 0,
+      context: context,
     );
     return res?.text;
   }
@@ -340,6 +377,7 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     required SupportedLanguage language,
     SpokenAudioContext? audioContext,
     int durationMs = 0,
+    SpeechTranscriptionContext? context,
   }) async {
     final uri = Uri.parse(config.endpointUrl);
     final request = http.MultipartRequest('POST', uri);
@@ -353,28 +391,46 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
     // Form fields
     request.fields['model'] = config.model;
     final whisperLang = _mapToWhisperLanguage(language.languageCode);
-    if (whisperLang != null) {
-      request.fields['language'] = whisperLang;
+    if (_isGptTranscribe) {
+      final hints = context?.languageHints.isNotEmpty == true
+          ? context!.languageHints
+          : [if (whisperLang != null) whisperLang];
+      for (var i = 0; i < hints.length; i++) {
+        request.fields['languages[$i]'] = hints[i];
+      }
+      request.fields['response_format'] = 'json';
+    } else {
+      if (whisperLang != null) request.fields['language'] = whisperLang;
+      request.fields['response_format'] = 'verbose_json';
     }
-    // Request verbose_json or json
-    request.fields['response_format'] = 'verbose_json';
 
     // Domain vocabulary prompt context
-    final prompt = vocabularyContext.buildVocabularyPrompt(language: language);
+    final prompt =
+        context?.prompt ??
+        vocabularyContext.buildVocabularyPrompt(language: language);
     if (prompt.isNotEmpty) {
       request.fields['prompt'] = prompt;
+    }
+    if (_isGptTranscribe && context != null) {
+      final validKeywords = context.keywords
+          .map((value) => value.trim())
+          .where(
+            (value) => value.isNotEmpty && !value.contains(RegExp(r'[<>\r\n]')),
+          )
+          .toList(growable: false);
+      for (var i = 0; i < validKeywords.length; i++) {
+        request.fields['keywords[$i]'] = validKeywords[i];
+      }
     }
 
     // Attach audio file
     request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        audioBytes,
-        filename: filename,
-      ),
+      http.MultipartFile.fromBytes('file', audioBytes, filename: filename),
     );
 
-    final streamedResponse = await _httpClient.send(request).timeout(config.timeout);
+    final streamedResponse = await _httpClient
+        .send(request)
+        .timeout(config.timeout);
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -396,12 +452,14 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
             final endSec = (w['end'] as num?)?.toDouble() ?? startSec;
             final conf = (w['confidence'] as num?)?.toDouble();
             if (wordStr.isNotEmpty) {
-              words.add(SpokenWordTimestamp(
-                word: wordStr,
-                startMs: (startSec * 1000).toInt(),
-                endMs: (endSec * 1000).toInt(),
-                confidence: conf,
-              ));
+              words.add(
+                SpokenWordTimestamp(
+                  word: wordStr,
+                  startMs: (startSec * 1000).toInt(),
+                  endMs: (endSec * 1000).toInt(),
+                  confidence: conf,
+                ),
+              );
             }
           }
         }
@@ -445,13 +503,105 @@ class OpenAiSpeechToTextService implements ISpeechToTextService {
 
   /// Official OpenAI Whisper supported language codes.
   static const Set<String> _whisperSupportedLanguageWhitelist = {
-    'af', 'am', 'ar', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bo', 'br', 'bs', 'ca', 'cs', 'cy',
-    'da', 'de', 'el', 'en', 'es', 'et', 'eu', 'fa', 'fi', 'fo', 'fr', 'gl', 'gu', 'ha', 'haw',
-    'he', 'hi', 'hr', 'ht', 'hu', 'hy', 'id', 'is', 'it', 'ja', 'jw', 'ka', 'kk', 'km', 'kn',
-    'ko', 'la', 'lb', 'ln', 'lo', 'lt', 'lv', 'mg', 'mi', 'mk', 'ml', 'mn', 'mr', 'ms', 'mt',
-    'my', 'ne', 'nl', 'nn', 'no', 'oc', 'pa', 'pl', 'ps', 'pt', 'ro', 'ru', 'sa', 'sd', 'si',
-    'sk', 'sl', 'sn', 'so', 'sq', 'sr', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'tk', 'tl',
-    'tr', 'tt', 'uk', 'ur', 'uz', 'vi', 'yi', 'yo', 'zh'
+    'af',
+    'am',
+    'ar',
+    'as',
+    'az',
+    'ba',
+    'be',
+    'bg',
+    'bn',
+    'bo',
+    'br',
+    'bs',
+    'ca',
+    'cs',
+    'cy',
+    'da',
+    'de',
+    'el',
+    'en',
+    'es',
+    'et',
+    'eu',
+    'fa',
+    'fi',
+    'fo',
+    'fr',
+    'gl',
+    'gu',
+    'ha',
+    'haw',
+    'he',
+    'hi',
+    'hr',
+    'ht',
+    'hu',
+    'hy',
+    'id',
+    'is',
+    'it',
+    'ja',
+    'jw',
+    'ka',
+    'kk',
+    'km',
+    'kn',
+    'ko',
+    'la',
+    'lb',
+    'ln',
+    'lo',
+    'lt',
+    'lv',
+    'mg',
+    'mi',
+    'mk',
+    'ml',
+    'mn',
+    'mr',
+    'ms',
+    'mt',
+    'my',
+    'ne',
+    'nl',
+    'nn',
+    'no',
+    'oc',
+    'pa',
+    'pl',
+    'ps',
+    'pt',
+    'ro',
+    'ru',
+    'sa',
+    'sd',
+    'si',
+    'sk',
+    'sl',
+    'sn',
+    'so',
+    'sq',
+    'sr',
+    'su',
+    'sv',
+    'sw',
+    'ta',
+    'te',
+    'tg',
+    'th',
+    'tk',
+    'tl',
+    'tr',
+    'tt',
+    'uk',
+    'ur',
+    'uz',
+    'vi',
+    'yi',
+    'yo',
+    'zh',
   };
 
   /// Maps ISO language codes to Whisper supported codes, returning null for auto-detection if unsupported.

@@ -1,0 +1,1346 @@
+[
+  {
+    "caseId": "safety_1",
+    "category": "positive",
+    "input": "aluksnay",
+    "expectedCanonicalName": "Rally Alūksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_2",
+    "category": "positive",
+    "input": "a looks nay",
+    "expectedCanonicalName": "Rally Alūksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_3",
+    "category": "positive",
+    "input": "alux new",
+    "expectedCanonicalName": "Rally Alūksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_4",
+    "category": "positive",
+    "input": "eluksne",
+    "expectedCanonicalName": "Rally Alūksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_5",
+    "category": "positive",
+    "input": "aluknse",
+    "expectedCanonicalName": "Rally Alūksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_6",
+    "category": "positive",
+    "input": "aluksney",
+    "expectedCanonicalName": "Rally Alūksne 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_7",
+    "category": "positive",
+    "input": "pawel malgo",
+    "expectedCanonicalName": "Paweł Molgo",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_8",
+    "category": "positive",
+    "input": "shea brain",
+    "expectedCanonicalName": "Shea Breen",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_9",
+    "category": "positive",
+    "input": "donny gall rally",
+    "expectedCanonicalName": "Donegal International Rally",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_10",
+    "category": "positive",
+    "input": "kemel berg",
+    "expectedCanonicalName": "Woodstoxx Kemmelberg 1",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_11",
+    "category": "positive",
+    "input": "dushniki",
+    "expectedCanonicalName": "Duszniki - Zieleniec 2",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_12",
+    "category": "positive",
+    "input": "kortrik",
+    "expectedCanonicalName": "6 Uren van Kortrijk 2024",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_13",
+    "category": "positive",
+    "input": "Serras de Fafe",
+    "expectedCanonicalName": "Rali Serras de Fafe 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_14",
+    "category": "positive",
+    "input": "lazdiai",
+    "expectedCanonicalName": "7bet Rally Lazdijai 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_15",
+    "category": "positive",
+    "input": "aboborera",
+    "expectedCanonicalName": "Rali Terras d'Aboboreira 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_16",
+    "category": "positive",
+    "input": "Polski Raid Legend",
+    "expectedCanonicalName": "Polski Rajd Legend 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_17",
+    "category": "positive",
+    "input": "Rally Vranow",
+    "expectedCanonicalName": "Rally Vranov 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_18",
+    "category": "positive",
+    "input": "1000 Hugel Rallye",
+    "expectedCanonicalName": "OBM Land der 1000 Hügel Rallye 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_19",
+    "category": "positive",
+    "input": "Cesavine",
+    "expectedCanonicalName": "Rallijsprints Cesavine 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_20",
+    "category": "positive",
+    "input": "Regional des Ardennes",
+    "expectedCanonicalName": "Rallye Régional des Ardennes 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_21",
+    "category": "positive",
+    "input": "Castelo Branco 2025",
+    "expectedCanonicalName": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_22",
+    "category": "positive",
+    "input": "Rally of the Lakes",
+    "expectedCanonicalName": "Assess Ireland International Rally of the Lakes 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_23",
+    "category": "positive",
+    "input": "West Cork Rally",
+    "expectedCanonicalName": "Clonakilty Park Hotel West Cork Rally 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_24",
+    "category": "positive",
+    "input": "Fivemiletown Rally",
+    "expectedCanonicalName": "Samsonas Rally Fivemiletown 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_25",
+    "category": "positive",
+    "input": "Ulster Rally 2025",
+    "expectedCanonicalName": "Modern Tyres Ulster Rally 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_26",
+    "category": "positive",
+    "input": "Ravens Rock Stages",
+    "expectedCanonicalName": "Raven's Rock Stages Rally 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_27",
+    "category": "positive",
+    "input": "Birr Stages 2026",
+    "expectedCanonicalName": "Birr Stages Rally 2026",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_28",
+    "category": "positive",
+    "input": "Fastnet Stages 2025",
+    "expectedCanonicalName": "Fastnet Stages Rally 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_29",
+    "category": "positive",
+    "input": "Cavan Stages 2025",
+    "expectedCanonicalName": "HK Cavan Stages Rally 2025",
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_30",
+    "category": "positive",
+    "input": "Jon Gunnar Stoten",
+    "expectedCanonicalName": "Jon-Gunnar Støten",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_31",
+    "category": "positive",
+    "input": "Michal Babicka",
+    "expectedCanonicalName": "Michal Babička",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_32",
+    "category": "positive",
+    "input": "Adam Zelik",
+    "expectedCanonicalName": "Adam Zelík",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_33",
+    "category": "positive",
+    "input": "Veroslav Cvrcek",
+    "expectedCanonicalName": "Věroslav Cvrček",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_34",
+    "category": "positive",
+    "input": "Piotr Krotoszynski",
+    "expectedCanonicalName": "Piotr Krotoszyński",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_35",
+    "category": "positive",
+    "input": "Herve Emerio",
+    "expectedCanonicalName": "Hervé Emeriau",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_36",
+    "category": "positive",
+    "input": "Jose Pawla",
+    "expectedCanonicalName": "José Paula",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_37",
+    "category": "positive",
+    "input": "Sergio Ramon",
+    "expectedCanonicalName": "Sergio Ramón Arrom",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_38",
+    "category": "positive",
+    "input": "Raphael Czwartkovski",
+    "expectedCanonicalName": "Raphaël Czwartkowski",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_39",
+    "category": "positive",
+    "input": "Vitor Mathias",
+    "expectedCanonicalName": "Vítor Matias",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_40",
+    "category": "positive",
+    "input": "Steven OConnor",
+    "expectedCanonicalName": "Stephen O'Connor",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_41",
+    "category": "positive",
+    "input": "Dermot OToole",
+    "expectedCanonicalName": "Diarmuid O'Toole",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_42",
+    "category": "positive",
+    "input": "Tanja Zingelmann",
+    "expectedCanonicalName": "Tanja Zingelmann-Hartjen",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_43",
+    "category": "positive",
+    "input": "Nenad Loncarich",
+    "expectedCanonicalName": "Nenad Lončarič",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_44",
+    "category": "positive",
+    "input": "Matej Bogovich",
+    "expectedCanonicalName": "Matej Bogović",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_45",
+    "category": "positive",
+    "input": "Andrej Medich",
+    "expectedCanonicalName": "Andrej Medić",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_46",
+    "category": "positive",
+    "input": "John Shanahan Jr",
+    "expectedCanonicalName": "John Shanahan jnr.",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_47",
+    "category": "positive",
+    "input": "Max Frieman",
+    "expectedCanonicalName": "Max Freeman",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_48",
+    "category": "positive",
+    "input": "Jan Erik Mall",
+    "expectedCanonicalName": "Jan-Erik Mäll",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_49",
+    "category": "positive",
+    "input": "Katarina Schmidt",
+    "expectedCanonicalName": "Catharina Schmidt",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_50",
+    "category": "positive",
+    "input": "Pawel Molgo",
+    "expectedCanonicalName": "Paweł Molgo",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_51",
+    "category": "positive",
+    "input": "Shea Breen",
+    "expectedCanonicalName": "Shea Breen",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_52",
+    "category": "positive",
+    "input": "Stoten",
+    "expectedCanonicalName": "Jon-Gunnar Støten",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_53",
+    "category": "positive",
+    "input": "Cvrcek",
+    "expectedCanonicalName": "Věroslav Cvrček",
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_54",
+    "category": "positive",
+    "input": "Kemmelberg 1",
+    "expectedCanonicalName": "Woodstoxx Kemmelberg 1",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_55",
+    "category": "positive",
+    "input": "Duszniki Zieleniec",
+    "expectedCanonicalName": "Duszniki - Zieleniec 2",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_56",
+    "category": "positive",
+    "input": "Seiksozo",
+    "expectedCanonicalName": "Seixoso 2",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_57",
+    "category": "positive",
+    "input": "Drumhalagh",
+    "expectedCanonicalName": "Drumhallagh 2",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_58",
+    "category": "positive",
+    "input": "Dikebus",
+    "expectedCanonicalName": "Dikkebus 1",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_59",
+    "category": "positive",
+    "input": "Fafe Powerstage",
+    "expectedCanonicalName": "Fafe 2Powerstage",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_60",
+    "category": "positive",
+    "input": "Knokalla",
+    "expectedCanonicalName": "Knockalla 2",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_61",
+    "category": "positive",
+    "input": "Dunworly",
+    "expectedCanonicalName": "Dunworley 2",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_62",
+    "category": "positive",
+    "input": "Kelley Mount 1",
+    "expectedCanonicalName": "Kellymount 1",
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_63",
+    "category": "negative_confusable",
+    "input": "Josh Smith",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_64",
+    "category": "negative_confusable",
+    "input": "Sam Williams",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_65",
+    "category": "negative_confusable",
+    "input": "Keith O'Connor",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_66",
+    "category": "negative_confusable",
+    "input": "Craig McErlean",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_67",
+    "category": "negative_confusable",
+    "input": "Callum Breen",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_68",
+    "category": "negative_confusable",
+    "input": "Paul Moffett",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_69",
+    "category": "negative_confusable",
+    "input": "David Cronin",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_70",
+    "category": "negative_confusable",
+    "input": "Michael Devine",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_71",
+    "category": "negative_confusable",
+    "input": "Mark Freeman",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_72",
+    "category": "negative_confusable",
+    "input": "John Breen",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_73",
+    "category": "negative_confusable",
+    "input": "Brain",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_74",
+    "category": "negative_confusable",
+    "input": "Breenan",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_75",
+    "category": "negative_confusable",
+    "input": "Moffitt",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_76",
+    "category": "negative_confusable",
+    "input": "Moffat",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_77",
+    "category": "negative_confusable",
+    "input": "Cronan",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_78",
+    "category": "negative_confusable",
+    "input": "Devaney",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_79",
+    "category": "negative_confusable",
+    "input": "Molgow",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_80",
+    "category": "negative_confusable",
+    "input": "Stotenberg",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_81",
+    "category": "negative_confusable",
+    "input": "Zelinski",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_82",
+    "category": "negative_confusable",
+    "input": "Babic",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_83",
+    "category": "negative_confusable",
+    "input": "Rally of the Mountains",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_84",
+    "category": "negative_confusable",
+    "input": "International Stages",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_85",
+    "category": "negative_confusable",
+    "input": "West Coast Rally",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_86",
+    "category": "negative_confusable",
+    "input": "Cork 25 Stages",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_87",
+    "category": "negative_confusable",
+    "input": "Donegal 1972",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_88",
+    "category": "negative_confusable",
+    "input": "Galway 1981",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_89",
+    "category": "negative_confusable",
+    "input": "Lakes Rally 1990",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_90",
+    "category": "negative_confusable",
+    "input": "Ulster Stages 1965",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_91",
+    "category": "negative_confusable",
+    "input": "Aluksne 1999",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_92",
+    "category": "negative_confusable",
+    "input": "Fafe Classic 1985",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_93",
+    "category": "negative_confusable",
+    "input": "Super Stage 1",
+    "expectedCanonicalName": null,
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_94",
+    "category": "negative_confusable",
+    "input": "Powerstage Final",
+    "expectedCanonicalName": null,
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_95",
+    "category": "negative_confusable",
+    "input": "Mountain Pass 2",
+    "expectedCanonicalName": null,
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_96",
+    "category": "negative_confusable",
+    "input": "Forest Stage 3",
+    "expectedCanonicalName": null,
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_97",
+    "category": "negative_confusable",
+    "input": "Sprint Stage 1",
+    "expectedCanonicalName": null,
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_98",
+    "category": "negative_confusable",
+    "input": "Town Stage 2",
+    "expectedCanonicalName": null,
+    "entityType": "stage",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_99",
+    "category": "negative_confusable",
+    "input": "FictionalEntity1 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_100",
+    "category": "negative_confusable",
+    "input": "FictionalEntity2 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_101",
+    "category": "negative_confusable",
+    "input": "FictionalEntity3 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_102",
+    "category": "negative_confusable",
+    "input": "FictionalEntity4 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_103",
+    "category": "negative_confusable",
+    "input": "FictionalEntity5 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_104",
+    "category": "negative_confusable",
+    "input": "FictionalEntity6 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_105",
+    "category": "negative_confusable",
+    "input": "FictionalEntity7 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_106",
+    "category": "negative_confusable",
+    "input": "FictionalEntity8 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_107",
+    "category": "negative_confusable",
+    "input": "FictionalEntity9 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_108",
+    "category": "negative_confusable",
+    "input": "FictionalEntity10 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_109",
+    "category": "negative_confusable",
+    "input": "FictionalEntity11 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_110",
+    "category": "negative_confusable",
+    "input": "FictionalEntity12 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_111",
+    "category": "negative_confusable",
+    "input": "FictionalEntity13 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_112",
+    "category": "negative_confusable",
+    "input": "FictionalEntity14 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_113",
+    "category": "negative_confusable",
+    "input": "FictionalEntity15 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_114",
+    "category": "negative_confusable",
+    "input": "FictionalEntity16 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_115",
+    "category": "negative_confusable",
+    "input": "FictionalEntity17 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_116",
+    "category": "negative_confusable",
+    "input": "FictionalEntity18 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_117",
+    "category": "negative_confusable",
+    "input": "FictionalEntity19 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_118",
+    "category": "negative_confusable",
+    "input": "FictionalEntity20 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_119",
+    "category": "negative_confusable",
+    "input": "FictionalEntity21 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_120",
+    "category": "negative_confusable",
+    "input": "FictionalEntity22 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_121",
+    "category": "negative_confusable",
+    "input": "FictionalEntity23 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_122",
+    "category": "negative_confusable",
+    "input": "FictionalEntity24 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_123",
+    "category": "negative_confusable",
+    "input": "FictionalEntity25 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_124",
+    "category": "negative_confusable",
+    "input": "FictionalEntity26 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_125",
+    "category": "negative_confusable",
+    "input": "FictionalEntity27 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_126",
+    "category": "negative_confusable",
+    "input": "FictionalEntity28 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_127",
+    "category": "negative_confusable",
+    "input": "FictionalEntity29 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_128",
+    "category": "negative_confusable",
+    "input": "FictionalEntity30 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_129",
+    "category": "negative_confusable",
+    "input": "FictionalEntity31 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_130",
+    "category": "negative_confusable",
+    "input": "FictionalEntity32 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_131",
+    "category": "negative_confusable",
+    "input": "FictionalEntity33 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_132",
+    "category": "negative_confusable",
+    "input": "FictionalEntity34 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_133",
+    "category": "negative_confusable",
+    "input": "FictionalEntity35 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_134",
+    "category": "negative_confusable",
+    "input": "FictionalEntity36 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_135",
+    "category": "negative_confusable",
+    "input": "FictionalEntity37 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_136",
+    "category": "negative_confusable",
+    "input": "FictionalEntity38 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_137",
+    "category": "negative_confusable",
+    "input": "FictionalEntity39 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_138",
+    "category": "negative_confusable",
+    "input": "FictionalEntity40 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_139",
+    "category": "negative_confusable",
+    "input": "FictionalEntity41 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_140",
+    "category": "negative_confusable",
+    "input": "FictionalEntity42 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_141",
+    "category": "negative_confusable",
+    "input": "FictionalEntity43 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_142",
+    "category": "negative_confusable",
+    "input": "FictionalEntity44 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_143",
+    "category": "negative_confusable",
+    "input": "FictionalEntity45 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_144",
+    "category": "negative_confusable",
+    "input": "FictionalEntity46 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_145",
+    "category": "negative_confusable",
+    "input": "FictionalEntity47 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_146",
+    "category": "negative_confusable",
+    "input": "FictionalEntity48 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_147",
+    "category": "negative_confusable",
+    "input": "FictionalEntity49 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_148",
+    "category": "negative_confusable",
+    "input": "FictionalEntity50 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_149",
+    "category": "negative_confusable",
+    "input": "FictionalEntity51 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_150",
+    "category": "negative_confusable",
+    "input": "FictionalEntity52 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_151",
+    "category": "negative_confusable",
+    "input": "FictionalEntity53 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_152",
+    "category": "negative_confusable",
+    "input": "FictionalEntity54 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_153",
+    "category": "negative_confusable",
+    "input": "FictionalEntity55 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_154",
+    "category": "negative_confusable",
+    "input": "FictionalEntity56 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_155",
+    "category": "negative_confusable",
+    "input": "FictionalEntity57 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_156",
+    "category": "negative_confusable",
+    "input": "FictionalEntity58 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_157",
+    "category": "negative_confusable",
+    "input": "FictionalEntity59 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_158",
+    "category": "negative_confusable",
+    "input": "FictionalEntity60 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_159",
+    "category": "negative_confusable",
+    "input": "FictionalEntity61 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_160",
+    "category": "negative_confusable",
+    "input": "FictionalEntity62 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_161",
+    "category": "negative_confusable",
+    "input": "FictionalEntity63 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_162",
+    "category": "negative_confusable",
+    "input": "FictionalEntity64 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_163",
+    "category": "negative_confusable",
+    "input": "FictionalEntity65 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_164",
+    "category": "negative_confusable",
+    "input": "FictionalEntity66 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_165",
+    "category": "negative_confusable",
+    "input": "FictionalEntity67 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_166",
+    "category": "negative_confusable",
+    "input": "FictionalEntity68 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  },
+  {
+    "caseId": "safety_167",
+    "category": "negative_confusable",
+    "input": "FictionalEntity69 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "rally",
+    "personRole": null
+  },
+  {
+    "caseId": "safety_168",
+    "category": "negative_confusable",
+    "input": "FictionalEntity70 PseudoName",
+    "expectedCanonicalName": null,
+    "entityType": "driver",
+    "personRole": "driver"
+  }
+]

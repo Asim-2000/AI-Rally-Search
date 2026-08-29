@@ -1,0 +1,39 @@
+{
+  "timestamp": "20260829_113249",
+  "branch": "benchmark-final",
+  "commit": "8fa449077968e1c91a850c3cb2d078c0eb62fe22",
+  "working_tree_dirty_before_stt_run": true,
+  "fixed_qu_model": "gemini-3.5-flash-lite",
+  "models_measured": [
+    "whisper-1",
+    "gpt-4o-mini-transcribe",
+    "gpt-transcribe"
+  ],
+  "model_unavailable": {
+    "gemini-3.5-transcribe": "listed and HTTP 200, but returned empty output with zero output tokens on inline and official Files API probes"
+  },
+  "cases": 115,
+  "synthetic": 110,
+  "human_rows": 5,
+  "human_unique_waveforms": 4,
+  "human_speakers": 1,
+  "total_duration_seconds": 213.9255,
+  "dataset_sha256": "0a61c34e1fcd3f6e4bfb74a7a7254c83324fff6baf9cb4bd11dc929292941195",
+  "concurrency": 4,
+  "conditions": [
+    "VANILLA",
+    "DB_CANONICAL_VOCABULARY"
+  ],
+  "derived_metric_audit": {
+    "stt_false_confident_definition": "reference path succeeds; transcript path confidently resolves with DB results but misses expected canonical entity",
+    "false_confident_counts": {
+      "whisper-1": 4,
+      "gpt-4o-mini-transcribe": 4,
+      "gpt-transcribe": 3
+    },
+    "finalists": [
+      "gpt-transcribe",
+      "gpt-4o-mini-transcribe"
+    ]
+  }
+}

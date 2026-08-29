@@ -1,0 +1,217 @@
+[
+  {
+    "input": "pawel malgo",
+    "expectedCanonicalName": "Paweł Molgo",
+    "queryNormalized": "pawel malgo",
+    "entityExists": true,
+    "matchingAccounts": [
+      {
+        "canonicalId": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "canonicalDisplayName": "Paweł Molgo",
+        "canonicalNormalized": "pawel molgo",
+        "searchableNames": [
+          "Paweł Molgo"
+        ],
+        "normalizedSearchableNames": [
+          "pawel molgo"
+        ]
+      }
+    ],
+    "rank": 1,
+    "score": 0.8356861111111111,
+    "signals": {
+      "exact": 0.0,
+      "normalizedExact": 0.0,
+      "token": 0.5,
+      "ngram": 0.6861111111111111,
+      "lexical": 0.9266666666666666,
+      "phonetic": 0.9180555555555555,
+      "context": 0.0
+    },
+    "strongestCompetitors": [
+      {
+        "canonicalId": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "canonicalName": "Paweł Molgo",
+        "score": 0.8356861111111111,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.6861111111111111,
+          "lexical": 0.9266666666666666,
+          "phonetic": 0.9180555555555555,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:codriver:516fcdf0-b284-4622-a85e-980b690a5312",
+        "canonicalName": "Paweł Omlet",
+        "score": 0.7964833333333334,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.4027777777777778,
+          "lexical": 0.8825000000000001,
+          "phonetic": 0.8666666666666666,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:driver:7991d6c3-e5a7-4cb6-b413-70bc0bf47c1a",
+        "canonicalName": "Paweł Hoffman",
+        "score": 0.7767373015873017,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.4,
+          "lexical": 0.8558333333333334,
+          "phonetic": 0.8526984126984127,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:driver:6c30b7ae-ad58-4cf4-8100-a2c0f686800a",
+        "canonicalName": "Paweł Ważny",
+        "score": 0.7599111111111112,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.4027777777777778,
+          "lexical": 0.8400000000000001,
+          "phonetic": 0.8222222222222222,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:driver:ce7af879-5d40-4d29-a003-144188837d20",
+        "canonicalName": "Paweł Wysocki",
+        "score": 0.7159925925925927,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.36,
+          "lexical": 0.8200000000000001,
+          "phonetic": 0.6851851851851851,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "shea brain",
+    "expectedCanonicalName": "Shea Breen",
+    "queryNormalized": "shea brain",
+    "entityExists": true,
+    "matchingAccounts": [
+      {
+        "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+        "canonicalDisplayName": "Shea Breen",
+        "canonicalNormalized": "shea breen",
+        "searchableNames": [
+          "Shea Breen"
+        ],
+        "normalizedSearchableNames": [
+          "shea breen"
+        ]
+      },
+      {
+        "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+        "canonicalDisplayName": "Shea Breen",
+        "canonicalNormalized": "shea breen",
+        "searchableNames": [
+          "Shea Breen"
+        ],
+        "normalizedSearchableNames": [
+          "shea breen"
+        ]
+      }
+    ],
+    "rank": 1,
+    "score": 0.8441269841269841,
+    "signals": {
+      "exact": 0.0,
+      "normalizedExact": 0.0,
+      "token": 0.5,
+      "ngram": 0.5928571428571427,
+      "lexical": 0.9111111111111111,
+      "phonetic": 0.9428571428571428,
+      "context": 0.0
+    },
+    "strongestCompetitors": [
+      {
+        "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+        "canonicalName": "Shea Breen",
+        "score": 0.8441269841269841,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.5928571428571427,
+          "lexical": 0.9111111111111111,
+          "phonetic": 0.9428571428571428,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+        "canonicalName": "Shea Breen",
+        "score": 0.8441269841269841,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.5928571428571427,
+          "lexical": 0.9111111111111111,
+          "phonetic": 0.9428571428571428,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:driver:6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+        "canonicalName": "Shay Byrne",
+        "score": 0.7028253968253968,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.8222222222222222,
+          "phonetic": 0.8285714285714285,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:codriver:848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+        "canonicalName": "Shea Kelly",
+        "score": 0.6908148148148149,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.3214285714285714,
+          "lexical": 0.6296296296296297,
+          "phonetic": 0.8,
+          "context": 0.0
+        }
+      },
+      {
+        "canonicalId": "person:codriver:14ffd959-9498-42e8-9040-1cd7b159a25c",
+        "canonicalName": "Shane Byrne",
+        "score": 0.6863005291005292,
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.8226455026455027,
+          "phonetic": 0.7663492063492063,
+          "context": 0.0
+        }
+      }
+    ]
+  }
+]

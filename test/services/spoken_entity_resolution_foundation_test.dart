@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ai_rally_search/models/entity_candidate.dart';
@@ -51,6 +52,7 @@ class TestLookupRepo implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 10,
   }) async {
     if (phrase.toLowerCase().contains('moffett')) {
@@ -72,30 +74,20 @@ class TestLookupRepo implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int limit = 10,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<EntityCandidate>> lookupCities(
     String phrase, {
     String? country,
     int limit = 10,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<EntityCandidate>> lookupUploaders(
     String phrase, {
     int limit = 10,
-  }) async =>
-      const [];
-
-  @override
-  Future<List<EntityCandidate>> lookupEntities(
-    String phrase, {
-    int limit = 10,
-  }) async =>
-      const [];
+  }) async => const [];
 }
 
 class TestSearchRepo implements ISearchRepository {
@@ -112,30 +104,50 @@ class TestSearchRepo implements ISearchRepository {
   }
 
   @override
-  Future<SearchResponse<RallySearchResult>> searchRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallySearchResult>> searchRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverRallies(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyParticipationResult>> searchDriverWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyResults(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyResults(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<RallyResult>> getRallyTopFinishers(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<RallyResult>> getRallyTopFinishers(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoAction>> searchVideoActions(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoAction>> searchVideoActions(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<VideoSearchResult>> searchDriverVideos(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<UploaderSearchResult>> getTopUploaders(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
   @override
-  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(SearchQuery query) async => throw UnimplementedError();
+  Future<SearchResponse<DriverWinResult>> getTopDriversByWins(
+    SearchQuery query,
+  ) async => throw UnimplementedError();
 }
 
 void main() {
   group('Spoken Audio Context & Speech Transcription Models', () {
     test('SpokenAudioContext retains bytes and disposes on-disk file deterministically', () {
       final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/test_audio_${DateTime.now().millisecondsSinceEpoch}.m4a');
+      final tempFile = File(
+        '${tempDir.path}/test_audio_${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
       tempFile.writeAsBytesSync([1, 2, 3, 4, 5]);
       expect(tempFile.existsSync(), isTrue);
 
@@ -162,9 +174,22 @@ void main() {
     });
 
     test('SpeechTranscriptionResult encapsulates optional hypotheses and timestamps', () {
-      const hyp1 = TranscriptHypothesis(text: 'Show jumps in Donegal', confidence: 0.95, logProb: -0.05);
-      const hyp2 = TranscriptHypothesis(text: 'Show jumps in Donegall', confidence: 0.75, logProb: -0.28);
-      const word1 = SpokenWordTimestamp(word: 'Donegal', startMs: 1200, endMs: 1800, confidence: 0.98);
+      const hyp1 = TranscriptHypothesis(
+        text: 'Show jumps in Donegal',
+        confidence: 0.95,
+        logProb: -0.05,
+      );
+      const hyp2 = TranscriptHypothesis(
+        text: 'Show jumps in Donegall',
+        confidence: 0.75,
+        logProb: -0.28,
+      );
+      const word1 = SpokenWordTimestamp(
+        word: 'Donegal',
+        startMs: 1200,
+        endMs: 1800,
+        confidence: 0.98,
+      );
 
       final result = SpeechTranscriptionResult(
         text: 'Show jumps in Donegal',
@@ -183,7 +208,9 @@ void main() {
     });
 
     test('SpeechTranscriptionResult.textOnly creates simple backward-compatible result', () {
-      final res = SpeechTranscriptionResult.textOnly(text: 'Kalle Rovanperä Sweden');
+      final res = SpeechTranscriptionResult.textOnly(
+        text: 'Kalle Rovanperä Sweden',
+      );
       expect(res.text, 'Kalle Rovanperä Sweden');
       expect(res.hasHypotheses, isFalse);
       expect(res.hasTimestamps, isFalse);
@@ -200,7 +227,7 @@ void main() {
 
       await mockStt.startListening(
         language: SupportedLanguages.english,
-        onResult: (_, __) {},
+        onResult: (_, _) {},
         onStateChanged: (_) {},
         onError: (_) {},
       );
@@ -214,7 +241,7 @@ void main() {
       // Test standard stopListening
       await mockStt.startListening(
         language: SupportedLanguages.english,
-        onResult: (_, __) {},
+        onResult: (_, _) {},
         onStateChanged: (_) {},
         onError: (_) {},
       );
@@ -227,10 +254,18 @@ void main() {
         defaultTranscript: 'Monte Carlo 2025',
       );
 
-      final text = await mockStt.transcribeAudioBytes([10, 20, 30], language: SupportedLanguages.english);
+      final text = await mockStt.transcribeAudioBytes([
+        10,
+        20,
+        30,
+      ], language: SupportedLanguages.english);
       expect(text, 'Monte Carlo 2025');
 
-      final detailed = await mockStt.transcribeAudioBytesDetailed([10, 20, 30], language: SupportedLanguages.english);
+      final detailed = await mockStt.transcribeAudioBytesDetailed([
+        10,
+        20,
+        30,
+      ], language: SupportedLanguages.english);
       expect(detailed, isNotNull);
       expect(detailed!.text, 'Monte Carlo 2025');
     });
@@ -279,49 +314,71 @@ void main() {
       expect(reconstructed.canonicalName, metadata.canonicalName);
       expect(reconstructed.entityType, EntityType.rally);
       expect(reconstructed.primaryPhonetic, 'ʁali otɔmɔbil də mɔ̃te kaʁlo');
-      expect(reconstructed.internationalPhonetic, 'ræli ɒtəməbiːl də mɒnti kɑːloʊ');
+      expect(
+        reconstructed.internationalPhonetic,
+        'ræli ɒtəməbiːl də mɒnti kɑːloʊ',
+      );
     });
 
-    test('NoOpAcousticCandidateScorer returns empty map without throwing', () async {
-      const scorer = NoOpAcousticCandidateScorer();
-      final audioContext = SpokenAudioContext(
-        bytes: Uint8List.fromList([1, 2, 3]),
-        durationMs: 1000,
-      );
+    test(
+      'NoOpAcousticCandidateScorer returns empty map without throwing',
+      () async {
+        const scorer = NoOpAcousticCandidateScorer();
+        final audioContext = SpokenAudioContext(
+          bytes: Uint8List.fromList([1, 2, 3]),
+          durationMs: 1000,
+        );
 
-      final scores = await scorer.rescoreCandidates(
-        audioContext: audioContext,
-        candidates: const [
-          EntityCandidate(id: 'd1', canonicalName: 'Josh Moffett', type: EntityType.driver),
-        ],
-      );
+        final scores = await scorer.rescoreCandidates(
+          audioContext: audioContext,
+          candidates: const [
+            EntityCandidate(
+              id: 'd1',
+              canonicalName: 'Josh Moffett',
+              type: EntityType.driver,
+            ),
+          ],
+        );
 
-      expect(scores, isEmpty);
-    });
+        expect(scores, isEmpty);
+      },
+    );
   });
 
   group('SpokenEntityResolver Orchestration & Deterministic Guarantees', () {
-    test('Typed search delegates directly to DatabaseEntityResolver unchanged', () async {
-      final repo = TestLookupRepo();
-      final dbResolver = DatabaseEntityResolver(repository: repo);
-      final spokenResolver = SpokenEntityResolver(
-        repository: repo,
-        baseResolver: dbResolver,
-      );
+    test(
+      'Typed search delegates directly to DatabaseEntityResolver unchanged',
+      () async {
+        final repo = TestLookupRepo();
+        final dbResolver = DatabaseEntityResolver(repository: repo);
+        final spokenResolver = SpokenEntityResolver(
+          repository: repo,
+          baseResolver: dbResolver,
+        );
 
-      const typedQuery = SearchQuery(
-        intent: SearchIntent.searchDriverVideos,
-        driverNames: ['Moffett'],
-      );
+        const typedQuery = SearchQuery(
+          intent: SearchIntent.searchDriverVideos,
+          driverNames: ['Moffett'],
+        );
 
-      final dbResult = await dbResolver.resolve(typedQuery);
-      final spokenResult = await spokenResolver.resolve(typedQuery);
+        final dbResult = await dbResolver.resolve(typedQuery);
+        final spokenResult = await spokenResolver.resolve(typedQuery);
 
-      expect(spokenResult.requiresClarification, dbResult.requiresClarification);
-      expect(spokenResult.resolvedQuery?.driverNames, dbResult.resolvedQuery?.driverNames);
-      expect(spokenResult.resolvedQuery?.driverIds, dbResult.resolvedQuery?.driverIds);
-      expect(spokenResult.resolutions.keys, dbResult.resolutions.keys);
-    });
+        expect(
+          spokenResult.requiresClarification,
+          dbResult.requiresClarification,
+        );
+        expect(
+          spokenResult.resolvedQuery?.driverNames,
+          dbResult.resolvedQuery?.driverNames,
+        );
+        expect(
+          spokenResult.resolvedQuery?.driverIds,
+          dbResult.resolvedQuery?.driverIds,
+        );
+        expect(spokenResult.resolutions.keys, dbResult.resolutions.keys);
+      },
+    );
 
     test('resolveSpoken handles 1-best transcripts and preserves 0% false confident goal', () async {
       final repo = TestLookupRepo();
@@ -332,7 +389,9 @@ void main() {
         rallyNames: ['Donegal'],
       );
 
-      final speechResult = SpeechTranscriptionResult.textOnly(text: 'Donegal rally');
+      final speechResult = SpeechTranscriptionResult.textOnly(
+        text: 'Donegal rally',
+      );
       final result = await spokenResolver.resolveSpoken(
         parsedQuery: parsedQuery,
         speechResult: speechResult,
@@ -346,7 +405,9 @@ void main() {
   group('NaturalLanguageSearchService Spoken Execution & Lifecycle', () {
     test('searchSpoken disposes SpokenAudioContext in finally block on success', () async {
       final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/test_leak_${DateTime.now().millisecondsSinceEpoch}.m4a');
+      final tempFile = File(
+        '${tempDir.path}/test_leak_${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
       tempFile.writeAsBytesSync([10, 20, 30]);
       expect(tempFile.existsSync(), isTrue);
 
@@ -390,7 +451,9 @@ void main() {
 
     test('searchSpoken disposes SpokenAudioContext in finally block on error', () async {
       final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/test_leak_err_${DateTime.now().millisecondsSinceEpoch}.m4a');
+      final tempFile = File(
+        '${tempDir.path}/test_leak_err_${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
       tempFile.writeAsBytesSync([10, 20, 30]);
 
       final audioContext = SpokenAudioContext(

@@ -1,0 +1,31 @@
+{
+  "status": "valid",
+  "fixtureHashValid": true,
+  "statuses": [
+    {
+      "alias": "IDENTITY_DRIVER_ONLY_01",
+      "valid": true,
+      "sameNameOppositeProfileCount": null
+    },
+    {
+      "alias": "IDENTITY_CODRIVER_ONLY_01",
+      "valid": true,
+      "sameNameOppositeProfileCount": null
+    },
+    {
+      "alias": "IDENTITY_DUAL_ROLE_01",
+      "valid": true,
+      "sameNameOppositeProfileCount": null
+    },
+    {
+      "alias": "IDENTITY_NULL_DRIVER_01",
+      "valid": true,
+      "sameNameOppositeProfileCount": 0
+    },
+    {
+      "alias": "IDENTITY_NULL_CODRIVER_01",
+      "valid": true,
+      "sameNameOppositeProfileCount": 0
+    }
+  ]
+}

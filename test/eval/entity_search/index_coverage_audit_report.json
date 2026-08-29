@@ -1,0 +1,153 @@
+{
+  "personProfiles": {
+    "totalDriverProfiles": 4515,
+    "totalCodriverProfiles": 4238,
+    "distinctNonNullAccountIds": 61,
+    "profilesWithNullAccountId": 8689,
+    "namedProfilesWithNullAccountId": 8689,
+    "distinctCanonicalPersonAccountsExpected": 61,
+    "accountBackedIdentities": 61,
+    "nullAccountDriverIdentities": 4473,
+    "nullAccountCodriverIdentities": 4216,
+    "expectedTotalPersonCanonicalIdentities": 8750,
+    "actualPersonEntitiesIndexed": 8750,
+    "missingIdentityCount": 0,
+    "missingIdentityIds": [],
+    "missingAccounts": [],
+    "missingByReason": {
+      "NULL account_id": 0,
+      "loader filter": 0,
+      "bad join": 0,
+      "dedup bug": 0,
+      "invalid/empty name": 0,
+      "database inconsistency": 0,
+      "other": 0
+    }
+  },
+  "coverage": {
+    "PERSON": {
+      "sourceCanonicalCount": 8750,
+      "indexedCanonicalCount": 8750,
+      "missingCount": 0,
+      "coveragePercent": 100.0
+    },
+    "RALLY": {
+      "sourceCanonicalCount": 111,
+      "indexedCanonicalCount": 111,
+      "missingCount": 0,
+      "coveragePercent": 100.0
+    },
+    "STAGE": {
+      "sourceCanonicalCount": 1025,
+      "indexedCanonicalCount": 1025,
+      "missingCount": 0,
+      "coveragePercent": 100.0
+    },
+    "UPLOADER": {
+      "sourceCanonicalCount": 1359,
+      "indexedCanonicalCount": 1359,
+      "missingCount": 0,
+      "coveragePercent": 100.0
+    }
+  },
+  "namedTraces": [
+    {
+      "expectedName": "Paweł Molgo",
+      "normalizedName": "pawel molgo",
+      "profileRows": [
+        {
+          "role": "driver",
+          "roleId": "0c7cef00-0888-41a6-8a4b-e64b32a75971",
+          "accountId": null,
+          "fullName": "Paweł Molgo",
+          "country": "Poland",
+          "excludedByLoader": false,
+          "exclusionReason": null,
+          "loaderIdentity": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971"
+        }
+      ],
+      "accountIds": [],
+      "loaderOutput": [
+        {
+          "canonicalId": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+          "canonicalName": "Paweł Molgo",
+          "metadata": {
+            "accountId": null,
+            "driverId": "0c7cef00-0888-41a6-8a4b-e64b32a75971",
+            "codriverId": null,
+            "role": "driver",
+            "country": "Poland",
+            "canonicalDisplayName": "Paweł Molgo",
+            "searchableNames": [
+              "Paweł Molgo"
+            ],
+            "identityKind": "driver"
+          }
+        }
+      ],
+      "absentReason": null
+    },
+    {
+      "expectedName": "Shea Breen",
+      "normalizedName": "shea breen",
+      "profileRows": [
+        {
+          "role": "driver",
+          "roleId": "24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+          "accountId": null,
+          "fullName": "Shea Breen",
+          "country": "gb",
+          "excludedByLoader": false,
+          "exclusionReason": null,
+          "loaderIdentity": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39"
+        },
+        {
+          "role": "co_driver",
+          "roleId": "9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+          "accountId": null,
+          "fullName": "Shea Breen",
+          "country": "gb",
+          "excludedByLoader": false,
+          "exclusionReason": null,
+          "loaderIdentity": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc"
+        }
+      ],
+      "accountIds": [],
+      "loaderOutput": [
+        {
+          "canonicalId": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+          "canonicalName": "Shea Breen",
+          "metadata": {
+            "accountId": null,
+            "driverId": "24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+            "codriverId": null,
+            "role": "driver",
+            "country": "gb",
+            "canonicalDisplayName": "Shea Breen",
+            "searchableNames": [
+              "Shea Breen"
+            ],
+            "identityKind": "driver"
+          }
+        },
+        {
+          "canonicalId": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+          "canonicalName": "Shea Breen",
+          "metadata": {
+            "accountId": null,
+            "driverId": null,
+            "codriverId": "9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+            "role": "co_driver",
+            "country": "gb",
+            "canonicalDisplayName": "Shea Breen",
+            "searchableNames": [
+              "Shea Breen"
+            ],
+            "identityKind": "codriver"
+          }
+        }
+      ],
+      "absentReason": null
+    }
+  ]
+}

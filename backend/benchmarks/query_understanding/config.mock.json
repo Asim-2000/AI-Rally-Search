@@ -1,0 +1,6 @@
+{
+  "pricing": "benchmarks/query_understanding/pricing_v1.json",
+  "models": [
+    {"provider": "mock", "model": "mock-parser-v1", "temperature": 0.0, "maxTokens": 1024, "structuredOutput": true, "maxRetries": 0}
+  ]
+}

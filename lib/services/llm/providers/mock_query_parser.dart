@@ -167,6 +167,9 @@ class MockLlmQueryParser implements LlmQueryParser {
     } else if (lower.contains('josh')) {
       driverName = 'Josh';
     }
+    final driverNames = <String>[];
+    if (lower.contains('josh moffett')) driverNames.add('Josh Moffett');
+    if (lower.contains('sam moffett')) driverNames.add('Sam Moffett');
 
     // 3. Extract Country
     String? country;
@@ -231,7 +234,7 @@ class MockLlmQueryParser implements LlmQueryParser {
     } else if (lower.contains('donegal international rally')) {
       rallyName = 'Donegal International Rally';
     } else if (lower.contains('donegal')) {
-      rallyName = 'Donegal';
+      rallyName = lower.contains('rally') ? 'Donegal Rally' : 'Donegal';
     } else if (lower.contains('trackrod rally')) {
       rallyName = 'Trackrod Rally';
     } else if (lower.contains('trackrod')) {
@@ -360,11 +363,13 @@ class MockLlmQueryParser implements LlmQueryParser {
         driverName = null;
         rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
         year ??= context.previousQuery?.year;
+        intent = context.previousQuery?.intent ?? intent;
       }
 
       if (lower.contains('what about 2024') || lower.contains('in 2024') && rallyName == null) {
         rallyName ??= context.referents.activeRally ?? context.previousQuery?.rallyName;
         driverName ??= context.referents.activeDriver ?? context.previousQuery?.driverName;
+        intent = context.previousQuery?.intent ?? intent;
       }
     }
 
@@ -378,6 +383,11 @@ class MockLlmQueryParser implements LlmQueryParser {
       year ??= context.previousQuery?.year;
       intent = SearchIntent.searchVideoActions;
     }
+    if (actionTypes.isEmpty &&
+        context != null &&
+        (lower.contains('forget the driver') || lower.contains('what about 2024'))) {
+      actionTypes = List<String>.from(context.previousQuery?.actionTypes ?? const []);
+    }
 
     return SearchQuery(
       intent: intent,
@@ -386,10 +396,12 @@ class MockLlmQueryParser implements LlmQueryParser {
       country: country,
       city: city,
       stageName: stageName,
-      driverName: driverName,
+      driverNames: driverNames.length > 1 ? driverNames : const [],
+      driverName: driverNames.length > 1 ? null : driverName,
       actionTypes: actionTypes,
       year: year,
       personRole: personRole,
+      driverMatchMode: lower.contains('both') ? MatchMode.all : MatchMode.any,
       limit: limit,
     );
   }

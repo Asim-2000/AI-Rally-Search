@@ -1,0 +1,1384 @@
+{
+  "totalQueries": 168,
+  "positive": {
+    "queries": 62,
+    "correctConfident": 34,
+    "wrongConfident": 0,
+    "clarification": 27,
+    "noMatch": 1,
+    "details": [
+      {
+        "input": "aluksnay",
+        "canonical": "Rally Alūksne 2026",
+        "type": "rally",
+        "resolved": "Rally Alūksne 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "a looks nay",
+        "canonical": "Rally Alūksne 2026",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "alux new",
+        "canonical": "Rally Alūksne 2026",
+        "type": "rally",
+        "resolved": "Rally Alūksne 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "eluksne",
+        "canonical": "Rally Alūksne 2026",
+        "type": "rally",
+        "resolved": "Rally Alūksne 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "aluknse",
+        "canonical": "Rally Alūksne 2026",
+        "type": "rally",
+        "resolved": "Rally Alūksne 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "aluksney",
+        "canonical": "Rally Alūksne 2026",
+        "type": "rally",
+        "resolved": "Rally Alūksne 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "pawel malgo",
+        "canonical": "Paweł Molgo",
+        "type": "driver",
+        "resolved": "Paweł Molgo",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "shea brain",
+        "canonical": "Shea Breen",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "donny gall rally",
+        "canonical": "Donegal International Rally",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "kemel berg",
+        "canonical": "Woodstoxx Kemmelberg 1",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "dushniki",
+        "canonical": "Duszniki - Zieleniec 2",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "kortrik",
+        "canonical": "6 Uren van Kortrijk 2024",
+        "type": "rally",
+        "resolved": "6 Uren van Kortrijk 2024",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Serras de Fafe",
+        "canonical": "Rali Serras de Fafe 2025",
+        "type": "rally",
+        "resolved": "Rali Serras de Fafe 2025",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "lazdiai",
+        "canonical": "7bet Rally Lazdijai 2025",
+        "type": "rally",
+        "resolved": "7bet Rally Lazdijai 2025",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "aboborera",
+        "canonical": "Rali Terras d'Aboboreira 2026",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Polski Raid Legend",
+        "canonical": "Polski Rajd Legend 2026",
+        "type": "rally",
+        "resolved": "Polski Rajd Legend 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Rally Vranow",
+        "canonical": "Rally Vranov 2026",
+        "type": "rally",
+        "resolved": "Rally Vranov 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "1000 Hugel Rallye",
+        "canonical": "OBM Land der 1000 Hügel Rallye 2026",
+        "type": "rally",
+        "resolved": "OBM Land der 1000 Hügel Rallye 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Cesavine",
+        "canonical": "Rallijsprints Cesavine 2026",
+        "type": "rally",
+        "resolved": "Rallijsprints Cesavine 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Regional des Ardennes",
+        "canonical": "Rallye Régional des Ardennes 2025",
+        "type": "rally",
+        "resolved": "Rallye Régional des Ardennes 2025",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Castelo Branco 2025",
+        "canonical": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+        "type": "rally",
+        "resolved": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Rally of the Lakes",
+        "canonical": "Assess Ireland International Rally of the Lakes 2026",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "West Cork Rally",
+        "canonical": "Clonakilty Park Hotel West Cork Rally 2026",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Fivemiletown Rally",
+        "canonical": "Samsonas Rally Fivemiletown 2026",
+        "type": "rally",
+        "resolved": "Samsonas Rally Fivemiletown 2026",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Ulster Rally 2025",
+        "canonical": "Modern Tyres Ulster Rally 2025",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Ravens Rock Stages",
+        "canonical": "Raven's Rock Stages Rally 2025",
+        "type": "rally",
+        "resolved": "Raven's Rock Stages Rally 2025",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Birr Stages 2026",
+        "canonical": "Birr Stages Rally 2026",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Fastnet Stages 2025",
+        "canonical": "Fastnet Stages Rally 2025",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Cavan Stages 2025",
+        "canonical": "HK Cavan Stages Rally 2025",
+        "type": "rally",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Jon Gunnar Stoten",
+        "canonical": "Jon-Gunnar Støten",
+        "type": "driver",
+        "resolved": "Jon-Gunnar Støten",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Michal Babicka",
+        "canonical": "Michal Babička",
+        "type": "driver",
+        "resolved": "Michal Babička",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Adam Zelik",
+        "canonical": "Adam Zelík",
+        "type": "driver",
+        "resolved": "Adam Zelík",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Veroslav Cvrcek",
+        "canonical": "Věroslav Cvrček",
+        "type": "driver",
+        "resolved": "Věroslav Cvrček",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Piotr Krotoszynski",
+        "canonical": "Piotr Krotoszyński",
+        "type": "driver",
+        "resolved": "Piotr Krotoszyński",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Herve Emerio",
+        "canonical": "Hervé Emeriau",
+        "type": "driver",
+        "resolved": "Hervé Emeriau",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Jose Pawla",
+        "canonical": "José Paula",
+        "type": "driver",
+        "resolved": "José Paula",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Sergio Ramon",
+        "canonical": "Sergio Ramón Arrom",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Raphael Czwartkovski",
+        "canonical": "Raphaël Czwartkowski",
+        "type": "driver",
+        "resolved": "Raphaël Czwartkowski",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Vitor Mathias",
+        "canonical": "Vítor Matias",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Steven OConnor",
+        "canonical": "Stephen O'Connor",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Dermot OToole",
+        "canonical": "Diarmuid O'Toole",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Tanja Zingelmann",
+        "canonical": "Tanja Zingelmann-Hartjen",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"Tanja Zingelmann\")."
+      },
+      {
+        "input": "Nenad Loncarich",
+        "canonical": "Nenad Lončarič",
+        "type": "driver",
+        "resolved": "Nenad Lončarič",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Matej Bogovich",
+        "canonical": "Matej Bogović",
+        "type": "driver",
+        "resolved": "Matej Bogović",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Andrej Medich",
+        "canonical": "Andrej Medić",
+        "type": "driver",
+        "resolved": "Andrej Medić",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "John Shanahan Jr",
+        "canonical": "John Shanahan jnr.",
+        "type": "driver",
+        "resolved": "John Shanahan jnr.",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Max Frieman",
+        "canonical": "Max Freeman",
+        "type": "driver",
+        "resolved": "Max Freeman",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Jan Erik Mall",
+        "canonical": "Jan-Erik Mäll",
+        "type": "driver",
+        "resolved": "Jan-Erik Mäll",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Katarina Schmidt",
+        "canonical": "Catharina Schmidt",
+        "type": "driver",
+        "resolved": "Catharina Schmidt",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Pawel Molgo",
+        "canonical": "Paweł Molgo",
+        "type": "driver",
+        "resolved": "Paweł Molgo",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Shea Breen",
+        "canonical": "Shea Breen",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Stoten",
+        "canonical": "Jon-Gunnar Støten",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Cvrcek",
+        "canonical": "Věroslav Cvrček",
+        "type": "driver",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Kemmelberg 1",
+        "canonical": "Woodstoxx Kemmelberg 1",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Duszniki Zieleniec",
+        "canonical": "Duszniki - Zieleniec 2",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Seiksozo",
+        "canonical": "Seixoso 2",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Drumhalagh",
+        "canonical": "Drumhallagh 2",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Dikebus",
+        "canonical": "Dikkebus 1",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Fafe Powerstage",
+        "canonical": "Fafe 2Powerstage",
+        "type": "stage",
+        "resolved": "Fafe 2Powerstage",
+        "correct": true,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Knokalla",
+        "canonical": "Knockalla 2",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Dunworly",
+        "canonical": "Dunworley 2",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Kelley Mount 1",
+        "canonical": "Kellymount 1",
+        "type": "stage",
+        "resolved": null,
+        "correct": false,
+        "clarification": true,
+        "error": null
+      }
+    ]
+  },
+  "negativeConfusable": {
+    "queries": 106,
+    "wrongConfident": 0,
+    "clarification": 30,
+    "rejection": 76,
+    "details": [
+      {
+        "input": "Josh Smith",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Sam Williams",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Keith O'Connor",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Craig McErlean",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Callum Breen",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Paul Moffett",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "David Cronin",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Michael Devine",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Mark Freeman",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "John Breen",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Brain",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Breenan",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Moffitt",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Moffat",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Cronan",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Devaney",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Molgow",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Stotenberg",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Zelinski",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Babic",
+        "type": "driver",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Rally of the Mountains",
+        "type": "rally",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "International Stages",
+        "type": "rally",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "West Coast Rally",
+        "type": "rally",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Cork 25 Stages",
+        "type": "rally",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Donegal 1972",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Galway 1981",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Lakes Rally 1990",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Ulster Stages 1965",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Aluksne 1999",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Fafe Classic 1985",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "Super Stage 1",
+        "type": "stage",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Powerstage Final",
+        "type": "stage",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Mountain Pass 2",
+        "type": "stage",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Forest Stage 3",
+        "type": "stage",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Sprint Stage 1",
+        "type": "stage",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "Town Stage 2",
+        "type": "stage",
+        "resolved": null,
+        "clarification": true,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity1 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity2 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity2 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity3 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity4 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity4 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity5 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity6 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity6 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity7 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity8 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity8 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity9 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity10 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity10 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity11 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity12 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity12 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity13 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity14 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity14 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity15 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity16 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity16 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity17 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity18 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity18 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity19 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity20 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity20 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity21 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity22 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity22 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity23 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity24 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity24 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity25 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity26 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity26 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity27 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity28 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity28 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity29 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity30 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity30 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity31 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity32 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity32 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity33 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity34 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity34 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity35 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity36 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity36 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity37 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity38 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity38 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity39 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity40 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity40 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity41 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity42 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity42 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity43 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity44 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity44 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity45 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity46 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity46 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity47 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity48 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity48 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity49 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity50 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity50 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity51 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity52 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity52 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity53 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity54 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity54 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity55 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity56 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity56 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity57 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity58 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity58 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity59 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity60 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity60 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity61 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity62 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity62 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity63 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity64 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity64 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity65 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity66 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity66 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity67 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity68 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity68 PseudoName\")."
+      },
+      {
+        "input": "FictionalEntity69 PseudoName",
+        "type": "rally",
+        "resolved": null,
+        "clarification": false,
+        "error": null
+      },
+      {
+        "input": "FictionalEntity70 PseudoName",
+        "type": "driver",
+        "resolved": null,
+        "clarification": false,
+        "error": "We couldn't confidently identify that driver (\"FictionalEntity70 PseudoName\")."
+      }
+    ]
+  },
+  "falseConfidentAutoResolution": 0,
+  "fallbackTelemetry": {
+    "legacyResolved": 37,
+    "legacyClarified": 55,
+    "legacyNoMatch": 81,
+    "entitySearchInvoked": 155,
+    "entitySearchResolved": 16,
+    "entitySearchClarified": 61,
+    "entitySearchNoMatch": 78,
+    "entitySearchRecoveredLegacyFailure": 4,
+    "roleConstraintRejected": 49,
+    "yearConstraintRejected": 0,
+    "duplicateIdentityClarification": 12,
+    "legacyLatencyMicroseconds": 18408432,
+    "entitySearchLatencyMicroseconds": 13916179,
+    "totalResolutionLatencyMicroseconds": 32334941
+  },
+  "nullAccountSafety": [
+    {
+      "case": "same visible name / different IDs",
+      "input": "Shea Breen",
+      "role": "any",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    },
+    {
+      "case": "wrong PersonRole",
+      "input": "Paweł Molgo",
+      "role": "coDriver",
+      "resolvedCanonicalId": null,
+      "clarification": false,
+      "error": "We couldn't confidently identify that driver (\"Paweł Molgo\").",
+      "safe": true
+    },
+    {
+      "case": "common surname collision",
+      "input": "David Young",
+      "role": "any",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    },
+    {
+      "case": "partial person name",
+      "input": "Paweł",
+      "role": "any",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    },
+    {
+      "case": "duplicate person names",
+      "input": "John O'Sullivan",
+      "role": "driver",
+      "resolvedCanonicalId": null,
+      "clarification": true,
+      "error": null,
+      "safe": true
+    }
+  ]
+}

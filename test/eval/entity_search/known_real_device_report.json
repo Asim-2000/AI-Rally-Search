@@ -1,0 +1,1082 @@
+[
+  {
+    "input": "aluksni",
+    "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 37,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.8014285714285714,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.8133333333333334,
+          "lexical": 0.9428571428571428,
+          "phonetic": 0.9428571428571428,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "name": "ALMC Hellfire Rally 2025",
+        "score": 0.5286038961038961,
+        "matchedSearchableName": "ALMC Hellfire Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.047058823529411764,
+          "lexical": 0.5595238095238095,
+          "phonetic": 0.6450216450216449,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "name": "Alina Test",
+        "score": 0.5003306878306878,
+        "matchedSearchableName": "Alina Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05714285714285714,
+          "lexical": 0.5886243386243386,
+          "phonetic": 0.5886243386243386,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "3e7d910e-3573-4011-b8c7-125f299b22c9",
+        "name": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+        "score": 0.5001357560568086,
+        "matchedSearchableName": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.020000000000000004,
+          "lexical": 0.5327903091060985,
+          "phonetic": 0.6090225563909774,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "9feae7cf-222c-4794-b58e-30a2a2ec658d",
+        "name": "Rally Anglo Caledonian 2024",
+        "score": 0.4829285714285715,
+        "matchedSearchableName": "Rally Anglo Caledonian 2024",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.08421052631578947,
+          "lexical": 0.5293650793650794,
+          "phonetic": 0.5825396825396826,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "aluksnay",
+    "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 45,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.8319285714285715,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.744055944055944,
+          "lexical": 0.9214285714285715,
+          "phonetic": 1.0,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "name": "Alina Test",
+        "score": 0.5512764550264551,
+        "matchedSearchableName": "Alina Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.10666666666666667,
+          "lexical": 0.6268518518518519,
+          "phonetic": 0.6566137566137565,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fc6c7658-da84-404c-a255-78771d654527",
+        "name": "McDonald & Munro Speyside Stages 2025",
+        "score": 0.5212222222222223,
+        "matchedSearchableName": "McDonald & Munro Speyside Stages 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05925925925925926,
+          "lexical": 0.5396825396825397,
+          "phonetic": 0.6404761904761905,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "name": "ALMC Hellfire Rally 2025",
+        "score": 0.508524531024531,
+        "matchedSearchableName": "ALMC Hellfire Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.044444444444444446,
+          "lexical": 0.47222222222222215,
+          "phonetic": 0.6450216450216449,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fb1a7e66-bf8a-46ca-9c0c-6c21b73ca861",
+        "name": "Rally Val d'Aveto 2025",
+        "score": 0.49509920634920634,
+        "matchedSearchableName": "Rally Val d'Aveto 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05333333333333334,
+          "lexical": 0.5694444444444444,
+          "phonetic": 0.5873015873015873,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "aluksney",
+    "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 43,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.95,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 1.0,
+          "ngram": 0.9146853146853147,
+          "lexical": 0.975,
+          "phonetic": 1.0,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "61d92fb9-64dd-4fea-a421-a9fd2fd7afef",
+        "name": "Fastnet Stages Rally 2025",
+        "score": 0.6016666666666666,
+        "matchedSearchableName": "Fastnet Stages Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.06153846153846154,
+          "lexical": 0.6904761904761904,
+          "phonetic": 0.7142857142857143,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "3efe08ff-7ab6-4249-8982-7a12fa6de5c3",
+        "name": "Rallijsprints Cesavine 2026",
+        "score": 0.5556190476190477,
+        "matchedSearchableName": "Rallijsprints Cesavine 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05714285714285714,
+          "lexical": 0.5833333333333334,
+          "phonetic": 0.6797619047619049,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "name": "Alina Test",
+        "score": 0.5512764550264551,
+        "matchedSearchableName": "Alina Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05333333333333334,
+          "lexical": 0.6268518518518519,
+          "phonetic": 0.6566137566137565,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fc6c7658-da84-404c-a255-78771d654527",
+        "name": "McDonald & Munro Speyside Stages 2025",
+        "score": 0.5390198412698413,
+        "matchedSearchableName": "McDonald & Munro Speyside Stages 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05925925925925926,
+          "lexical": 0.6170634920634921,
+          "phonetic": 0.6404761904761905,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "alux new",
+    "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 42,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.8038333333333334,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.32,
+          "lexical": 0.8666666666666668,
+          "phonetic": 0.975,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "61d92fb9-64dd-4fea-a421-a9fd2fd7afef",
+        "name": "Fastnet Stages Rally 2025",
+        "score": 0.5704761904761904,
+        "matchedSearchableName": "Fastnet Stages Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.06666666666666667,
+          "lexical": 0.6190476190476191,
+          "phonetic": 0.6904761904761904,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "name": "Alina Test",
+        "score": 0.5607896825396825,
+        "matchedSearchableName": "Alina Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05714285714285714,
+          "lexical": 0.671957671957672,
+          "phonetic": 0.6268518518518519,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "3efe08ff-7ab6-4249-8982-7a12fa6de5c3",
+        "name": "Rallijsprints Cesavine 2026",
+        "score": 0.5412738095238095,
+        "matchedSearchableName": "Rallijsprints Cesavine 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.06153846153846154,
+          "lexical": 0.6011904761904762,
+          "phonetic": 0.65,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "name": "ALMC Hellfire Rally 2025",
+        "score": 0.5138419913419914,
+        "matchedSearchableName": "ALMC Hellfire Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.047058823529411764,
+          "lexical": 0.5595238095238095,
+          "phonetic": 0.6212121212121212,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "a looks nay",
+    "type": "rally",
+    "legacyOutcome": "no_match",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 50,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Did you mean \"Rally Alūksne 2026\"?",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.8052169312169313,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.2714285714285714,
+          "lexical": 0.8052910052910053,
+          "phonetic": 1.0,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "name": "Alina Test",
+        "score": 0.545952380952381,
+        "matchedSearchableName": "Alina Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.1,
+          "lexical": 0.6037037037037037,
+          "phonetic": 0.6566137566137565,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fc6c7658-da84-404c-a255-78771d654527",
+        "name": "McDonald & Munro Speyside Stages 2025",
+        "score": 0.5260899470899472,
+        "matchedSearchableName": "McDonald & Munro Speyside Stages 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05714285714285714,
+          "lexical": 0.5608465608465608,
+          "phonetic": 0.6404761904761905,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "2ae62071-898f-44d7-9b5a-7b0f6794cec9",
+        "name": "Moonraker Forestry Rally 2025",
+        "score": 0.5152804232804232,
+        "matchedSearchableName": "Moonraker Forestry Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.6037037037037037,
+          "phonetic": 0.6071428571428571,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "2c411152-5bfe-4292-bd5a-43bc98ba6ab3",
+        "name": "Moonraker Forestry Rally 2026",
+        "score": 0.5152804232804232,
+        "matchedSearchableName": "Moonraker Forestry Rally 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.6037037037037037,
+          "phonetic": 0.6071428571428571,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "eluksne",
+    "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 36,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.7690476190476191,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.8133333333333334,
+          "lexical": 0.9047619047619048,
+          "phonetic": 0.9047619047619048,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "3efe08ff-7ab6-4249-8982-7a12fa6de5c3",
+        "name": "Rallijsprints Cesavine 2026",
+        "score": 0.6009285714285715,
+        "matchedSearchableName": "Rallijsprints Cesavine 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.06153846153846154,
+          "lexical": 0.6904761904761904,
+          "phonetic": 0.7130952380952381,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "05b95085-b30c-4fbe-a075-175566d2252e",
+        "name": "Ireland Rally Test",
+        "score": 0.5482683982683982,
+        "matchedSearchableName": "Ireland Rally Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.6450216450216449,
+          "phonetic": 0.6450216450216449,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "61d92fb9-64dd-4fea-a421-a9fd2fd7afef",
+        "name": "Fastnet Stages Rally 2025",
+        "score": 0.5261904761904762,
+        "matchedSearchableName": "Fastnet Stages Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.06666666666666667,
+          "lexical": 0.6190476190476191,
+          "phonetic": 0.6190476190476191,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "3e7d910e-3573-4011-b8c7-125f299b22c9",
+        "name": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+        "score": 0.49937343358395986,
+        "matchedSearchableName": "Century 21 Portugal Rally Series - Castelo Branco 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.020000000000000004,
+          "lexical": 0.5883458646616541,
+          "phonetic": 0.5852130325814536,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "aluknse",
+    "type": "rally",
+    "legacyOutcome": "resolved",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 40,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "resolved",
+    "resolvedCanonicalName": "Rally Alūksne 2026",
+    "userVisibleBehavior": "execute canonical result",
+    "top5": [
+      {
+        "id": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "name": "Rally Alūksne 2026",
+        "score": 0.8257142857142857,
+        "matchedSearchableName": "Rally Alūksne 2026",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.44,
+          "lexical": 0.9714285714285714,
+          "phonetic": 0.9714285714285714,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+        "name": "Alina Test",
+        "score": 0.5864550264550265,
+        "matchedSearchableName": "Alina Test",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05714285714285714,
+          "lexical": 0.6899470899470899,
+          "phonetic": 0.6899470899470899,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "f29869cb-4367-4d95-89ba-248ce067b5b9",
+        "name": "Plains Rally 2025",
+        "score": 0.5716587301587301,
+        "matchedSearchableName": "Plains Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.07272727272727274,
+          "lexical": 0.6626984126984127,
+          "phonetic": 0.6761904761904761,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fc6c7658-da84-404c-a255-78771d654527",
+        "name": "McDonald & Munro Speyside Stages 2025",
+        "score": 0.5505873015873015,
+        "matchedSearchableName": "McDonald & Munro Speyside Stages 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.03076923076923077,
+          "lexical": 0.6031746031746031,
+          "phonetic": 0.6642857142857143,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "name": "ALMC Hellfire Rally 2025",
+        "score": 0.5286038961038961,
+        "matchedSearchableName": "ALMC Hellfire Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.047058823529411764,
+          "lexical": 0.5595238095238095,
+          "phonetic": 0.6450216450216449,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "pawel malgo",
+    "type": "person",
+    "legacyOutcome": "no_match",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 1200,
+    "fullUniverseSize": 8750,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": "Paweł Molgo",
+    "userVisibleBehavior": "Did you mean \"Paweł Molgo\"?",
+    "top5": [
+      {
+        "id": "person:driver:0c7cef00-0888-41a6-8a4b-e64b32a75971",
+        "name": "Paweł Molgo",
+        "score": 0.8356861111111111,
+        "matchedSearchableName": "Paweł Molgo",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.6861111111111111,
+          "lexical": 0.9266666666666666,
+          "phonetic": 0.9180555555555555,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:codriver:516fcdf0-b284-4622-a85e-980b690a5312",
+        "name": "Paweł Omlet",
+        "score": 0.7964833333333334,
+        "matchedSearchableName": "Paweł Omlet",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.4027777777777778,
+          "lexical": 0.8825000000000001,
+          "phonetic": 0.8666666666666666,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:driver:7991d6c3-e5a7-4cb6-b413-70bc0bf47c1a",
+        "name": "Paweł Hoffman",
+        "score": 0.7767373015873017,
+        "matchedSearchableName": "Paweł Hoffman",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.4,
+          "lexical": 0.8558333333333334,
+          "phonetic": 0.8526984126984127,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:driver:6c30b7ae-ad58-4cf4-8100-a2c0f686800a",
+        "name": "Paweł Ważny",
+        "score": 0.7599111111111112,
+        "matchedSearchableName": "Paweł Ważny",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.4027777777777778,
+          "lexical": 0.8400000000000001,
+          "phonetic": 0.8222222222222222,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:driver:ce7af879-5d40-4d29-a003-144188837d20",
+        "name": "Paweł Wysocki",
+        "score": 0.7159925925925927,
+        "matchedSearchableName": "Paweł Wysocki",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.36,
+          "lexical": 0.8200000000000001,
+          "phonetic": 0.6851851851851851,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "shea brain",
+    "type": "person",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 1200,
+    "fullUniverseSize": 8750,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Did you mean \"Catherine Brain\"?",
+    "top5": [
+      {
+        "id": "person:codriver:9d48dcdc-88b7-470b-99c6-d8a4164299dc",
+        "name": "Shea Breen",
+        "score": 0.8441269841269841,
+        "matchedSearchableName": "Shea Breen",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.5928571428571427,
+          "lexical": 0.9111111111111111,
+          "phonetic": 0.9428571428571428,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:driver:24c4cb50-6361-4af1-8875-a7b6cb3c5e39",
+        "name": "Shea Breen",
+        "score": 0.8441269841269841,
+        "matchedSearchableName": "Shea Breen",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.5928571428571427,
+          "lexical": 0.9111111111111111,
+          "phonetic": 0.9428571428571428,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:driver:6b36e7e0-71e9-4d0f-8a78-e010d19fe8f8",
+        "name": "Shay Byrne",
+        "score": 0.7028253968253968,
+        "matchedSearchableName": "Shay Byrne",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.8222222222222222,
+          "phonetic": 0.8285714285714285,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:codriver:848badf1-2b8f-46ef-a7ae-1439a39fb78f",
+        "name": "Shea Kelly",
+        "score": 0.6908148148148149,
+        "matchedSearchableName": "Shea Kelly",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.5,
+          "ngram": 0.3214285714285714,
+          "lexical": 0.6296296296296297,
+          "phonetic": 0.8,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "person:codriver:14ffd959-9498-42e8-9040-1cd7b159a25c",
+        "name": "Shane Byrne",
+        "score": 0.6863005291005292,
+        "matchedSearchableName": "Shane Byrne",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.8226455026455027,
+          "phonetic": 0.7663492063492063,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "donny gall",
+    "type": "rally",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 51,
+    "fullUniverseSize": 111,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Which year or edition of \"donny gall\" are you looking for?",
+    "top5": [
+      {
+        "id": "01594380-c4aa-4d99-b19c-af125e032102",
+        "name": "Donegal test rally 15th",
+        "score": 0.660562091503268,
+        "matchedSearchableName": "Donegal test rally 15th",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.2654545454545455,
+          "lexical": 0.6732026143790849,
+          "phonetic": 0.8156862745098039,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "a3f1bdf2-a353-4be8-8110-a794c8cecaa3",
+        "name": "Loughgall Stages Rally 2025",
+        "score": 0.5918201058201058,
+        "matchedSearchableName": "Loughgall Stages Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.3214285714285714,
+          "lexical": 0.7037037037037037,
+          "phonetic": 0.6761904761904761,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "7b175f4d-632c-468d-aff5-51dd4778067a",
+        "name": "Dogleap Rally 2025",
+        "score": 0.5644708994708995,
+        "matchedSearchableName": "Dogleap Rally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05714285714285714,
+          "lexical": 0.671957671957672,
+          "phonetic": 0.6428571428571429,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "cfc487dc-12ea-4420-949f-dc3056935f3d",
+        "name": "Sezoensrally 2025",
+        "score": 0.555947570947571,
+        "matchedSearchableName": "Sezoensrally 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.15479876160990713,
+          "lexical": 0.6574074074074074,
+          "phonetic": 0.6450216450216449,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fc6c7658-da84-404c-a255-78771d654527",
+        "name": "McDonald & Munro Speyside Stages 2025",
+        "score": 0.5364682539682539,
+        "matchedSearchableName": "McDonald & Munro Speyside Stages 2025",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.13186813186813187,
+          "lexical": 0.5674603174603174,
+          "phonetic": 0.6547619047619048,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "kemel berg",
+    "type": "stage",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 361,
+    "fullUniverseSize": 1025,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Which stage named \"kemel berg\" do you mean?",
+    "top5": [
+      {
+        "id": "831768d8-dcbf-4113-b191-206ef58ab34c",
+        "name": "Kemmelberg 1",
+        "score": 0.8140378787878788,
+        "matchedSearchableName": "Kemmelberg 1",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.8055555555555556,
+          "lexical": 0.9416666666666667,
+          "phonetic": 0.9636363636363636,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "1cd5473e-242c-42b7-b06c-04f6c3572d2b",
+        "name": "Kemmelberg 2",
+        "score": 0.8140378787878788,
+        "matchedSearchableName": "Kemmelberg 2",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.8055555555555556,
+          "lexical": 0.9416666666666667,
+          "phonetic": 0.9636363636363636,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "34c7f5ec-7cbc-4e09-bca2-1425e57fa14d",
+        "name": "Castellane - Le Bourguet",
+        "score": 0.5717804232804232,
+        "matchedSearchableName": "Castellane - Le Bourguet",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.06153846153846154,
+          "lexical": 0.614021164021164,
+          "phonetic": 0.6944444444444443,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "b14893b3-d2b2-4d2d-b94f-f5eeb4d38bfd",
+        "name": "Sever / Albergaria",
+        "score": 0.554973544973545,
+        "matchedSearchableName": "Sever / Albergaria",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.3323809523809524,
+          "lexical": 0.652910052910053,
+          "phonetic": 0.652910052910053,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "8a38cd89-39a5-463f-87cb-524814df7710",
+        "name": "Killeter 1",
+        "score": 0.5372222222222223,
+        "matchedSearchableName": "Killeter 1",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.05,
+          "lexical": 0.6185185185185186,
+          "phonetic": 0.6370370370370371,
+          "context": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "input": "dushniki",
+    "type": "stage",
+    "legacyOutcome": "clarification",
+    "newCandidateRank": 1,
+    "candidatePoolSize": 194,
+    "fullUniverseSize": 1025,
+    "fullScanEscape": false,
+    "canonicalTargetPresentInGeneratedPool": true,
+    "finalResolverOutcome": "clarification",
+    "resolvedCanonicalName": null,
+    "userVisibleBehavior": "Which stage named \"dushniki\" do you mean?",
+    "top5": [
+      {
+        "id": "a2933c28-547e-44c2-8a5b-e39afbd6ff1e",
+        "name": "Duszniki - Zieleniec 1",
+        "score": 0.7029061890838206,
+        "matchedSearchableName": "Duszniki - Zieleniec 1",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.34545454545454546,
+          "lexical": 0.8234649122807017,
+          "phonetic": 0.8282407407407407,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "03caf52d-d0e0-4eaf-b13b-f762a7dc550d",
+        "name": "Duszniki - Zieleniec 2",
+        "score": 0.7029061890838206,
+        "matchedSearchableName": "Duszniki - Zieleniec 2",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.34545454545454546,
+          "lexical": 0.8234649122807017,
+          "phonetic": 0.8282407407407407,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "69a2fa8e-3203-4e71-87e6-2ac5bcb26b59",
+        "name": "Duszniki - Zieleniec 3",
+        "score": 0.7029061890838206,
+        "matchedSearchableName": "Duszniki - Zieleniec 3",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.34545454545454546,
+          "lexical": 0.8234649122807017,
+          "phonetic": 0.8282407407407407,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "fe52ded3-b4cb-4ff9-b3f5-3f13f275a933",
+        "name": "Usini 1",
+        "score": 0.6061309523809524,
+        "matchedSearchableName": "Usini 1",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.13333333333333333,
+          "lexical": 0.7130952380952381,
+          "phonetic": 0.7130952380952381,
+          "context": 0.0
+        }
+      },
+      {
+        "id": "564c7e54-369f-4859-81dc-17784323cd8a",
+        "name": "Usini 2",
+        "score": 0.6061309523809524,
+        "matchedSearchableName": "Usini 2",
+        "signals": {
+          "exact": 0.0,
+          "normalizedExact": 0.0,
+          "token": 0.0,
+          "ngram": 0.13333333333333333,
+          "lexical": 0.7130952380952381,
+          "phonetic": 0.7130952380952381,
+          "context": 0.0
+        }
+      }
+    ]
+  }
+]

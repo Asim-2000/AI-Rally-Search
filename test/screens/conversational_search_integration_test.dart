@@ -235,6 +235,7 @@ class ConversationalTestEntityLookupRepository implements IEntityLookupRepositor
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 10,
   }) async {
     final lower = phrase.toLowerCase().trim();

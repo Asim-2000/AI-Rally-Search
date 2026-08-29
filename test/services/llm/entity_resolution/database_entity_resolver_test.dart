@@ -27,16 +27,21 @@ class MockEntityLookupRepository implements IEntityLookupRepository {
     int limit = 10,
   }) async {
     final clean = phrase.toLowerCase().trim();
+    MapEntry<String, List<EntityCandidate>>? bestMatch;
     for (final entry in rallies.entries) {
-      if (entry.key.toLowerCase().contains(clean) || clean.contains(entry.key.toLowerCase())) {
-        var list = entry.value;
-        if (year != null) {
-          list = list.where((c) => c.metadata?['year'] == year).toList();
+      if (entry.key.toLowerCase().contains(clean) ||
+          clean.contains(entry.key.toLowerCase())) {
+        if (bestMatch == null || entry.key.length > bestMatch.key.length) {
+          bestMatch = entry;
         }
-        return list;
       }
     }
-    return [];
+    if (bestMatch == null) return [];
+    var list = bestMatch.value;
+    if (year != null) {
+      list = list.where((c) => c.metadata?['year'] == year).toList();
+    }
+    return list;
   }
 
   @override
@@ -45,24 +50,31 @@ class MockEntityLookupRepository implements IEntityLookupRepository {
     String? eventId,
     String? eventName,
     int? year,
+    PersonRole personRole = PersonRole.any,
     int limit = 10,
   }) async {
     final clean = phrase.toLowerCase().trim();
     for (final entry in drivers.entries) {
-      if (entry.key.toLowerCase().contains(clean) || clean.contains(entry.key.toLowerCase())) {
+      if (entry.key.toLowerCase().contains(clean) ||
+          clean.contains(entry.key.toLowerCase())) {
         var list = entry.value;
         // If event context matches, prioritize inContext matches
         if (eventId != null || eventName != null) {
-          final inContext = list.where((c) {
-            final ev = c.metadata?['eventId'] ?? c.metadata?['eventName'];
-            return ev == eventId || ev == eventName;
-          }).map((c) => EntityCandidate(
-            id: c.id,
-            type: c.type,
-            canonicalName: c.canonicalName,
-            subtitle: c.subtitle,
-            metadata: {...?c.metadata, 'inContext': true},
-          )).toList();
+          final inContext = list
+              .where((c) {
+                final ev = c.metadata?['eventId'] ?? c.metadata?['eventName'];
+                return ev == eventId || ev == eventName;
+              })
+              .map(
+                (c) => EntityCandidate(
+                  id: c.id,
+                  type: c.type,
+                  canonicalName: c.canonicalName,
+                  subtitle: c.subtitle,
+                  metadata: {...?c.metadata, 'inContext': true},
+                ),
+              )
+              .toList();
 
           if (inContext.isNotEmpty) return inContext;
         }
@@ -81,7 +93,8 @@ class MockEntityLookupRepository implements IEntityLookupRepository {
   }) async {
     final clean = phrase.toLowerCase().trim();
     for (final entry in stages.entries) {
-      if (entry.key.toLowerCase().contains(clean) || clean.contains(entry.key.toLowerCase())) {
+      if (entry.key.toLowerCase().contains(clean) ||
+          clean.contains(entry.key.toLowerCase())) {
         var list = entry.value;
         if (eventId != null) {
           list = list.where((s) => s.metadata?['eventId'] == eventId).toList();
@@ -100,7 +113,8 @@ class MockEntityLookupRepository implements IEntityLookupRepository {
   }) async {
     final clean = phrase.toLowerCase().trim();
     for (final entry in cities.entries) {
-      if (entry.key.toLowerCase().contains(clean) || clean.contains(entry.key.toLowerCase())) {
+      if (entry.key.toLowerCase().contains(clean) ||
+          clean.contains(entry.key.toLowerCase())) {
         return entry.value;
       }
     }
@@ -135,7 +149,31 @@ void main() {
               type: EntityType.rally,
               canonicalName: 'Moonraker Forestry Rally 2026',
               subtitle: 'Ireland • Dungarvan • 2026',
-              metadata: {'year': 2026, 'country': 'Ireland', 'city': 'Dungarvan'},
+              metadata: {
+                'year': 2026,
+                'country': 'Ireland',
+                'city': 'Dungarvan',
+              },
+            ),
+          ],
+          'moonraker forestry rally 2025': [
+            const EntityCandidate(
+              id: 'moonraker-2025-uuid',
+              type: EntityType.rally,
+              canonicalName: 'Moonraker Forestry Rally 2025',
+              subtitle: 'Ireland • Munster • 2025',
+              metadata: {'year': 2025, 'country': 'Ireland', 'city': 'Munster'},
+            ),
+            const EntityCandidate(
+              id: 'moonraker-2026-uuid',
+              type: EntityType.rally,
+              canonicalName: 'Moonraker Forestry Rally 2026',
+              subtitle: 'Ireland • Dungarvan • 2026',
+              metadata: {
+                'year': 2026,
+                'country': 'Ireland',
+                'city': 'Dungarvan',
+              },
             ),
           ],
           'get jerky': [
@@ -188,7 +226,10 @@ void main() {
               type: EntityType.driver,
               canonicalName: 'Josh Moffett',
               subtitle: 'IE',
-              metadata: {'eventId': 'moonraker-2025-uuid', 'eventName': 'Moonraker Forestry Rally 2025'},
+              metadata: {
+                'eventId': 'moonraker-2025-uuid',
+                'eventName': 'Moonraker Forestry Rally 2025',
+              },
             ),
             const EntityCandidate(
               id: 'sam-moffett-uuid',
@@ -260,7 +301,10 @@ void main() {
       final result = await resolver.resolve(parsedQuery);
       expect(result.isSuccess, isTrue);
       expect(result.requiresClarification, isFalse);
-      expect(result.resolvedQuery?.targetRallyName, 'Moonraker Forestry Rally 2025');
+      expect(
+        result.resolvedQuery?.targetRallyName,
+        'Moonraker Forestry Rally 2025',
+      );
       expect(result.parsedQuery?.targetRallyName, 'Moonraker');
     });
 
@@ -273,32 +317,65 @@ void main() {
       final result = await resolver.resolve(parsedQuery);
       expect(result.requiresClarification, isTrue);
       expect(result.candidates.length, greaterThanOrEqualTo(2));
-      expect(result.candidates.any((c) => c.canonicalName.contains('2025')), isTrue);
-      expect(result.candidates.any((c) => c.canonicalName.contains('2026')), isTrue);
-    });
-
-    test('Rallies: "Get Jerky" resolves to Get Jerky Rally North Wales', () async {
-      const parsedQuery = SearchQuery(
-        intent: SearchIntent.searchRallies,
-        rallyName: 'Get Jerky',
+      expect(
+        result.candidates.any((c) => c.canonicalName.contains('2025')),
+        isTrue,
       );
-
-      final result = await resolver.resolve(parsedQuery);
-      expect(result.isSuccess, isTrue);
-      expect(result.resolvedQuery?.targetRallyName, 'Get Jerky Rally North Wales 2026');
-    });
-
-    test('Drivers: "Josh Moffett" exact name resolves auto-magically', () async {
-      const parsedQuery = SearchQuery(
-        intent: SearchIntent.searchDriverRallies,
-        driverName: 'Josh Moffett',
+      expect(
+        result.candidates.any((c) => c.canonicalName.contains('2026')),
+        isTrue,
       );
-
-      final result = await resolver.resolve(parsedQuery);
-      expect(result.isSuccess, isTrue);
-      expect(result.resolvedQuery?.driverName, 'Josh Moffett');
-      expect(result.resolvedQuery?.driverId, 'josh-moffett-uuid');
     });
+
+    test(
+      'Rallies: year embedded in an exact canonical name selects that edition',
+      () async {
+        const parsedQuery = SearchQuery(
+          intent: SearchIntent.searchRallies,
+          rallyName: 'Moonraker Forestry Rally 2025',
+        );
+
+        final result = await resolver.resolve(parsedQuery);
+        expect(result.isSuccess, isTrue);
+        expect(result.requiresClarification, isFalse);
+        expect(
+          result.resolvedQuery?.targetRallyName,
+          'Moonraker Forestry Rally 2025',
+        );
+      },
+    );
+
+    test(
+      'Rallies: "Get Jerky" resolves to Get Jerky Rally North Wales',
+      () async {
+        const parsedQuery = SearchQuery(
+          intent: SearchIntent.searchRallies,
+          rallyName: 'Get Jerky',
+        );
+
+        final result = await resolver.resolve(parsedQuery);
+        expect(result.isSuccess, isTrue);
+        expect(
+          result.resolvedQuery?.targetRallyName,
+          'Get Jerky Rally North Wales 2026',
+        );
+      },
+    );
+
+    test(
+      'Drivers: "Josh Moffett" exact name resolves auto-magically',
+      () async {
+        const parsedQuery = SearchQuery(
+          intent: SearchIntent.searchDriverRallies,
+          driverName: 'Josh Moffett',
+        );
+
+        final result = await resolver.resolve(parsedQuery);
+        expect(result.isSuccess, isTrue);
+        expect(result.resolvedQuery?.driverName, 'Josh Moffett');
+        expect(result.resolvedQuery?.driverId, 'josh-moffett-uuid');
+      },
+    );
 
     test('Drivers: Ambiguous surname "Smith" without context requires clarification', () async {
       const parsedQuery = SearchQuery(
@@ -326,23 +403,29 @@ void main() {
       expect(result.requiresClarification, isFalse);
       expect(result.resolvedQuery?.driverName, 'Josh Moffett');
       expect(result.resolvedQuery?.driverId, 'josh-moffett-uuid');
-      expect(result.resolvedQuery?.targetRallyName, 'Moonraker Forestry Rally 2025');
-    });
-
-    test('Stages: "Gale Rigg" resolves within Trackrod event context', () async {
-      const parsedQuery = SearchQuery(
-        intent: SearchIntent.searchVideoActions,
-        stageName: 'Gale Rigg',
-        rallyName: 'Trackrod',
-        year: 2024,
+      expect(
+        result.resolvedQuery?.targetRallyName,
+        'Moonraker Forestry Rally 2025',
       );
-
-      final result = await resolver.resolve(parsedQuery);
-      expect(result.isSuccess, isTrue);
-      expect(result.resolvedQuery?.stageName, 'Gale Rigg');
-      expect(result.resolvedQuery?.stageNumber, '3');
-      expect(result.resolvedQuery?.targetRallyName, 'Trackrod Rally 2024');
     });
+
+    test(
+      'Stages: "Gale Rigg" resolves within Trackrod event context',
+      () async {
+        const parsedQuery = SearchQuery(
+          intent: SearchIntent.searchVideoActions,
+          stageName: 'Gale Rigg',
+          rallyName: 'Trackrod',
+          year: 2024,
+        );
+
+        final result = await resolver.resolve(parsedQuery);
+        expect(result.isSuccess, isTrue);
+        expect(result.resolvedQuery?.stageName, 'Gale Rigg');
+        expect(result.resolvedQuery?.stageNumber, '3');
+        expect(result.resolvedQuery?.targetRallyName, 'Trackrod Rally 2024');
+      },
+    );
 
     test('Compound Query: "jump highlights featuring Moffett from Moonraker in 2025"', () async {
       const parsedQuery = SearchQuery(
@@ -358,7 +441,10 @@ void main() {
       expect(result.resolvedQuery?.actionType, 'jump');
       expect(result.resolvedQuery?.driverName, 'Josh Moffett');
       expect(result.resolvedQuery?.driverId, 'josh-moffett-uuid');
-      expect(result.resolvedQuery?.targetRallyName, 'Moonraker Forestry Rally 2025');
+      expect(
+        result.resolvedQuery?.targetRallyName,
+        'Moonraker Forestry Rally 2025',
+      );
     });
 
     test('Ambiguous Location: "Donegal" matches both city and rally without targetRallyName', () async {
@@ -381,7 +467,10 @@ void main() {
 
       final result = await resolver.resolve(parsedQuery);
       expect(result.isSuccess, isFalse);
-      expect(result.error, contains('We couldn\'t confidently identify that driver'));
+      expect(
+        result.error,
+        contains('We couldn\'t confidently identify that driver'),
+      );
       expect(result.resolvedQuery?.driverId, isNull);
     });
   });

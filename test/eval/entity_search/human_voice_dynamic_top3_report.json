@@ -1,0 +1,3386 @@
+{
+  "phase": "ES-8A",
+  "experiment": "REAL_HUMAN_DYNAMIC_TOP3_BIASING_SMOKE_TEST",
+  "humanBenchmarkStatus": "LABELED_SMOKE_TEST_ONLY",
+  "realHumanAudio": true,
+  "productionVoiceRoutingChanged": false,
+  "sttBiasingProductionEnabled": false,
+  "audioPreprocessing": {
+    "implementation": "NoOpAudioPreprocessor",
+    "enabled": false,
+    "originalAudioOverwritten": false
+  },
+  "biasingConfiguration": {
+    "strategy": "DYNAMIC_TOP3_SECOND_PASS_ONLY",
+    "topK": 3,
+    "staticDomainContextUsed": false,
+    "maximumSecondPasses": 1,
+    "sameOriginalAudioRetranscribed": true,
+    "circularExactEvidenceMayAutoConfirm": false
+  },
+  "audioInventory": {
+    "TOTAL_FILES": 5,
+    "UNIQUE_AUDIO_FILES": 4,
+    "DUPLICATE_GROUPS": [
+      {
+        "representative": "human-smoke-001",
+        "members": [
+          "human-smoke-001",
+          "human-smoke-003"
+        ],
+        "byteIdenticalVerified": true
+      }
+    ]
+  },
+  "canonicalGroundTruth": {
+    "rallyAluksneEventId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+    "maxFreemanCanonicalPersonId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+    "ambiguousCityFixtureForcedToEvent": false
+  },
+  "frozenRawBaseline": {
+    "report": "test/eval/entity_search/human_voice_smoke_baseline_report.json",
+    "sha256": "2a10f02f249ae55a45f6708d20f61fff4d0c7a40f43e9f51d10ae2aa4fa71ef4",
+    "diagnosis": "test/eval/entity_search/es8a_raw_failure_diagnosis.json"
+  },
+  "perFileMetrics": {
+    "files": 5,
+    "canonicalScorable": 4,
+    "baselineCanonicalCorrect": 2,
+    "dynamicCanonicalCorrect": 2,
+    "dynamicWrongConfident": 0,
+    "secondPassTriggers": 1,
+    "secondPassTriggerRate": 0.2,
+    "averageSttCallsPerQuery": 1.2,
+    "recoveryDelta": {
+      "IMPROVED": 1,
+      "UNCHANGED": 4,
+      "WORSENED": 0,
+      "UNSCORABLE_AMBIGUOUS": 0
+    },
+    "baselineOutcomes": {
+      "NO_MATCH": 2,
+      "WRONG_CLARIFICATION": 1,
+      "CORRECT_CONFIDENT": 1,
+      "CORRECT_CLARIFICATION": 1
+    },
+    "dynamicOutcomes": {
+      "NO_MATCH": 3,
+      "CORRECT_CONFIDENT": 1,
+      "CORRECT_CLARIFICATION": 1
+    },
+    "circularEvidenceGuardsApplied": 0,
+    "latencyMs": {
+      "averageFrozenBaselineStt": 725.8,
+      "averageFrozenBaselineTotal": 4044.4,
+      "averageDynamicPass1Stt": 710.6,
+      "averageDynamicPass1Total": 3838.6,
+      "averageDynamicSecondPassSttWhenTriggered": 556.0,
+      "averageDynamicTotal": 4518.0
+    }
+  },
+  "uniqueAudioMetrics": {
+    "files": 4,
+    "canonicalScorable": 3,
+    "baselineCanonicalCorrect": 2,
+    "dynamicCanonicalCorrect": 2,
+    "dynamicWrongConfident": 0,
+    "secondPassTriggers": 1,
+    "secondPassTriggerRate": 0.25,
+    "averageSttCallsPerQuery": 1.25,
+    "recoveryDelta": {
+      "IMPROVED": 0,
+      "UNCHANGED": 4,
+      "WORSENED": 0,
+      "UNSCORABLE_AMBIGUOUS": 0
+    },
+    "baselineOutcomes": {
+      "NO_MATCH": 2,
+      "CORRECT_CONFIDENT": 1,
+      "CORRECT_CLARIFICATION": 1
+    },
+    "dynamicOutcomes": {
+      "NO_MATCH": 2,
+      "CORRECT_CONFIDENT": 1,
+      "CORRECT_CLARIFICATION": 1
+    },
+    "circularEvidenceGuardsApplied": 0,
+    "latencyMs": {
+      "averageFrozenBaselineStt": 711.0,
+      "averageFrozenBaselineTotal": 3972.25,
+      "averageDynamicPass1Stt": 727.25,
+      "averageDynamicPass1Total": 3714.75,
+      "averageDynamicSecondPassSttWhenTriggered": 556.0,
+      "averageDynamicTotal": 4564.0
+    }
+  },
+  "results": [
+    {
+      "recordingId": "human-smoke-001",
+      "audioFile": "test/eval/audio/human/asim1.wav",
+      "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+      "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+      "canonicalScorable": true,
+      "canonicalInterpretationAmbiguous": false,
+      "expectedIntent": [
+        "GET_RALLY_TOP_FINISHERS"
+      ],
+      "expectedPersonRole": null,
+      "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+      "expectedCanonicalEntityName": "Rally Alūksne 2026",
+      "pipeline": {
+        "audioInput": "original_unmodified_wav",
+        "audioPreprocessor": "NoOpAudioPreprocessor",
+        "audioPreprocessingUsed": false,
+        "staticDomainContextUsed": false,
+        "dynamicCandidateCount": 3,
+        "maximumSecondPasses": 1
+      },
+      "triggerPolicy": {
+        "fired": true,
+        "reason": "PASS1_NO_MATCH",
+        "topCandidatePhoneticOnly": false,
+        "candidatePolicyWouldFire": true,
+        "candidatePolicyReason": "PASS1_NO_MATCH",
+        "protectedFrozenBaselineWinner": false,
+        "secondPassSkippedBecauseNoCandidateHints": false
+      },
+      "secondPassTriggered": true,
+      "top3Hints": [
+        "Alex Lee",
+        "Alexine Serin",
+        "Alexander Derez"
+      ],
+      "pass1": {
+        "recordingId": "human-smoke-001",
+        "audioFile": "test/eval/audio/human/asim1.wav",
+        "transcriptionInputFilename": "asim1.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "drivers that participated in aluksne rally",
+        "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+        "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne rally",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return the participating drivers/results for the independently verified Rally Alūksne event."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Drivers that participated in Alex Nerelli.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Drivers that participated in Alex Nerelli.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchDriverRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Alex Nerelli",
+              "entityType": "person"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Alex Nerelli",
+            "entityType": "person",
+            "targetCandidateRank": null,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+                "canonicalName": "Alex Lee",
+                "score": 0.8316103896103897,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3314285714285714,
+                  "lexical": 0.8987012987012987,
+                  "phonetic": 0.9272727272727272,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "person:codriver:89aaa24f-a5f5-407f-acbe-8266036c5bc8",
+                "canonicalName": "Alexine Serin",
+                "score": 0.8103371406371407,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3263157894736842,
+                  "lexical": 0.8914141414141414,
+                  "phonetic": 0.8956643356643357,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "person:driver:f9e78aea-03e1-4543-8b72-00f071a9db3b",
+                "canonicalName": "Alexander Derez",
+                "score": 0.7955948051948053,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.37047619047619046,
+                  "lexical": 0.8597402597402598,
+                  "phonetic": 0.8836363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "person:driver:896756dd-0287-4006-95df-e0ed97366995",
+                "canonicalName": "Alex Steele",
+                "score": 0.7953545454545456,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.31895424836601305,
+                  "lexical": 0.8672727272727273,
+                  "phonetic": 0.8804545454545455,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 5,
+                "canonicalId": "person:driver:bde5e41d-21e8-453e-b3f1-3d67fedb71ed",
+                "canonicalName": "Alexander Vassallo",
+                "score": 0.7931938502673799,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.26,
+                  "lexical": 0.8695187165775402,
+                  "phonetic": 0.8761363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 6,
+                "canonicalId": "person:driver:a638b7fd-d0fc-44a2-897d-0427cb6f2992",
+                "canonicalName": "Alexis Deleu",
+                "score": 0.7926507936507936,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3017543859649123,
+                  "lexical": 0.8259740259740259,
+                  "phonetic": 0.8914141414141414,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 7,
+                "canonicalId": "person:codriver:664e946c-86d8-4497-9222-4467467efe1f",
+                "canonicalName": "Alex Lewis",
+                "score": 0.7923608946608948,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.2911764705882353,
+                  "lexical": 0.8542568542568543,
+                  "phonetic": 0.8804545454545455,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 8,
+                "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+                "canonicalName": "Alex Hill",
+                "score": 0.7892857142857144,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3482352941176471,
+                  "lexical": 0.8590909090909091,
+                  "phonetic": 0.8737012987012986,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 9,
+                "canonicalId": "person:driver:821cfe9e-5806-48f7-811b-032b2d757866",
+                "canonicalName": "Alexander Strobl",
+                "score": 0.7891924242424244,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.24242424242424243,
+                  "lexical": 0.8521212121212122,
+                  "phonetic": 0.8761363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 10,
+                "canonicalId": "person:codriver:a631dba5-2998-4072-8f32-5f88b0978ca4",
+                "canonicalName": "Alexandre Lopes",
+                "score": 0.7875795093795095,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.34534161490683224,
+                  "lexical": 0.8477633477633478,
+                  "phonetic": 0.8751515151515152,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {},
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": false,
+        "correctConfident": false,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.14285714285714285,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 728,
+          "queryUnderstanding": 3125,
+          "entitySearch": 98,
+          "resolver": 320,
+          "preprocessing": 0.0,
+          "total": 4377.0
+        }
+      },
+      "pass2": {
+        "recordingId": "human-smoke-001",
+        "audioFile": "test/eval/audio/human/asim1.wav",
+        "transcriptionInputFilename": "asim1.wav",
+        "strategy": "DYNAMIC_TOP3_PASS2_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "drivers that participated in aluksne rally",
+        "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+        "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne rally",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return the participating drivers/results for the independently verified Rally Alūksne event."
+        },
+        "transcription": {
+          "origin": "dynamicBiased",
+          "biasingUsed": true,
+          "prompt": "Candidate spellings: Alex Lee, Alexine Serin, Alexander Derez.",
+          "keywords": [
+            "Alex Lee",
+            "Alexine Serin",
+            "Alexander Derez"
+          ],
+          "transcript": "Drivers that participated in Alex Nerelli.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Drivers that participated in Alex Nerelli.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchDriverRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Alex Nerelli",
+              "entityType": "person"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Alex Nerelli",
+            "entityType": "person",
+            "targetCandidateRank": null,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+                "canonicalName": "Alex Lee",
+                "score": 0.8316103896103897,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3314285714285714,
+                  "lexical": 0.8987012987012987,
+                  "phonetic": 0.9272727272727272,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "person:codriver:89aaa24f-a5f5-407f-acbe-8266036c5bc8",
+                "canonicalName": "Alexine Serin",
+                "score": 0.8103371406371407,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3263157894736842,
+                  "lexical": 0.8914141414141414,
+                  "phonetic": 0.8956643356643357,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "person:driver:f9e78aea-03e1-4543-8b72-00f071a9db3b",
+                "canonicalName": "Alexander Derez",
+                "score": 0.7955948051948053,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.37047619047619046,
+                  "lexical": 0.8597402597402598,
+                  "phonetic": 0.8836363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "person:driver:896756dd-0287-4006-95df-e0ed97366995",
+                "canonicalName": "Alex Steele",
+                "score": 0.7953545454545456,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.31895424836601305,
+                  "lexical": 0.8672727272727273,
+                  "phonetic": 0.8804545454545455,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 5,
+                "canonicalId": "person:driver:bde5e41d-21e8-453e-b3f1-3d67fedb71ed",
+                "canonicalName": "Alexander Vassallo",
+                "score": 0.7931938502673799,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.26,
+                  "lexical": 0.8695187165775402,
+                  "phonetic": 0.8761363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 6,
+                "canonicalId": "person:driver:a638b7fd-d0fc-44a2-897d-0427cb6f2992",
+                "canonicalName": "Alexis Deleu",
+                "score": 0.7926507936507936,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3017543859649123,
+                  "lexical": 0.8259740259740259,
+                  "phonetic": 0.8914141414141414,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 7,
+                "canonicalId": "person:codriver:664e946c-86d8-4497-9222-4467467efe1f",
+                "canonicalName": "Alex Lewis",
+                "score": 0.7923608946608948,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.2911764705882353,
+                  "lexical": 0.8542568542568543,
+                  "phonetic": 0.8804545454545455,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 8,
+                "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+                "canonicalName": "Alex Hill",
+                "score": 0.7892857142857144,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3482352941176471,
+                  "lexical": 0.8590909090909091,
+                  "phonetic": 0.8737012987012986,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 9,
+                "canonicalId": "person:driver:821cfe9e-5806-48f7-811b-032b2d757866",
+                "canonicalName": "Alexander Strobl",
+                "score": 0.7891924242424244,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.24242424242424243,
+                  "lexical": 0.8521212121212122,
+                  "phonetic": 0.8761363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 10,
+                "canonicalId": "person:codriver:a631dba5-2998-4072-8f32-5f88b0978ca4",
+                "canonicalName": "Alexandre Lopes",
+                "score": 0.7875795093795095,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.34534161490683224,
+                  "lexical": 0.8477633477633478,
+                  "phonetic": 0.8751515151515152,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {},
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": false,
+        "correctConfident": false,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.14285714285714285,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 556,
+          "queryUnderstanding": 2694,
+          "entitySearch": 82,
+          "resolver": 0,
+          "preprocessing": 0.0,
+          "total": 3397.0
+        }
+      },
+      "final": {
+        "recordingId": "human-smoke-001",
+        "audioFile": "test/eval/audio/human/asim1.wav",
+        "transcriptionInputFilename": "asim1.wav",
+        "strategy": "DYNAMIC_TOP3_PASS2_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "drivers that participated in aluksne rally",
+        "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+        "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne rally",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return the participating drivers/results for the independently verified Rally Alūksne event."
+        },
+        "transcription": {
+          "origin": "dynamicBiased",
+          "biasingUsed": true,
+          "prompt": "Candidate spellings: Alex Lee, Alexine Serin, Alexander Derez.",
+          "keywords": [
+            "Alex Lee",
+            "Alexine Serin",
+            "Alexander Derez"
+          ],
+          "transcript": "Drivers that participated in Alex Nerelli.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Drivers that participated in Alex Nerelli.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchDriverRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Alex Nerelli",
+              "entityType": "person"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Alex Nerelli",
+            "entityType": "person",
+            "targetCandidateRank": null,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "person:codriver:d5f66165-0f0a-4571-9925-919e7b69cdeb",
+                "canonicalName": "Alex Lee",
+                "score": 0.8316103896103897,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3314285714285714,
+                  "lexical": 0.8987012987012987,
+                  "phonetic": 0.9272727272727272,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "person:codriver:89aaa24f-a5f5-407f-acbe-8266036c5bc8",
+                "canonicalName": "Alexine Serin",
+                "score": 0.8103371406371407,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3263157894736842,
+                  "lexical": 0.8914141414141414,
+                  "phonetic": 0.8956643356643357,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "person:driver:f9e78aea-03e1-4543-8b72-00f071a9db3b",
+                "canonicalName": "Alexander Derez",
+                "score": 0.7955948051948053,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.37047619047619046,
+                  "lexical": 0.8597402597402598,
+                  "phonetic": 0.8836363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "person:driver:896756dd-0287-4006-95df-e0ed97366995",
+                "canonicalName": "Alex Steele",
+                "score": 0.7953545454545456,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.31895424836601305,
+                  "lexical": 0.8672727272727273,
+                  "phonetic": 0.8804545454545455,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 5,
+                "canonicalId": "person:driver:bde5e41d-21e8-453e-b3f1-3d67fedb71ed",
+                "canonicalName": "Alexander Vassallo",
+                "score": 0.7931938502673799,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.26,
+                  "lexical": 0.8695187165775402,
+                  "phonetic": 0.8761363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 6,
+                "canonicalId": "person:driver:a638b7fd-d0fc-44a2-897d-0427cb6f2992",
+                "canonicalName": "Alexis Deleu",
+                "score": 0.7926507936507936,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3017543859649123,
+                  "lexical": 0.8259740259740259,
+                  "phonetic": 0.8914141414141414,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 7,
+                "canonicalId": "person:codriver:664e946c-86d8-4497-9222-4467467efe1f",
+                "canonicalName": "Alex Lewis",
+                "score": 0.7923608946608948,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.2911764705882353,
+                  "lexical": 0.8542568542568543,
+                  "phonetic": 0.8804545454545455,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 8,
+                "canonicalId": "person:codriver:7db25d7d-b0b1-4bf5-a36e-837e1d450a2d",
+                "canonicalName": "Alex Hill",
+                "score": 0.7892857142857144,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.3482352941176471,
+                  "lexical": 0.8590909090909091,
+                  "phonetic": 0.8737012987012986,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 9,
+                "canonicalId": "person:driver:821cfe9e-5806-48f7-811b-032b2d757866",
+                "canonicalName": "Alexander Strobl",
+                "score": 0.7891924242424244,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.24242424242424243,
+                  "lexical": 0.8521212121212122,
+                  "phonetic": 0.8761363636363637,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 10,
+                "canonicalId": "person:codriver:a631dba5-2998-4072-8f32-5f88b0978ca4",
+                "canonicalName": "Alexandre Lopes",
+                "score": 0.7875795093795095,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.34534161490683224,
+                  "lexical": 0.8477633477633478,
+                  "phonetic": 0.8751515151515152,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": false,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Alex Nerelli"
+            ],
+            "driverName": "Alex Nerelli",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {},
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": false,
+        "correctConfident": false,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.14285714285714285,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 556,
+          "queryUnderstanding": 2694,
+          "entitySearch": 82,
+          "resolver": 0,
+          "preprocessing": 0.0,
+          "total": 3397.0
+        },
+        "dynamicCircularEvidence": {
+          "detected": false,
+          "guardApplied": false,
+          "resolvedWasHinted": false,
+          "pass2ContainsExactHint": false,
+          "pass1ContainedExactName": false
+        }
+      },
+      "comparisonToRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "NO_MATCH",
+        "dynamicOutcome": "NO_MATCH",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": false,
+        "dynamicCanonicalOutcomeCorrect": false,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "comparisonToFrozenRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "NO_MATCH",
+        "dynamicOutcome": "NO_MATCH",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": false,
+        "dynamicCanonicalOutcomeCorrect": false,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "latencyMs": {
+        "rawBaselineStt": 758,
+        "rawBaselineTotal": 5154.0,
+        "frozenBaselineStt": 758,
+        "frozenBaselineTotal": 5154.0,
+        "dynamicPass1Stt": 728,
+        "dynamicPass1Total": 4377.0,
+        "dynamicSecondPassStt": 556,
+        "dynamicSecondPassTotal": 3397.0,
+        "dynamicTotal": 7774.0
+      },
+      "sttCalls": 2
+    },
+    {
+      "recordingId": "human-smoke-002",
+      "audioFile": "test/eval/audio/human/asim2.wav",
+      "referenceTranscriptRaw": "rallies in aluksne",
+      "referenceTranscriptNormalized": "rallies in aluksne",
+      "canonicalScorable": false,
+      "canonicalInterpretationAmbiguous": true,
+      "expectedIntent": [
+        "SEARCH_RALLIES"
+      ],
+      "expectedPersonRole": null,
+      "expectedCanonicalEntityId": null,
+      "expectedCanonicalEntityName": null,
+      "pipeline": {
+        "audioInput": "original_unmodified_wav",
+        "audioPreprocessor": "NoOpAudioPreprocessor",
+        "audioPreprocessingUsed": false,
+        "staticDomainContextUsed": false,
+        "dynamicCandidateCount": 3,
+        "maximumSecondPasses": 1
+      },
+      "triggerPolicy": {
+        "fired": true,
+        "reason": "PASS1_NO_MATCH",
+        "topCandidatePhoneticOnly": false,
+        "candidatePolicyWouldFire": true,
+        "candidatePolicyReason": "PASS1_NO_MATCH",
+        "protectedFrozenBaselineWinner": false,
+        "secondPassSkippedBecauseNoCandidateHints": true
+      },
+      "secondPassTriggered": false,
+      "top3Hints": [],
+      "pass1": {
+        "recordingId": "human-smoke-002",
+        "audioFile": "test/eval/audio/human/asim2.wav",
+        "transcriptionInputFilename": "asim2.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_LITERAL_ENTITY_SPAN",
+        "referenceTranscript": "rallies in aluksne",
+        "referenceTranscriptRaw": "rallies in aluksne",
+        "referenceTranscriptNormalized": "rallies in aluksne",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne",
+        "expectedCanonicalEntityId": null,
+        "expectedCanonicalEntityName": null,
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "city",
+        "expectedQuerySemantics": {
+          "intents": [
+            "SEARCH_RALLIES"
+          ],
+          "personRole": null,
+          "description": "Search rallies with the city filter Alūksne; this is not a Rally Alūksne event-name query."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Rallies in Alytus.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Rallies in Alytus.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Alytus",
+              "entityType": "city"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_RALLIES",
+            "cities": [
+              "Alytus"
+            ],
+            "city": "Alytus",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_RALLIES",
+            "cities": [
+              "Alytus"
+            ],
+            "city": "Alytus",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_RALLIES",
+            "cities": [
+              "Alytus"
+            ],
+            "city": "Alytus",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {
+            "city:Alytus": {
+              "type": "city",
+              "rawPhrase": "Alytus",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.0,
+              "strategy": "none",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            },
+            "city": {
+              "type": "city",
+              "rawPhrase": "Alytus",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.0,
+              "strategy": "none",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            }
+          },
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": null,
+        "canonicalOutcomeCorrect": null,
+        "correctConfident": null,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": null,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.2777777777777778,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "NOT_ASSESSABLE_NO_CANONICAL_GROUND_TRUTH",
+          "occurred": null,
+          "reason": "The fixture has no expected canonical entity ID."
+        },
+        "latencyMs": {
+          "stt": 594,
+          "queryUnderstanding": 1950,
+          "entitySearch": 0,
+          "resolver": 113,
+          "preprocessing": 0.0,
+          "total": 2724.0
+        }
+      },
+      "pass2": null,
+      "final": {
+        "recordingId": "human-smoke-002",
+        "audioFile": "test/eval/audio/human/asim2.wav",
+        "transcriptionInputFilename": "asim2.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_LITERAL_ENTITY_SPAN",
+        "referenceTranscript": "rallies in aluksne",
+        "referenceTranscriptRaw": "rallies in aluksne",
+        "referenceTranscriptNormalized": "rallies in aluksne",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne",
+        "expectedCanonicalEntityId": null,
+        "expectedCanonicalEntityName": null,
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "city",
+        "expectedQuerySemantics": {
+          "intents": [
+            "SEARCH_RALLIES"
+          ],
+          "personRole": null,
+          "description": "Search rallies with the city filter Alūksne; this is not a Rally Alūksne event-name query."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Rallies in Alytus.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Rallies in Alytus.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Alytus",
+              "entityType": "city"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_RALLIES",
+            "cities": [
+              "Alytus"
+            ],
+            "city": "Alytus",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "SEARCH_RALLIES",
+          "intentCorrect": true,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_RALLIES",
+            "cities": [
+              "Alytus"
+            ],
+            "city": "Alytus",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_RALLIES",
+            "cities": [
+              "Alytus"
+            ],
+            "city": "Alytus",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {
+            "city:Alytus": {
+              "type": "city",
+              "rawPhrase": "Alytus",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.0,
+              "strategy": "none",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            },
+            "city": {
+              "type": "city",
+              "rawPhrase": "Alytus",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.0,
+              "strategy": "none",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            }
+          },
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": null,
+        "canonicalOutcomeCorrect": null,
+        "correctConfident": null,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": null,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.2777777777777778,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "NOT_ASSESSABLE_NO_CANONICAL_GROUND_TRUTH",
+          "occurred": null,
+          "reason": "The fixture has no expected canonical entity ID."
+        },
+        "latencyMs": {
+          "stt": 594,
+          "queryUnderstanding": 1950,
+          "entitySearch": 0,
+          "resolver": 113,
+          "preprocessing": 0.0,
+          "total": 2724.0
+        }
+      },
+      "comparisonToRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "NO_MATCH",
+        "dynamicOutcome": "NO_MATCH",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": null,
+        "dynamicCanonicalOutcomeCorrect": null,
+        "baselineWrongConfident": null,
+        "dynamicWrongConfident": null
+      },
+      "comparisonToFrozenRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "NO_MATCH",
+        "dynamicOutcome": "NO_MATCH",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": null,
+        "dynamicCanonicalOutcomeCorrect": null,
+        "baselineWrongConfident": null,
+        "dynamicWrongConfident": null
+      },
+      "latencyMs": {
+        "rawBaselineStt": 551,
+        "rawBaselineTotal": 2405.0,
+        "frozenBaselineStt": 551,
+        "frozenBaselineTotal": 2405.0,
+        "dynamicPass1Stt": 594,
+        "dynamicPass1Total": 2724.0,
+        "dynamicSecondPassStt": null,
+        "dynamicSecondPassTotal": null,
+        "dynamicTotal": 2724.0
+      },
+      "sttCalls": 1
+    },
+    {
+      "recordingId": "human-smoke-003",
+      "audioFile": "test/eval/audio/human/asim3.wav",
+      "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+      "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+      "canonicalScorable": true,
+      "canonicalInterpretationAmbiguous": false,
+      "expectedIntent": [
+        "GET_RALLY_TOP_FINISHERS"
+      ],
+      "expectedPersonRole": null,
+      "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+      "expectedCanonicalEntityName": "Rally Alūksne 2026",
+      "pipeline": {
+        "audioInput": "original_unmodified_wav",
+        "audioPreprocessor": "NoOpAudioPreprocessor",
+        "audioPreprocessingUsed": false,
+        "staticDomainContextUsed": false,
+        "dynamicCandidateCount": 3,
+        "maximumSecondPasses": 1
+      },
+      "triggerPolicy": {
+        "fired": true,
+        "reason": "PASS1_NO_MATCH",
+        "topCandidatePhoneticOnly": false,
+        "candidatePolicyWouldFire": true,
+        "candidatePolicyReason": "PASS1_NO_MATCH",
+        "protectedFrozenBaselineWinner": false,
+        "secondPassSkippedBecauseNoCandidateHints": true
+      },
+      "secondPassTriggered": false,
+      "top3Hints": [],
+      "pass1": {
+        "recordingId": "human-smoke-003",
+        "audioFile": "test/eval/audio/human/asim3.wav",
+        "transcriptionInputFilename": "asim3.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "drivers that participated in aluksne rally",
+        "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+        "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne rally",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return the participating drivers/results for the independently verified Rally Alūksne event."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Drivers that participated in Alex's rally.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Drivers that participated in Alex's rally.",
+        "queryUnderstanding": {
+          "success": false,
+          "error": "No parseable transcript"
+        },
+        "candidateGroups": [],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": null,
+          "intentCorrect": false,
+          "actualPersonRole": null,
+          "personRoleCorrect": null,
+          "parsedSearchQuery": null,
+          "finalSearchQuery": null,
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {},
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": false,
+        "correctConfident": false,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.11904761904761904,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 644,
+          "queryUnderstanding": 3611,
+          "entitySearch": 0,
+          "resolver": 0,
+          "preprocessing": 0.0,
+          "total": 4334.0
+        }
+      },
+      "pass2": null,
+      "final": {
+        "recordingId": "human-smoke-003",
+        "audioFile": "test/eval/audio/human/asim3.wav",
+        "transcriptionInputFilename": "asim3.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "drivers that participated in aluksne rally",
+        "referenceTranscriptRaw": "drivers that participated in aluksne rally",
+        "referenceTranscriptNormalized": "drivers that participated in aluksne rally",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "aluksne rally",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return the participating drivers/results for the independently verified Rally Alūksne event."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Drivers that participated in Alex's rally.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Drivers that participated in Alex's rally.",
+        "queryUnderstanding": {
+          "success": false,
+          "error": "No parseable transcript"
+        },
+        "candidateGroups": [],
+        "targetCandidateRank": null,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": null,
+          "intentCorrect": false,
+          "actualPersonRole": null,
+          "personRoleCorrect": null,
+          "parsedSearchQuery": null,
+          "finalSearchQuery": null,
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "no_match",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {},
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": false,
+        "correctConfident": false,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": true,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "NO_MATCH",
+        "wer": 0.3333333333333333,
+        "cer": 0.11904761904761904,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 644,
+          "queryUnderstanding": 3611,
+          "entitySearch": 0,
+          "resolver": 0,
+          "preprocessing": 0.0,
+          "total": 4334.0
+        }
+      },
+      "comparisonToRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "WRONG_CLARIFICATION",
+        "dynamicOutcome": "NO_MATCH",
+        "delta": "IMPROVED",
+        "baselineCanonicalOutcomeCorrect": false,
+        "dynamicCanonicalOutcomeCorrect": false,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "comparisonToFrozenRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "WRONG_CLARIFICATION",
+        "dynamicOutcome": "NO_MATCH",
+        "delta": "IMPROVED",
+        "baselineCanonicalOutcomeCorrect": false,
+        "dynamicCanonicalOutcomeCorrect": false,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "latencyMs": {
+        "rawBaselineStt": 785,
+        "rawBaselineTotal": 4333.0,
+        "frozenBaselineStt": 785,
+        "frozenBaselineTotal": 4333.0,
+        "dynamicPass1Stt": 644,
+        "dynamicPass1Total": 4334.0,
+        "dynamicSecondPassStt": null,
+        "dynamicSecondPassTotal": null,
+        "dynamicTotal": 4334.0
+      },
+      "sttCalls": 1
+    },
+    {
+      "recordingId": "human-smoke-004",
+      "audioFile": "test/eval/audio/human/record_out.wav",
+      "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+      "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+      "canonicalScorable": true,
+      "canonicalInterpretationAmbiguous": false,
+      "expectedIntent": [
+        "SEARCH_DRIVER_RALLIES"
+      ],
+      "expectedPersonRole": "ANY",
+      "expectedCanonicalEntityId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+      "expectedCanonicalEntityName": "Max Freeman",
+      "pipeline": {
+        "audioInput": "original_unmodified_wav",
+        "audioPreprocessor": "NoOpAudioPreprocessor",
+        "audioPreprocessingUsed": false,
+        "staticDomainContextUsed": false,
+        "dynamicCandidateCount": 3,
+        "maximumSecondPasses": 1
+      },
+      "triggerPolicy": {
+        "fired": false,
+        "reason": "FROZEN_BASELINE_SAFE_WINNER_PROTECTED",
+        "topCandidatePhoneticOnly": false,
+        "candidatePolicyWouldFire": false,
+        "candidatePolicyReason": "PASS1_SAFELY_RESOLVED",
+        "protectedFrozenBaselineWinner": true,
+        "secondPassSkippedBecauseNoCandidateHints": false
+      },
+      "secondPassTriggered": false,
+      "top3Hints": [
+        "Max Freeman",
+        "Max Matton",
+        "Max McRae"
+      ],
+      "pass1": {
+        "recordingId": "human-smoke-004",
+        "audioFile": "test/eval/audio/human/record_out.wav",
+        "transcriptionInputFilename": "record_out.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "show me all rallies in which max freeman patcipated",
+        "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+        "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+        "referenceNormalizationNote": "Corrected the obvious typed label typo 'patcipated' to 'participated' for WER/CER only; the raw human label is preserved verbatim.",
+        "expectedEntityMention": "max freeman",
+        "expectedCanonicalEntityId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+        "expectedCanonicalEntityName": "Max Freeman",
+        "equivalentResolverEntityIds": [
+          "7a633b52-950e-49ef-8cab-34cd43e99366"
+        ],
+        "expectedEntityType": "person",
+        "expectedQuerySemantics": {
+          "intents": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "personRole": "ANY",
+          "description": "Search rally participation for Max Freeman with ANY-role semantics, not wins or rally results. Live DB truth identifies Max Freeman as co-driver-only for these entries."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Show me all rallies in which Max Freeman participated.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Show me all rallies in which Max Freeman participated.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchDriverRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Max Freeman",
+              "entityType": "person"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverName": "Max Freeman",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Max Freeman",
+            "entityType": "person",
+            "targetCandidateRank": 1,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+                "canonicalName": "Max Freeman",
+                "score": 0.95,
+                "componentScores": {
+                  "exact": 1.0,
+                  "normalizedExact": 1.0,
+                  "token": 1.0,
+                  "ngram": 1.0,
+                  "lexical": 1.0,
+                  "phonetic": 1.0,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "character_ngram",
+                  "exact",
+                  "lexical",
+                  "normalized_exact",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "person:driver:c3b951aa-d3d2-43aa-8944-cd2c5f0bac17",
+                "canonicalName": "Max Matton",
+                "score": 0.7958888888888889,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.18666666666666668,
+                  "lexical": 0.8288888888888889,
+                  "phonetic": 0.8955555555555555,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "person:driver:9631ab5e-8a9b-4235-911b-ac58fc6fc3d9",
+                "canonicalName": "Max McRae",
+                "score": 0.7793884920634921,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.19238095238095237,
+                  "lexical": 0.8341666666666666,
+                  "phonetic": 0.8669841269841271,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "person:codriver:3291ff96-b92f-4624-94e2-5cfc188d8884",
+                "canonicalName": "Max Redfern",
+                "score": 0.777909632034632,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.2161764705882353,
+                  "lexical": 0.8629166666666667,
+                  "phonetic": 0.8387012987012987,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 5,
+                "canonicalId": "person:driver:e298d112-c0ea-4e2f-926f-c97eb58c8afc",
+                "canonicalName": "Max Maier",
+                "score": 0.773877380952381,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.19999999999999998,
+                  "lexical": 0.8341666666666666,
+                  "phonetic": 0.858095238095238,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 6,
+                "canonicalId": "person:driver:efdca8b6-50a6-46ed-bb9c-ebb841446207",
+                "canonicalName": "Maxime Castelein",
+                "score": 0.7714930555555556,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.12987012987012986,
+                  "lexical": 0.8006944444444445,
+                  "phonetic": 0.8666666666666667,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 7,
+                "canonicalId": "person:codriver:62c2c7c2-2fa9-47bf-9623-c04a8d1e5044",
+                "canonicalName": "Max Bacon",
+                "score": 0.7621083333333333,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.19238095238095237,
+                  "lexical": 0.7958333333333334,
+                  "phonetic": 0.8533333333333333,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 8,
+                "canonicalId": "person:codriver:35ea0b30-a3af-49a5-8dc7-f50432744300",
+                "canonicalName": "Maxime Andernack",
+                "score": 0.761814814814815,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.16623376623376623,
+                  "lexical": 0.8185185185185185,
+                  "phonetic": 0.8444444444444446,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 9,
+                "canonicalId": "person:driver:5cb68bb0-59e6-401a-a842-25506d998dd1",
+                "canonicalName": "Maxence Girard",
+                "score": 0.7540161172161173,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.1431578947368421,
+                  "lexical": 0.8052564102564104,
+                  "phonetic": 0.8367857142857142,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 10,
+                "canonicalId": "person:driver:5fb153fe-c524-4b0e-9456-3644003d117f",
+                "canonicalName": "Max Murray",
+                "score": 0.7504333333333335,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.18,
+                  "lexical": 0.79,
+                  "phonetic": 0.8366666666666667,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": 1,
+        "entityMentionExact": true,
+        "querySemantics": {
+          "actualIntent": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": true,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverName": "Max Freeman",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverName": "Max Freeman",
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "driverId": "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": true
+        },
+        "resolver": {
+          "decision": "resolved",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {
+            "driver:Max Freeman": {
+              "type": "driver",
+              "rawPhrase": "Max Freeman",
+              "resolvedCandidate": "Max Freeman",
+              "resolvedId": "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "confidence": 1.0,
+              "strategy": "clear_winner",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            },
+            "driver": {
+              "type": "driver",
+              "rawPhrase": "Max Freeman",
+              "resolvedCandidate": "Max Freeman",
+              "resolvedId": "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "confidence": 1.0,
+              "strategy": "clear_winner",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            }
+          },
+          "finalCanonicalEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "finalCanonicalEntityNames": [
+            "Max Freeman"
+          ]
+        },
+        "canonicalEntityCorrect": true,
+        "canonicalOutcomeCorrect": true,
+        "correctConfident": true,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": false,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "CORRECT_CONFIDENT",
+        "wer": 0.0,
+        "cer": 0.0,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 822,
+          "queryUnderstanding": 1672,
+          "entitySearch": 79,
+          "resolver": 187,
+          "preprocessing": 0.0,
+          "total": 2786.0
+        }
+      },
+      "pass2": null,
+      "final": {
+        "recordingId": "human-smoke-004",
+        "audioFile": "test/eval/audio/human/record_out.wav",
+        "transcriptionInputFilename": "record_out.wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "show me all rallies in which max freeman patcipated",
+        "referenceTranscriptRaw": "show me all rallies in which max freeman patcipated",
+        "referenceTranscriptNormalized": "show me all rallies in which max freeman participated",
+        "referenceNormalizationNote": "Corrected the obvious typed label typo 'patcipated' to 'participated' for WER/CER only; the raw human label is preserved verbatim.",
+        "expectedEntityMention": "max freeman",
+        "expectedCanonicalEntityId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+        "expectedCanonicalEntityName": "Max Freeman",
+        "equivalentResolverEntityIds": [
+          "7a633b52-950e-49ef-8cab-34cd43e99366"
+        ],
+        "expectedEntityType": "person",
+        "expectedQuerySemantics": {
+          "intents": [
+            "SEARCH_DRIVER_RALLIES"
+          ],
+          "personRole": "ANY",
+          "description": "Search rally participation for Max Freeman with ANY-role semantics, not wins or rally results. Live DB truth identifies Max Freeman as co-driver-only for these entries."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Show me all rallies in which Max Freeman participated.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Show me all rallies in which Max Freeman participated.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "searchDriverRallies",
+          "rawEntityMentions": [
+            {
+              "mention": "Max Freeman",
+              "entityType": "person"
+            }
+          ],
+          "query": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverName": "Max Freeman",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Max Freeman",
+            "entityType": "person",
+            "targetCandidateRank": 1,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+                "canonicalName": "Max Freeman",
+                "score": 0.95,
+                "componentScores": {
+                  "exact": 1.0,
+                  "normalizedExact": 1.0,
+                  "token": 1.0,
+                  "ngram": 1.0,
+                  "lexical": 1.0,
+                  "phonetic": 1.0,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "character_ngram",
+                  "exact",
+                  "lexical",
+                  "normalized_exact",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "person:driver:c3b951aa-d3d2-43aa-8944-cd2c5f0bac17",
+                "canonicalName": "Max Matton",
+                "score": 0.7958888888888889,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.18666666666666668,
+                  "lexical": 0.8288888888888889,
+                  "phonetic": 0.8955555555555555,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "person:driver:9631ab5e-8a9b-4235-911b-ac58fc6fc3d9",
+                "canonicalName": "Max McRae",
+                "score": 0.7793884920634921,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.19238095238095237,
+                  "lexical": 0.8341666666666666,
+                  "phonetic": 0.8669841269841271,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "person:codriver:3291ff96-b92f-4624-94e2-5cfc188d8884",
+                "canonicalName": "Max Redfern",
+                "score": 0.777909632034632,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.2161764705882353,
+                  "lexical": 0.8629166666666667,
+                  "phonetic": 0.8387012987012987,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 5,
+                "canonicalId": "person:driver:e298d112-c0ea-4e2f-926f-c97eb58c8afc",
+                "canonicalName": "Max Maier",
+                "score": 0.773877380952381,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.19999999999999998,
+                  "lexical": 0.8341666666666666,
+                  "phonetic": 0.858095238095238,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 6,
+                "canonicalId": "person:driver:efdca8b6-50a6-46ed-bb9c-ebb841446207",
+                "canonicalName": "Maxime Castelein",
+                "score": 0.7714930555555556,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.12987012987012986,
+                  "lexical": 0.8006944444444445,
+                  "phonetic": 0.8666666666666667,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 7,
+                "canonicalId": "person:codriver:62c2c7c2-2fa9-47bf-9623-c04a8d1e5044",
+                "canonicalName": "Max Bacon",
+                "score": 0.7621083333333333,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.19238095238095237,
+                  "lexical": 0.7958333333333334,
+                  "phonetic": 0.8533333333333333,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 8,
+                "canonicalId": "person:codriver:35ea0b30-a3af-49a5-8dc7-f50432744300",
+                "canonicalName": "Maxime Andernack",
+                "score": 0.761814814814815,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.16623376623376623,
+                  "lexical": 0.8185185185185185,
+                  "phonetic": 0.8444444444444446,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 9,
+                "canonicalId": "person:driver:5cb68bb0-59e6-401a-a842-25506d998dd1",
+                "canonicalName": "Maxence Girard",
+                "score": 0.7540161172161173,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.1431578947368421,
+                  "lexical": 0.8052564102564104,
+                  "phonetic": 0.8367857142857142,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              },
+              {
+                "rank": 10,
+                "canonicalId": "person:driver:5fb153fe-c524-4b0e-9456-3644003d117f",
+                "canonicalName": "Max Murray",
+                "score": 0.7504333333333335,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.5,
+                  "ngram": 0.18,
+                  "lexical": 0.79,
+                  "phonetic": 0.8366666666666667,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "lexical",
+                  "phonetic",
+                  "token"
+                ]
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": 1,
+        "entityMentionExact": true,
+        "querySemantics": {
+          "actualIntent": "SEARCH_DRIVER_RALLIES",
+          "intentCorrect": true,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": true,
+          "parsedSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverName": "Max Freeman",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "SEARCH_DRIVER_RALLIES",
+            "driverNames": [
+              "Max Freeman"
+            ],
+            "driverName": "Max Freeman",
+            "driverIds": [
+              "7a633b52-950e-49ef-8cab-34cd43e99366"
+            ],
+            "driverId": "7a633b52-950e-49ef-8cab-34cd43e99366",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": true
+        },
+        "resolver": {
+          "decision": "resolved",
+          "requiresClarification": false,
+          "clarificationQuestion": null,
+          "resolutions": {
+            "driver:Max Freeman": {
+              "type": "driver",
+              "rawPhrase": "Max Freeman",
+              "resolvedCandidate": "Max Freeman",
+              "resolvedId": "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "confidence": 1.0,
+              "strategy": "clear_winner",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            },
+            "driver": {
+              "type": "driver",
+              "rawPhrase": "Max Freeman",
+              "resolvedCandidate": "Max Freeman",
+              "resolvedId": "7a633b52-950e-49ef-8cab-34cd43e99366",
+              "confidence": 1.0,
+              "strategy": "clear_winner",
+              "isAmbiguous": false,
+              "candidateOptionsCount": 0
+            }
+          },
+          "finalCanonicalEntityIds": [
+            "7a633b52-950e-49ef-8cab-34cd43e99366"
+          ],
+          "finalCanonicalEntityNames": [
+            "Max Freeman"
+          ]
+        },
+        "canonicalEntityCorrect": true,
+        "canonicalOutcomeCorrect": true,
+        "correctConfident": true,
+        "correctClarification": false,
+        "clarificationMatchesExpectedEntity": false,
+        "clarification": false,
+        "noMatch": false,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "CORRECT_CONFIDENT",
+        "wer": 0.0,
+        "cer": 0.0,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 822,
+          "queryUnderstanding": 1672,
+          "entitySearch": 79,
+          "resolver": 187,
+          "preprocessing": 0.0,
+          "total": 2786.0
+        }
+      },
+      "comparisonToRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "CORRECT_CONFIDENT",
+        "dynamicOutcome": "CORRECT_CONFIDENT",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": true,
+        "dynamicCanonicalOutcomeCorrect": true,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "comparisonToFrozenRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "CORRECT_CONFIDENT",
+        "dynamicOutcome": "CORRECT_CONFIDENT",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": true,
+        "dynamicCanonicalOutcomeCorrect": true,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "latencyMs": {
+        "rawBaselineStt": 833,
+        "rawBaselineTotal": 2513.0,
+        "frozenBaselineStt": 833,
+        "frozenBaselineTotal": 2513.0,
+        "dynamicPass1Stt": 822,
+        "dynamicPass1Total": 2786.0,
+        "dynamicSecondPassStt": null,
+        "dynamicSecondPassTotal": null,
+        "dynamicTotal": 2786.0
+      },
+      "sttCalls": 1
+    },
+    {
+      "recordingId": "human-smoke-005",
+      "audioFile": "test/eval/audio/human/record_out (1).wav",
+      "referenceTranscriptRaw": "rally aluksne drivers",
+      "referenceTranscriptNormalized": "rally aluksne drivers",
+      "canonicalScorable": true,
+      "canonicalInterpretationAmbiguous": false,
+      "expectedIntent": [
+        "GET_RALLY_TOP_FINISHERS"
+      ],
+      "expectedPersonRole": null,
+      "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+      "expectedCanonicalEntityName": "Rally Alūksne 2026",
+      "pipeline": {
+        "audioInput": "original_unmodified_wav",
+        "audioPreprocessor": "NoOpAudioPreprocessor",
+        "audioPreprocessingUsed": false,
+        "staticDomainContextUsed": false,
+        "dynamicCandidateCount": 3,
+        "maximumSecondPasses": 1
+      },
+      "triggerPolicy": {
+        "fired": false,
+        "reason": "FROZEN_BASELINE_SAFE_WINNER_PROTECTED",
+        "topCandidatePhoneticOnly": true,
+        "candidatePolicyWouldFire": false,
+        "candidatePolicyReason": "PASS1_SAFE_TOP1_CLARIFICATION",
+        "protectedFrozenBaselineWinner": true,
+        "secondPassSkippedBecauseNoCandidateHints": false
+      },
+      "secondPassTriggered": false,
+      "top3Hints": [
+        "Rally Alūksne 2026",
+        "Rallye National du Pays de Fayence 2025",
+        "McDonald & Munro Speyside Stages 2025"
+      ],
+      "pass1": {
+        "recordingId": "human-smoke-005",
+        "audioFile": "test/eval/audio/human/record_out (1).wav",
+        "transcriptionInputFilename": "record_out (1).wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "rally aluksne drivers",
+        "referenceTranscriptRaw": "rally aluksne drivers",
+        "referenceTranscriptNormalized": "rally aluksne drivers",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "rally aluksne",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return drivers/results for the independently verified Rally Alūksne event; the terse utterance is interpreted as the supported top-finishers intent."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Rally aloops نے drivers.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Rally aloops نے drivers.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "getRallyTopFinishers",
+          "rawEntityMentions": [
+            {
+              "mention": "Rally aloops",
+              "entityType": "rally"
+            }
+          ],
+          "query": {
+            "intent": "GET_RALLY_TOP_FINISHERS",
+            "rallyNames": [
+              "Rally aloops"
+            ],
+            "rallyName": "Rally aloops",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Rally aloops",
+            "entityType": "rally",
+            "targetCandidateRank": 1,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+                "canonicalName": "Rally Alūksne 2026",
+                "score": 0.6769238095238095,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.07272727272727274,
+                  "lexical": 0.6428571428571429,
+                  "phonetic": 0.8533333333333333,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "phonetic"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "85ba513d-0df3-4ce7-b952-ae54899d6531",
+                "canonicalName": "Rallye National du Pays de Fayence 2025",
+                "score": 0.6068888888888888,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.032,
+                  "lexical": 0.6169082125603865,
+                  "phonetic": 0.75,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "phonetic"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "fc6c7658-da84-404c-a255-78771d654527",
+                "canonicalName": "McDonald & Munro Speyside Stages 2025",
+                "score": 0.5491428571428572,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.032,
+                  "lexical": 0.5904761904761905,
+                  "phonetic": 0.6666666666666666,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "phonetic"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+                "canonicalName": "Alina Test",
+                "score": 0.5401111111111111,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.06153846153846154,
+                  "lexical": 0.611111111111111,
+                  "phonetic": 0.6444444444444445,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 5,
+                "canonicalId": "39a04c18-0c49-4749-9ce9-9fa082359edd",
+                "canonicalName": "ME Rallysport Showground Stages 2026",
+                "score": 0.5194989367357788,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.03076923076923077,
+                  "lexical": 0.6202020202020202,
+                  "phonetic": 0.5868421052631579,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 6,
+                "canonicalId": "cdd6fb95-ecfc-45d3-a165-65cf3771fccc",
+                "canonicalName": "Rapalloo",
+                "score": 0.5031666666666667,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.32,
+                  "lexical": 0.5972222222222222,
+                  "phonetic": 0.5777777777777778,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 7,
+                "canonicalId": "072e980c-45ca-4ad9-a529-4c7df8bf1b08",
+                "canonicalName": "Woodpecker Rally 2025",
+                "score": 0.4985,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.05714285714285714,
+                  "lexical": 0.6,
+                  "phonetic": 0.5499999999999999,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 8,
+                "canonicalId": "a3f1bdf2-a353-4be8-8110-a794c8cecaa3",
+                "canonicalName": "Loughgall Stages Rally 2025",
+                "score": 0.4912592592592593,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.12307692307692308,
+                  "lexical": 0.5185185185185185,
+                  "phonetic": 0.6,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 9,
+                "canonicalId": "7178d900-61ef-4524-a42b-58cc38f18b50",
+                "canonicalName": "Jim Walsh Cork Forest Rally 2025",
+                "score": 0.49075925925925923,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.0380952380952381,
+                  "lexical": 0.5462962962962963,
+                  "phonetic": 0.5888888888888889,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 10,
+                "canonicalId": "01594380-c4aa-4d99-b19c-af125e032102",
+                "canonicalName": "Donegal test rally 15th",
+                "score": 0.4842042483660131,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.042105263157894736,
+                  "lexical": 0.5089869281045751,
+                  "phonetic": 0.592156862745098,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": 1,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "GET_RALLY_TOP_FINISHERS",
+          "intentCorrect": true,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "GET_RALLY_TOP_FINISHERS",
+            "rallyNames": [
+              "Rally aloops"
+            ],
+            "rallyName": "Rally aloops",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "GET_RALLY_TOP_FINISHERS",
+            "rallyNames": [
+              "Rally aloops"
+            ],
+            "rallyName": "Rally aloops",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "clarification",
+          "requiresClarification": true,
+          "clarificationQuestion": "Did you mean \"Rally Alūksne 2026\"?",
+          "resolutions": {
+            "rally:Rally aloops": {
+              "type": "rally",
+              "rawPhrase": "Rally aloops",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.737,
+              "strategy": "plausible_candidates",
+              "isAmbiguous": true,
+              "candidateOptionsCount": 5
+            },
+            "rally": {
+              "type": "rally",
+              "rawPhrase": "Rally aloops",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.737,
+              "strategy": "plausible_candidates",
+              "isAmbiguous": true,
+              "candidateOptionsCount": 5
+            }
+          },
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": true,
+        "correctConfident": false,
+        "correctClarification": true,
+        "clarificationMatchesExpectedEntity": true,
+        "clarification": true,
+        "noMatch": false,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "CORRECT_CLARIFICATION",
+        "wer": 0.6666666666666666,
+        "cer": 0.2857142857142857,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 765,
+          "queryUnderstanding": 3987,
+          "entitySearch": 3,
+          "resolver": 126,
+          "preprocessing": 0.0,
+          "total": 4972.0
+        }
+      },
+      "pass2": null,
+      "final": {
+        "recordingId": "human-smoke-005",
+        "audioFile": "test/eval/audio/human/record_out (1).wav",
+        "transcriptionInputFilename": "record_out (1).wav",
+        "strategy": "DYNAMIC_TOP3_PASS1_RAW",
+        "realHumanAudio": true,
+        "groundTruthStatus": "HUMAN_TRANSCRIPT_WITH_VERIFIED_CANONICAL_ENTITY",
+        "referenceTranscript": "rally aluksne drivers",
+        "referenceTranscriptRaw": "rally aluksne drivers",
+        "referenceTranscriptNormalized": "rally aluksne drivers",
+        "referenceNormalizationNote": null,
+        "expectedEntityMention": "rally aluksne",
+        "expectedCanonicalEntityId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+        "expectedCanonicalEntityName": "Rally Alūksne 2026",
+        "equivalentResolverEntityIds": [],
+        "expectedEntityType": "rally",
+        "expectedQuerySemantics": {
+          "intents": [
+            "GET_RALLY_TOP_FINISHERS"
+          ],
+          "personRole": null,
+          "description": "Return drivers/results for the independently verified Rally Alūksne event; the terse utterance is interpreted as the supported top-finishers intent."
+        },
+        "transcription": {
+          "origin": "baseline",
+          "biasingUsed": false,
+          "prompt": "",
+          "keywords": [],
+          "transcript": "Rally aloops نے drivers.",
+          "requestedLanguage": "en",
+          "detectedLanguage": null,
+          "detectedLanguageAvailable": false,
+          "confidence": null,
+          "confidenceAvailable": false,
+          "logprob": null,
+          "logprobAvailable": false
+        },
+        "normalizedTranscript": "Rally aloops نے drivers.",
+        "queryUnderstanding": {
+          "success": true,
+          "intent": "getRallyTopFinishers",
+          "rawEntityMentions": [
+            {
+              "mention": "Rally aloops",
+              "entityType": "rally"
+            }
+          ],
+          "query": {
+            "intent": "GET_RALLY_TOP_FINISHERS",
+            "rallyNames": [
+              "Rally aloops"
+            ],
+            "rallyName": "Rally aloops",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "provider": "openai",
+          "model": "gpt-5.6-luna"
+        },
+        "candidateGroups": [
+          {
+            "rawMention": "Rally aloops",
+            "entityType": "rally",
+            "targetCandidateRank": 1,
+            "candidates": [
+              {
+                "rank": 1,
+                "canonicalId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
+                "canonicalName": "Rally Alūksne 2026",
+                "score": 0.6769238095238095,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.07272727272727274,
+                  "lexical": 0.6428571428571429,
+                  "phonetic": 0.8533333333333333,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "phonetic"
+                ]
+              },
+              {
+                "rank": 2,
+                "canonicalId": "85ba513d-0df3-4ce7-b952-ae54899d6531",
+                "canonicalName": "Rallye National du Pays de Fayence 2025",
+                "score": 0.6068888888888888,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.032,
+                  "lexical": 0.6169082125603865,
+                  "phonetic": 0.75,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "phonetic"
+                ]
+              },
+              {
+                "rank": 3,
+                "canonicalId": "fc6c7658-da84-404c-a255-78771d654527",
+                "canonicalName": "McDonald & Munro Speyside Stages 2025",
+                "score": 0.5491428571428572,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.032,
+                  "lexical": 0.5904761904761905,
+                  "phonetic": 0.6666666666666666,
+                  "context": 0.0
+                },
+                "matchedBy": [
+                  "phonetic"
+                ]
+              },
+              {
+                "rank": 4,
+                "canonicalId": "657682d5-cd9e-4ac3-aae7-62a03030be71",
+                "canonicalName": "Alina Test",
+                "score": 0.5401111111111111,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.06153846153846154,
+                  "lexical": 0.611111111111111,
+                  "phonetic": 0.6444444444444445,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 5,
+                "canonicalId": "39a04c18-0c49-4749-9ce9-9fa082359edd",
+                "canonicalName": "ME Rallysport Showground Stages 2026",
+                "score": 0.5194989367357788,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.03076923076923077,
+                  "lexical": 0.6202020202020202,
+                  "phonetic": 0.5868421052631579,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 6,
+                "canonicalId": "cdd6fb95-ecfc-45d3-a165-65cf3771fccc",
+                "canonicalName": "Rapalloo",
+                "score": 0.5031666666666667,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.32,
+                  "lexical": 0.5972222222222222,
+                  "phonetic": 0.5777777777777778,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 7,
+                "canonicalId": "072e980c-45ca-4ad9-a529-4c7df8bf1b08",
+                "canonicalName": "Woodpecker Rally 2025",
+                "score": 0.4985,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.05714285714285714,
+                  "lexical": 0.6,
+                  "phonetic": 0.5499999999999999,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 8,
+                "canonicalId": "a3f1bdf2-a353-4be8-8110-a794c8cecaa3",
+                "canonicalName": "Loughgall Stages Rally 2025",
+                "score": 0.4912592592592593,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.12307692307692308,
+                  "lexical": 0.5185185185185185,
+                  "phonetic": 0.6,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 9,
+                "canonicalId": "7178d900-61ef-4524-a42b-58cc38f18b50",
+                "canonicalName": "Jim Walsh Cork Forest Rally 2025",
+                "score": 0.49075925925925923,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.0380952380952381,
+                  "lexical": 0.5462962962962963,
+                  "phonetic": 0.5888888888888889,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              },
+              {
+                "rank": 10,
+                "canonicalId": "01594380-c4aa-4d99-b19c-af125e032102",
+                "canonicalName": "Donegal test rally 15th",
+                "score": 0.4842042483660131,
+                "componentScores": {
+                  "exact": 0.0,
+                  "normalizedExact": 0.0,
+                  "token": 0.0,
+                  "ngram": 0.042105263157894736,
+                  "lexical": 0.5089869281045751,
+                  "phonetic": 0.592156862745098,
+                  "context": 0.0
+                },
+                "matchedBy": []
+              }
+            ]
+          }
+        ],
+        "targetCandidateRank": 1,
+        "entityMentionExact": false,
+        "querySemantics": {
+          "actualIntent": "GET_RALLY_TOP_FINISHERS",
+          "intentCorrect": true,
+          "actualPersonRole": "ANY",
+          "personRoleCorrect": null,
+          "parsedSearchQuery": {
+            "intent": "GET_RALLY_TOP_FINISHERS",
+            "rallyNames": [
+              "Rally aloops"
+            ],
+            "rallyName": "Rally aloops",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "finalSearchQuery": {
+            "intent": "GET_RALLY_TOP_FINISHERS",
+            "rallyNames": [
+              "Rally aloops"
+            ],
+            "rallyName": "Rally aloops",
+            "driverMatchMode": "ANY",
+            "personRole": "ANY",
+            "limit": 20,
+            "offset": 0
+          },
+          "semanticsCorrect": false
+        },
+        "resolver": {
+          "decision": "clarification",
+          "requiresClarification": true,
+          "clarificationQuestion": "Did you mean \"Rally Alūksne 2026\"?",
+          "resolutions": {
+            "rally:Rally aloops": {
+              "type": "rally",
+              "rawPhrase": "Rally aloops",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.737,
+              "strategy": "plausible_candidates",
+              "isAmbiguous": true,
+              "candidateOptionsCount": 5
+            },
+            "rally": {
+              "type": "rally",
+              "rawPhrase": "Rally aloops",
+              "resolvedCandidate": null,
+              "resolvedId": null,
+              "confidence": 0.737,
+              "strategy": "plausible_candidates",
+              "isAmbiguous": true,
+              "candidateOptionsCount": 5
+            }
+          },
+          "finalCanonicalEntityIds": [],
+          "finalCanonicalEntityNames": []
+        },
+        "canonicalEntityCorrect": false,
+        "canonicalOutcomeCorrect": true,
+        "correctConfident": false,
+        "correctClarification": true,
+        "clarificationMatchesExpectedEntity": true,
+        "clarification": true,
+        "noMatch": false,
+        "wrongConfident": false,
+        "wrongClarification": false,
+        "finalOutcome": "CORRECT_CLARIFICATION",
+        "wer": 0.6666666666666666,
+        "cer": 0.2857142857142857,
+        "preprocessingDiagnostics": {
+          "implementation": "no_op"
+        },
+        "voiceExactMatchEscalation": {
+          "status": "ASSESSED",
+          "occurred": false,
+          "reason": "No wrong confident canonical resolution occurred."
+        },
+        "latencyMs": {
+          "stt": 765,
+          "queryUnderstanding": 3987,
+          "entitySearch": 3,
+          "resolver": 126,
+          "preprocessing": 0.0,
+          "total": 4972.0
+        }
+      },
+      "comparisonToRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "CORRECT_CLARIFICATION",
+        "dynamicOutcome": "CORRECT_CLARIFICATION",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": true,
+        "dynamicCanonicalOutcomeCorrect": true,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "comparisonToFrozenRaw": {
+        "source": "FROZEN_ACCEPTED_RAW_BASELINE",
+        "baselineOutcome": "CORRECT_CLARIFICATION",
+        "dynamicOutcome": "CORRECT_CLARIFICATION",
+        "delta": "UNCHANGED",
+        "baselineCanonicalOutcomeCorrect": true,
+        "dynamicCanonicalOutcomeCorrect": true,
+        "baselineWrongConfident": false,
+        "dynamicWrongConfident": false
+      },
+      "latencyMs": {
+        "rawBaselineStt": 702,
+        "rawBaselineTotal": 5817.0,
+        "frozenBaselineStt": 702,
+        "frozenBaselineTotal": 5817.0,
+        "dynamicPass1Stt": 765,
+        "dynamicPass1Total": 4972.0,
+        "dynamicSecondPassStt": null,
+        "dynamicSecondPassTotal": null,
+        "dynamicTotal": 4972.0
+      },
+      "sttCalls": 1
+    }
+  ],
+  "existingSyntheticEvidence": {
+    "report": "test/eval/entity_search/synthetic_stt_biasing_report.json",
+    "rerun": false,
+    "dynamicTop3WasBestSafetyUtilityConfiguration": true,
+    "remainedExperimental": true
+  },
+  "safety": {
+    "requiredDynamicWrongConfident": 0,
+    "actualPerFileDynamicWrongConfident": 0,
+    "actualUniqueDynamicWrongConfident": 0,
+    "blocker": false,
+    "previouslyCorrectBaselineCasesRetranscribed": 0
+  },
+  "recommendation": "NO BENEFIT — KEEP BIASING SHELVED",
+  "limitations": [
+    "Four unique human waveforms are a labeled smoke test only.",
+    "No production latency or human/accent robustness claim can be extrapolated.",
+    "Query Understanding is LLM-backed and can vary for identical transcripts.",
+    "Dynamically hinted exact spellings are circular evidence and are downgraded to clarification when they would otherwise auto-resolve."
+  ]
+}

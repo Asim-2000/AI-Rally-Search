@@ -1,0 +1,1145 @@
+{
+  "runVersion": "PY3_PROVIDER_VALIDATION_V1",
+  "sourceProviderReport": "benchmarks/query_understanding/results/provider_smoke_v1_live/PY3_PROVIDER_SMOKE_V1_openai_gpt-4.1-mini.json",
+  "provider": "openai",
+  "model": "gpt-4.1-mini",
+  "entityIndex": {
+    "entityCount": 11244,
+    "buildTimeMs": 2101.049
+  },
+  "summary": {
+    "cases": 15,
+    "eligible": 15,
+    "canonicalSuccess": 10,
+    "clarifications": 5,
+    "noMatch": 0,
+    "databaseExecutions": 10
+  },
+  "totalLatencyMs": 8812.560583999584,
+  "records": [
+    {
+      "caseId": "SMOKE-RALLIES",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [
+          "Ireland"
+        ],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [
+          2025
+        ],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {},
+      "entitySearchLatencyMs": 0.013332999515114352,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [
+          "Ireland"
+        ],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [
+          2025
+        ],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 323.1284159992356,
+      "resultIds": [
+        "8b0a3dda-0660-4abd-a97d-a6f549a7b6a4",
+        "61d92fb9-64dd-4fea-a421-a9fd2fd7afef",
+        "40d77dc8-e15d-463a-9a3e-50bc6f95bd99",
+        "c3484678-57bf-4337-a9ff-fc48c6076a24",
+        "b740e837-440e-4ce1-9d39-739b34a85f92",
+        "2f076531-06d3-4184-a1f8-a8e793deef50",
+        "1c9341db-ebc3-40b3-9a45-d9abe88e78de",
+        "fa581dfb-bb52-40fc-823c-e000944df859",
+        "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "7178d900-61ef-4524-a42b-58cc38f18b50",
+        "7ea57ab9-5499-4c84-9989-60fc1252cc1f",
+        "92a7a836-1581-4164-8819-96254243cfc1",
+        "38912944-9809-4bfb-84a6-8980d82b06f8",
+        "f42b053d-8df9-4b5c-9d60-6ff3cfbf1642",
+        "f6bf8341-7cce-407e-8f47-e7af06bf06a3",
+        "838d0839-53a9-4f3a-9c1e-ef8ef771cfe0",
+        "62c4f55a-798d-447b-81ad-2f882a693ac0",
+        "a7acfb10-d6ec-4acc-91df-58e7f0b7eb36",
+        "9138a7c1-5f1c-4fe2-82d3-0fa37fac6582",
+        "bfece896-adbd-41de-b664-0f7aa9be09b9"
+      ],
+      "totalCount": 24,
+      "returnedCount": 20
+    },
+    {
+      "caseId": "SMOKE-PARTICIPATION",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {
+        "driver:Josh Moffett": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        }
+      },
+      "entitySearchLatencyMs": 110.50508300104411,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 507.0878749975236,
+      "resultIds": [
+        "2c411152-5bfe-4292-bd5a-43bc98ba6ab3",
+        "c10f3cdb-9d8d-4bb1-8558-a2b20fd823d2",
+        "a73dfca5-83b2-4f09-98f6-5d27ad749c81",
+        "01594380-c4aa-4d99-b19c-af125e032102",
+        "1ec50ac2-9408-47ac-a650-1287568ecce2",
+        "08d348fc-aa7c-4806-83a8-c6521febc7ec",
+        "547c9162-2235-46e8-9cd3-94436a37fd3c",
+        "3a4b1757-28cb-4977-9fc4-a14f8ce1616d",
+        "21eaa41d-5732-45eb-a4a8-950461db22fa",
+        "2f076531-06d3-4184-a1f8-a8e793deef50",
+        "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "92a7a836-1581-4164-8819-96254243cfc1",
+        "38912944-9809-4bfb-84a6-8980d82b06f8",
+        "f42b053d-8df9-4b5c-9d60-6ff3cfbf1642",
+        "62c4f55a-798d-447b-81ad-2f882a693ac0",
+        "bfece896-adbd-41de-b664-0f7aa9be09b9",
+        "c636d2bb-b167-4173-b5ed-a0d818de19d3",
+        "7123b272-88a9-4604-b1d5-68d2ce4d0635",
+        "f2b801df-64e7-49f1-b197-92f301763748"
+      ],
+      "totalCount": 19,
+      "returnedCount": 19
+    },
+    {
+      "caseId": "SMOKE-DRIVER-ROLE",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "DRIVER",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {
+        "driver:Josh Moffett": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        }
+      },
+      "entitySearchLatencyMs": 99.87000000182888,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "DRIVER",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 435.92591699780314,
+      "resultIds": [
+        "2c411152-5bfe-4292-bd5a-43bc98ba6ab3",
+        "c10f3cdb-9d8d-4bb1-8558-a2b20fd823d2",
+        "a73dfca5-83b2-4f09-98f6-5d27ad749c81",
+        "01594380-c4aa-4d99-b19c-af125e032102",
+        "1ec50ac2-9408-47ac-a650-1287568ecce2",
+        "08d348fc-aa7c-4806-83a8-c6521febc7ec",
+        "547c9162-2235-46e8-9cd3-94436a37fd3c",
+        "3a4b1757-28cb-4977-9fc4-a14f8ce1616d",
+        "21eaa41d-5732-45eb-a4a8-950461db22fa",
+        "2f076531-06d3-4184-a1f8-a8e793deef50",
+        "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "92a7a836-1581-4164-8819-96254243cfc1",
+        "38912944-9809-4bfb-84a6-8980d82b06f8",
+        "f42b053d-8df9-4b5c-9d60-6ff3cfbf1642",
+        "62c4f55a-798d-447b-81ad-2f882a693ac0",
+        "bfece896-adbd-41de-b664-0f7aa9be09b9",
+        "c636d2bb-b167-4173-b5ed-a0d818de19d3",
+        "7123b272-88a9-4604-b1d5-68d2ce4d0635",
+        "f2b801df-64e7-49f1-b197-92f301763748"
+      ],
+      "totalCount": 19,
+      "returnedCount": 19
+    },
+    {
+      "caseId": "SMOKE-CODRIVER-ROLE",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Max Freeman"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "CO_DRIVER",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {
+        "driver:Max Freeman": {
+          "type": "driver",
+          "rawPhrase": "Max Freeman",
+          "resolvedCandidate": "Max Freeman",
+          "resolvedId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver": {
+          "type": "driver",
+          "rawPhrase": "Max Freeman",
+          "resolvedCandidate": "Max Freeman",
+          "resolvedId": "person:account:cf3ddf9c-a64b-4f59-a5e4-5230c44b4d87",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        }
+      },
+      "entitySearchLatencyMs": 102.50262500267127,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_DRIVER_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Max Freeman"
+        ],
+        "driverIds": [
+          "7a633b52-950e-49ef-8cab-34cd43e99366"
+        ],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "CO_DRIVER",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 549.2759580010897,
+      "resultIds": [
+        "a73dfca5-83b2-4f09-98f6-5d27ad749c81",
+        "01594380-c4aa-4d99-b19c-af125e032102",
+        "1ec50ac2-9408-47ac-a650-1287568ecce2",
+        "de2987c8-eb35-4310-908a-454043b8ea09",
+        "abe188b2-a7e7-43d3-a78c-4a63772d5a83",
+        "547c9162-2235-46e8-9cd3-94436a37fd3c",
+        "21eaa41d-5732-45eb-a4a8-950461db22fa",
+        "ea1b544c-b0cc-4e8e-bd71-d4b09d058c2d",
+        "bfece896-adbd-41de-b664-0f7aa9be09b9"
+      ],
+      "totalCount": 9,
+      "returnedCount": 9
+    },
+    {
+      "caseId": "SMOKE-WINS",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_WINS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {
+        "driver:Josh Moffett": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        }
+      },
+      "entitySearchLatencyMs": 0.12037499982398003,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_DRIVER_WINS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 306.2232499978563,
+      "resultIds": [
+        "2c411152-5bfe-4292-bd5a-43bc98ba6ab3"
+      ],
+      "totalCount": 1,
+      "returnedCount": 1
+    },
+    {
+      "caseId": "SMOKE-WINNER",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "GET_RALLY_RESULTS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "clarification",
+      "canonicalResolutions": {
+        "rally:Moonraker Rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker Rally",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.5,
+          "strategy": "multi_year_ambiguity",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 5
+        },
+        "rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker Rally",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.5,
+          "strategy": "multi_year_ambiguity",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 5
+        }
+      },
+      "entitySearchLatencyMs": 71.205625001312,
+      "clarificationQuestion": "Which year or edition of \"Moonraker Rally\" are you looking for?",
+      "resolutionError": null,
+      "databaseExecuted": false
+    },
+    {
+      "caseId": "SMOKE-TOP",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "GET_RALLY_TOP_FINISHERS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 5,
+        "offset": 0
+      },
+      "canonicalOutcome": "clarification",
+      "canonicalResolutions": {
+        "rally:Moonraker": {
+          "type": "rally",
+          "rawPhrase": "Moonraker",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.5,
+          "strategy": "multi_year_ambiguity",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 5
+        },
+        "rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.5,
+          "strategy": "multi_year_ambiguity",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 5
+        }
+      },
+      "entitySearchLatencyMs": 37.34804099804023,
+      "clarificationQuestion": "Which year or edition of \"Moonraker\" are you looking for?",
+      "resolutionError": null,
+      "databaseExecuted": false
+    },
+    {
+      "caseId": "SMOKE-ACTIONS",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker Rally"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [
+          "SS2"
+        ],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "clarification",
+      "canonicalResolutions": {
+        "rally:Moonraker Rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker Rally",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.94,
+          "strategy": "insufficient_gap",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 3
+        },
+        "rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker Rally",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.94,
+          "strategy": "insufficient_gap",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 3
+        }
+      },
+      "entitySearchLatencyMs": 39.8324589987169,
+      "clarificationQuestion": "Which rally event named \"Moonraker Rally\" do you mean?",
+      "resolutionError": null,
+      "databaseExecuted": false
+    },
+    {
+      "caseId": "SMOKE-STAGE",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [
+          "Gale Rigg"
+        ],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "crash"
+        ],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "clarification",
+      "canonicalResolutions": {
+        "stage:Gale Rigg": {
+          "type": "stage",
+          "rawPhrase": "Gale Rigg",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 1.0,
+          "strategy": "insufficient_gap",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 2
+        },
+        "stage": {
+          "type": "stage",
+          "rawPhrase": "Gale Rigg",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 1.0,
+          "strategy": "insufficient_gap",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 2
+        }
+      },
+      "entitySearchLatencyMs": 39.55770900211064,
+      "clarificationQuestion": "Which stage named \"Gale Rigg\" do you mean?",
+      "resolutionError": null,
+      "databaseExecuted": false
+    },
+    {
+      "caseId": "SMOKE-DRIVER-VIDEOS",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {
+        "driver:Josh Moffett": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        }
+      },
+      "entitySearchLatencyMs": 0.0106250008684583,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_DRIVER_VIDEOS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 1245.5987080029445,
+      "resultIds": [
+        "181054",
+        "179854",
+        "179849",
+        "176900",
+        "176864",
+        "176816",
+        "176815",
+        "176603",
+        "176340",
+        "176334",
+        "176134",
+        "175940",
+        "175934",
+        "175653",
+        "172217",
+        "172103",
+        "171868",
+        "171814",
+        "171792",
+        "171686"
+      ],
+      "totalCount": 122,
+      "returnedCount": 20
+    },
+    {
+      "caseId": "SMOKE-UPLOADERS",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "GET_TOP_UPLOADERS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "clarification",
+      "canonicalResolutions": {
+        "rally:Moonraker": {
+          "type": "rally",
+          "rawPhrase": "Moonraker",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.5,
+          "strategy": "multi_year_ambiguity",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 5
+        },
+        "rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker",
+          "resolvedCandidate": null,
+          "resolvedId": null,
+          "confidence": 0.5,
+          "strategy": "multi_year_ambiguity",
+          "isAmbiguous": true,
+          "candidateOptionsCount": 5
+        }
+      },
+      "entitySearchLatencyMs": 0.08850000085658394,
+      "clarificationQuestion": "Which year or edition of \"Moonraker\" are you looking for?",
+      "resolutionError": null,
+      "databaseExecuted": false
+    },
+    {
+      "caseId": "SMOKE-UPLOADER-NAME",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "jump"
+        ],
+        "years": [],
+        "uploaders": [
+          "Rally Media UK"
+        ],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {},
+      "entitySearchLatencyMs": 0.01912500010803342,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [
+          "jump"
+        ],
+        "years": [],
+        "uploaders": [
+          "Rally Media UK"
+        ],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 429.0311250006198,
+      "resultIds": [
+        "66334",
+        "66326",
+        "66319",
+        "66315",
+        "66311",
+        "66304",
+        "66303",
+        "66302",
+        "66301",
+        "66300",
+        "66299",
+        "66298",
+        "66297",
+        "66296",
+        "66295",
+        "66294",
+        "66289",
+        "66280",
+        "66261",
+        "66245"
+      ],
+      "totalCount": 3071,
+      "returnedCount": 20
+    },
+    {
+      "caseId": "SMOKE-TOP-DRIVERS",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "GET_TOP_DRIVERS_BY_WINS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {},
+      "entitySearchLatencyMs": 0.04670799899031408,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "GET_TOP_DRIVERS_BY_WINS",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 285.5411249984172,
+      "resultIds": [
+        "22d4b60e-2a55-4127-a6a2-bf142e2a3569",
+        "2872e161-96c2-4d85-920d-dcdde7b49f9e",
+        "4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+        "5600e432-9ca9-4947-9f6d-a3e0c11bcb56",
+        "6720bba7-e47f-4e72-9efb-a8ba6af0a5dd"
+      ],
+      "totalCount": 5,
+      "returnedCount": 5
+    },
+    {
+      "caseId": "SMOKE-RANGE",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "yearFrom": 2022,
+        "yearTo": 2025,
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {},
+      "entitySearchLatencyMs": 0.053416999435285106,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_RALLIES",
+        "rallyNames": [],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [],
+        "driverIds": [],
+        "actionTypes": [],
+        "years": [],
+        "yearFrom": 2022,
+        "yearTo": 2025,
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 353.0113340020762,
+      "resultIds": [
+        "8b0a3dda-0660-4abd-a97d-a6f549a7b6a4",
+        "61d92fb9-64dd-4fea-a421-a9fd2fd7afef",
+        "f7e6c755-86d9-4be6-988c-7c28039ae288",
+        "7b175f4d-632c-468d-aff5-51dd4778067a",
+        "40d77dc8-e15d-463a-9a3e-50bc6f95bd99",
+        "cc21e6c1-c890-42a1-9536-0cb6243c670e",
+        "7e8b9e4f-b502-471a-b01e-d1a3d7e43b45",
+        "85ba513d-0df3-4ce7-b952-ae54899d6531",
+        "c3484678-57bf-4337-a9ff-fc48c6076a24",
+        "b740e837-440e-4ce1-9d39-739b34a85f92",
+        "2f076531-06d3-4184-a1f8-a8e793deef50",
+        "fb1a7e66-bf8a-46ca-9c0c-6c21b73ca861",
+        "1c9341db-ebc3-40b3-9a45-d9abe88e78de",
+        "072e980c-45ca-4ad9-a529-4c7df8bf1b08",
+        "fa581dfb-bb52-40fc-823c-e000944df859",
+        "f9ef9810-9eec-45df-a76d-a170bb0351aa",
+        "2ca0fe83-3d83-4edf-a4bf-e1075b1a028a",
+        "7178d900-61ef-4524-a42b-58cc38f18b50",
+        "7ea57ab9-5499-4c84-9989-60fc1252cc1f",
+        "92a7a836-1581-4164-8819-96254243cfc1"
+      ],
+      "totalCount": 56,
+      "returnedCount": 20
+    },
+    {
+      "caseId": "SMOKE-MULTILINGUAL",
+      "eligible": true,
+      "parsedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker"
+        ],
+        "eventNames": [],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ],
+        "years": [
+          2024,
+          2025
+        ],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "canonicalOutcome": "correct_confident",
+      "canonicalResolutions": {
+        "rally:Moonraker": {
+          "type": "rally",
+          "rawPhrase": "Moonraker",
+          "resolvedCandidate": "Moonraker Forestry Rally 2025",
+          "resolvedId": "2ae62071-898f-44d7-9b5a-7b0f6794cec9",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "rally": {
+          "type": "rally",
+          "rawPhrase": "Moonraker",
+          "resolvedCandidate": "Moonraker Forestry Rally 2025",
+          "resolvedId": "2ae62071-898f-44d7-9b5a-7b0f6794cec9",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver:Josh Moffett": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        },
+        "driver": {
+          "type": "driver",
+          "rawPhrase": "Josh Moffett",
+          "resolvedCandidate": "Josh Moffett",
+          "resolvedId": "person:driver:4e1a528d-0d6b-4aa3-bf06-27a27318fb70",
+          "confidence": 1.0,
+          "strategy": "clear_winner",
+          "isAmbiguous": false,
+          "candidateOptionsCount": 0
+        }
+      },
+      "entitySearchLatencyMs": 133.01749999664025,
+      "clarificationQuestion": null,
+      "resolutionError": null,
+      "databaseExecuted": true,
+      "resolvedSearchQuery": {
+        "intent": "SEARCH_VIDEO_ACTIONS",
+        "rallyNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "eventNames": [
+          "Moonraker Forestry Rally 2025"
+        ],
+        "countries": [],
+        "cities": [],
+        "stageNames": [],
+        "stageNumbers": [],
+        "driverNames": [
+          "Josh Moffett"
+        ],
+        "driverIds": [
+          "4e1a528d-0d6b-4aa3-bf06-27a27318fb70"
+        ],
+        "actionTypes": [
+          "jump",
+          "drift"
+        ],
+        "years": [
+          2024,
+          2025
+        ],
+        "uploaders": [],
+        "driverMatchMode": "ANY",
+        "personRole": "ANY",
+        "limit": 20,
+        "offset": 0
+      },
+      "databaseLatencyMs": 1205.88145900183,
+      "resultIds": [],
+      "totalCount": 0,
+      "returnedCount": 0
+    }
+  ]
+}

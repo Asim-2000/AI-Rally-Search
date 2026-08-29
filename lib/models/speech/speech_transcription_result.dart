@@ -29,6 +29,15 @@ class SpeechTranscriptionResult {
   /// Optional overall acoustic confidence score [0.0, 1.0].
   final double? confidence;
 
+  /// Provider name (e.g. 'openai', 'OS_NATIVE').
+  final String? provider;
+
+  /// Model identifier (e.g. 'gpt-transcribe', 'whisper-1', 'NATIVE_DEVICE_STT').
+  final String? model;
+
+  /// Latency in milliseconds.
+  final double? latencyMs;
+
   const SpeechTranscriptionResult({
     required this.text,
     this.hypotheses = const [],
@@ -37,6 +46,9 @@ class SpeechTranscriptionResult {
     required this.language,
     this.durationMs = 0,
     this.confidence,
+    this.provider,
+    this.model,
+    this.latencyMs,
   });
 
   /// Factory creating a basic 1-best result from a text string.

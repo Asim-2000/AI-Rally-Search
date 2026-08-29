@@ -274,3 +274,8 @@ OPENAI_API_KEY=<secret>
 - Certificate-verified AWS RDS CA TLS.
 - Inverse rally→participants capability.
 - Some genuine ambiguity cases intentionally remain clarification-first.
+
+## Other Details
+
+- [ARCHITECURE.MD](ARCHITECTURE.md)
+- 

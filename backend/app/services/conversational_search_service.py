@@ -1,3 +1,4 @@
+import re
 import time
 from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
@@ -8,6 +9,7 @@ from ..domain.referent_context import ResultReferentContext
 from ..domain.results import SearchResponse
 from ..domain.router import IntentResolutionPlan, IntentResolutionRouter
 from ..domain.search_plan import SearchPlan
+from ..domain.search_intent import SearchIntent
 from ..domain.search_query import SearchQuery
 from ..domain.summary import generate_interpreted_summary
 from ..entity_search.models import EntityCandidate, EntityResolution
@@ -39,6 +41,10 @@ class ConversationalSearchResult(BaseModel):
     error_code: str | None = Field(default=None, alias="errorCode")
     friendly_message: str | None = Field(default=None, alias="friendlyMessage")
     special_response_category: str | None = Field(default=None, alias="specialResponseCategory")
+    neutralized_temporal_filters: list[str] = Field(
+        default_factory=list,
+        alias="neutralizedTemporalFilters",
+    )
     interpreted_summary: str | None = Field(default=None, alias="interpretedSummary")
     referents: ResultReferentContext = Field(default_factory=ResultReferentContext)
     parse_latency_ms: float = Field(default=0, alias="parseLatencyMs")
@@ -80,6 +86,58 @@ class ConversationalSearchService:
         self.repository = repository
         self.plan_builder = plan_builder or SearchPlanBuilder()
         self.router = router or IntentResolutionRouter()
+
+    @staticmethod
+    def _neutralize_ungrounded_temporal_filters(
+        query: SearchQuery,
+        raw_text: str,
+        session: SearchConversationSession,
+    ) -> tuple[SearchQuery, list[str]]:
+        """Remove model-added years absent from this turn and committed context."""
+        raw_years = {
+            int(value)
+            for value in re.findall(r"(?<!\d)(?:19|20)\d{2}(?!\d)", raw_text)
+        }
+        context_years = set(session.active_query.years)
+        if session.active_query.year_from is not None:
+            context_years.add(session.active_query.year_from)
+        if session.active_query.year_to is not None:
+            context_years.add(session.active_query.year_to)
+        grounded = raw_years | context_years
+
+        kept_years = [year for year in query.years if year in grounded]
+        removed = [f"years:{year}" for year in query.years if year not in grounded]
+        year_from = query.year_from
+        year_to = query.year_to
+        if year_from is not None and year_from not in grounded:
+            removed.append(f"yearFrom:{year_from}")
+            year_from = None
+        if year_to is not None and year_to not in grounded:
+            removed.append(f"yearTo:{year_to}")
+            year_to = None
+
+        if not removed:
+            return query, []
+        return query.model_copy(update={
+            "years": kept_years,
+            "year_from": year_from,
+            "year_to": year_to,
+        }), removed
+
+    @staticmethod
+    def _missing_required_subject(query: SearchQuery) -> str | None:
+        if query.intent in {
+            SearchIntent.GET_RALLY_RESULTS,
+            SearchIntent.GET_RALLY_TOP_FINISHERS,
+        } and not query.target_rally_names and not query.stage_names:
+            return "Which rally do you mean?"
+        if query.intent in {
+            SearchIntent.SEARCH_DRIVER_RALLIES,
+            SearchIntent.SEARCH_DRIVER_WINS,
+            SearchIntent.SEARCH_DRIVER_VIDEOS,
+        } and not query.driver_names and not query.driver_ids:
+            return "Which driver do you mean?"
+        return None
 
     @staticmethod
     def _reuse_committed_referent_ids(
@@ -214,7 +272,23 @@ class ConversationalSearchService:
             )
             return request_session, result
 
-        parsed_query = parse_result.query
+        parsed_query, neutralized_temporal_filters = self._neutralize_ungrounded_temporal_filters(
+            parse_result.query,
+            clean,
+            request_session,
+        )
+        missing_subject_question = self._missing_required_subject(parsed_query)
+        if missing_subject_question is not None:
+            elapsed = (time.perf_counter() - started) * 1000
+            return request_session, ConversationalSearchResult(
+                parsed_query=parsed_query,
+                requires_clarification=True,
+                clarification_question=missing_subject_question,
+                neutralized_temporal_filters=neutralized_temporal_filters,
+                referents=request_session.referents,
+                parse_latency_ms=parse_ms,
+                total_latency_ms=elapsed,
+            )
         resolved_query = parsed_query
         candidates: list[EntityCandidate] = []
         resolutions: dict[str, EntityResolution] = {}
@@ -382,6 +456,7 @@ class ConversationalSearchService:
             interpreted_summary=summary,
             referents=derived_referents,
             resolutions=resolutions,
+            neutralized_temporal_filters=neutralized_temporal_filters,
             parse_latency_ms=parse_ms,
             entity_resolution_latency_ms=er_ms,
             db_latency_ms=db_ms,

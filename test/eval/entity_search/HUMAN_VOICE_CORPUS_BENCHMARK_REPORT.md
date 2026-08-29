@@ -29,17 +29,17 @@ Recommendation: **PROMISING — COLLECT MORE HUMAN AUDIO**
 | Wrong clarification | 1 | 0 |
 | No-match | 2 | 2 |
 | Mean WER | 33.33% | 16.67% |
-| Mean CER | 17.06% | 9.92% |
+| Mean CER | 17.66% | 10.52% |
 
 Recovery: **1 improved, 3 unchanged, 0 worsened**.
 
-Second-pass trigger rate: 25.00%; average STT calls/query: 1.250.
+Second-pass trigger rate: 50.00%; average STT calls/query: 1.500.
 
 | Total latency | RAW_BASELINE | RAW_DYNAMIC_TOP3 |
 |---|---:|---:|
-| Average | 3724.8 ms | 4808.3 ms |
-| p50 | 3020.0 ms | 3020.0 ms |
-| p95 | 4577.0 ms | 8803.0 ms |
+| Average | 3495.0 ms | 5282.8 ms |
+| p50 | 2579.0 ms | 2579.0 ms |
+| p95 | 5015.0 ms | 8931.0 ms |
 
 Per-file metrics are retained in JSON (5 files); primary metrics are SHA-256-deduplicated.
 
@@ -54,14 +54,23 @@ Per-file metrics are retained in JSON (5 files); primary metrics are SHA-256-ded
 
 ## Bias recovery triggers
 
+### human-smoke-001
+
+- Pass 1: Drivers that participated in Alex Nerelli.
+- Trigger: `PASS1_NO_MATCH`
+- Top 3: Alex Lee; Alexine Serin; Alexander Derez
+- Pass 2: Drivers that participated in Alex Nerelli.
+- Outcome: `NO_MATCH → NO_MATCH` (`UNCHANGED`)
+- `CIRCULAR_EVIDENCE_CONFIRMATION_REQUIRED = false`
+
 ### human-smoke-003
 
-- Pass 1: Drivers that participated in Alex's rally.
-- Trigger: `PASS1_CLARIFICATION_DISAGREES_WITH_ENTITY_SEARCH_TOP1`
-- Top 3: Rally Alūksne 2026; Raven's Rock Stages Rally 2025; Alina Test
-- Pass 2: Drivers that participated in Alūksne Rally.
-- Outcome: `WRONG_CLARIFICATION → CORRECT_CLARIFICATION` (`IMPROVED`)
-- `CIRCULAR_EVIDENCE_CONFIRMATION_REQUIRED = true`
+- Pass 1: Drivers that participated in Alex Nerelli.
+- Trigger: `PASS1_NO_MATCH`
+- Top 3: Alex Lee; Alexine Serin; Alexander Derez
+- Pass 2: Drivers that participated in Alex's rally.
+- Outcome: `NO_MATCH → NO_MATCH` (`UNCHANGED`)
+- `CIRCULAR_EVIDENCE_CONFIRMATION_REQUIRED = false`
 
 ### human-smoke-005
 

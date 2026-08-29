@@ -179,7 +179,7 @@ class IntentResolutionRouter:
         "holds", "holding", "took", "take", "takes", "taking", "place", "places",
         "featuring", "features", "featured", "stuck", "recorded", "shot", "captured",
         "between", "during", "season", "seasons", "year", "years", "country", "countries",
-        "city", "cities", "event", "events"
+        "city", "cities", "event", "events", "located"
     }
 
     ACTION_EXPANSIONS: dict[str, set[str]] = {
@@ -193,6 +193,13 @@ class IntentResolutionRouter:
         "action": {"action", "actions"},
         "roll": {"roll", "rolls", "rolling", "rolled"},
         "save": {"save", "saves", "saving", "saved"},
+    }
+
+    # Aggregate intents describe a ranking over the corpus. Their remaining raw
+    # words are ranking language, not an omitted entity mention.
+    GLOBAL_AGGREGATE_INTENTS: set[SearchIntent] = {
+        SearchIntent.GET_TOP_DRIVERS_BY_WINS,
+        SearchIntent.GET_TOP_UPLOADERS,
     }
 
     def route(
@@ -336,7 +343,11 @@ class IntentResolutionRouter:
         unexplained_tokens: list[str] = []
         has_entity_field = any(r.route_type == ResolutionRouteType.ENTITY for r in routes)
 
-        if not has_entity_field and clean_raw:
+        if (
+            not has_entity_field
+            and clean_raw
+            and effective_query.intent not in self.GLOBAL_AGGREGATE_INTENTS
+        ):
             explained_tokens: set[str] = set()
             for r in routes:
                 val_str = str(r.raw_value).lower()

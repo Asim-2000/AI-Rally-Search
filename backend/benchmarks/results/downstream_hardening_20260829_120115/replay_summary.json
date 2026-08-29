@@ -1,0 +1,81 @@
+{
+  "models": {
+    "gpt-5.6-luna": {
+      "before": {
+        "success": 293,
+        "total": 392,
+        "success_rate": 0.7474489795918368,
+        "exact_success": 196,
+        "exact_total": 259,
+        "p_success_exact": 0.7567567567567568,
+        "correct_resolution": 254,
+        "clarification_correct": 20,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "after": {
+        "success": 311,
+        "total": 392,
+        "success_rate": 0.7933673469387755,
+        "exact_success": 214,
+        "exact_total": 259,
+        "p_success_exact": 0.8262548262548263,
+        "correct_resolution": 262,
+        "clarification_correct": 24,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "remaining": {
+        "ENTITY_RESOLUTION_WRONG": 55,
+        "MODEL_PARSE_WRONG": 23,
+        "EXPECTED_CLARIFICATION_MISMATCH": 1,
+        "ROUTER_WRONG": 2
+      }
+    },
+    "gemini-3.5-flash-lite": {
+      "before": {
+        "success": 298,
+        "total": 392,
+        "success_rate": 0.7602040816326531,
+        "exact_success": 197,
+        "exact_total": 252,
+        "p_success_exact": 0.7817460317460317,
+        "correct_resolution": 240,
+        "clarification_correct": 20,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "after": {
+        "success": 315,
+        "total": 392,
+        "success_rate": 0.8035714285714286,
+        "exact_success": 214,
+        "exact_total": 252,
+        "p_success_exact": 0.8492063492063492,
+        "correct_resolution": 262,
+        "clarification_correct": 26,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "remaining": {
+        "ENTITY_RESOLUTION_WRONG": 49,
+        "MODEL_PARSE_WRONG": 27,
+        "EXPECTED_CLARIFICATION_MISMATCH": 1
+      }
+    }
+  },
+  "both_fail": {
+    "before": 87,
+    "escaped": 25,
+    "fully_fixed": 23,
+    "remaining": 62
+  }
+}

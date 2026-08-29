@@ -483,7 +483,16 @@ class DatabaseEntityResolver:
             self._resolution_cache[cache_key] = res
             return res
 
-        scored = self._score_candidates(phrase, candidates, year=effective_year, years=years)
+        # A year embedded in the entity phrase identifies the edition. A
+        # separate query year remains a downstream search filter and must not
+        # penalize the correctly retrieved entity during identity scoring.
+        identity_years = [phrase_year] if phrase_year is not None else years
+        scored = self._score_candidates(
+            phrase,
+            candidates,
+            year=phrase_year if phrase_year is not None else effective_year,
+            years=identity_years,
+        )
 
         has_explicit_years = (effective_year is not None) or bool(years) or (extract_year(phrase) is not None)
         if not has_explicit_years and len(scored) > 1:

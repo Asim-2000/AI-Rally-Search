@@ -1,0 +1,46 @@
+{
+  "timestamp": "20260829_053539",
+  "branch": "benchmark-final",
+  "commit": "8fa449077968e1c91a850c3cb2d078c0eb62fe22",
+  "working_tree_dirty_before_run": false,
+  "working_tree_status_before_run": [],
+  "postprocessing_working_tree_status": [
+    " M backend/benchmarks/runners/run_qu_benchmark.py",
+    "?? backend/benchmarks/results/full_20260829_053539/",
+    "?? backend/benchmarks/runners/finalize_qu_benchmark.py"
+  ],
+  "python": "3.12.13",
+  "dependencies": {
+    "httpx": "0.28.1",
+    "pydantic": "2.13.4",
+    "sqlalchemy": "2.0.52",
+    "asyncmy": "0.2.14"
+  },
+  "dataset_count": 392,
+  "dataset_sha256": "b7fd39226592281c565c0e835c16b460654f43cd2da4bc09655a5abf06972662",
+  "prompt_sha256": "c82c75d4d10017478084b4c37ee0be005b910bd67cb6c45cf64452d3a2e2c09b",
+  "entity_search_fallback_mode": "FALLBACK",
+  "db_identifier": "pineamite_dev_db",
+  "open_entity_index_stats": {
+    "entity_count": 11245,
+    "estimated_bytes": 15992794,
+    "canonical_estimated_bytes": 5404554,
+    "posting_list_estimated_bytes": 10588240
+  },
+  "randomization_seed": 20260829,
+  "concurrency": 4,
+  "models": [
+    "gpt-5.6-luna",
+    "gemini-3.5-flash-lite"
+  ],
+  "warmups_per_model": 1,
+  "measured_requests": 784,
+  "head_to_head_counts": {
+    "BOTH_SUCCEED_RAW_SAME": 127,
+    "BOTH_SUCCEED_RAW_DIFFERS": 159,
+    "BOTH_FAIL": 87,
+    "FLASH_SUCCEEDS_LUNA_FAILS": 12,
+    "LUNA_SUCCEEDS_FLASH_FAILS": 7
+  },
+  "recommendation": "gemini-3.5-flash-lite"
+}

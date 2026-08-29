@@ -320,6 +320,80 @@ async def test_database_failure_advances_generation_without_commit():
 
 
 @pytest.mark.unit
+def test_ungrounded_temporal_filters_are_neutralized_provider_neutrally():
+    query = SearchQuery(
+        intent=SearchIntent.SEARCH_RALLIES,
+        years=[2025],
+        year_from=2020,
+        year_to=2024,
+    )
+
+    guarded, removed = ConversationalSearchService._neutralize_ungrounded_temporal_filters(
+        query,
+        "Show rallies in Ireland",
+        SearchConversationSession(),
+    )
+
+    assert guarded.years == []
+    assert guarded.year_from is None
+    assert guarded.year_to is None
+    assert removed == ["years:2025", "yearFrom:2020", "yearTo:2024"]
+
+
+@pytest.mark.unit
+def test_explicit_and_conversation_years_remain_grounded():
+    session = SearchConversationSession(
+        active_query=SearchQuery(intent=SearchIntent.SEARCH_RALLIES, years=[2024])
+    )
+    query = SearchQuery(
+        intent=SearchIntent.SEARCH_RALLIES,
+        years=[2024, 2026, 2023],
+    )
+
+    guarded, removed = ConversationalSearchService._neutralize_ungrounded_temporal_filters(
+        query,
+        "What about 2026?",
+        session,
+    )
+
+    assert guarded.years == [2024, 2026]
+    assert removed == ["years:2023"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("intent", "question"),
+    [
+        (SearchIntent.GET_RALLY_RESULTS, "Which rally do you mean?"),
+        (SearchIntent.GET_RALLY_TOP_FINISHERS, "Which rally do you mean?"),
+        (SearchIntent.SEARCH_DRIVER_RALLIES, "Which driver do you mean?"),
+        (SearchIntent.SEARCH_DRIVER_WINS, "Which driver do you mean?"),
+        (SearchIntent.SEARCH_DRIVER_VIDEOS, "Which driver do you mean?"),
+    ],
+)
+def test_relational_intents_require_their_subject(intent, question):
+    assert ConversationalSearchService._missing_required_subject(
+        SearchQuery(intent=intent)
+    ) == question
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "intent",
+    [
+        SearchIntent.SEARCH_RALLIES,
+        SearchIntent.SEARCH_VIDEO_ACTIONS,
+        SearchIntent.GET_TOP_DRIVERS_BY_WINS,
+        SearchIntent.GET_TOP_UPLOADERS,
+    ],
+)
+def test_broad_exploration_and_global_aggregates_need_no_subject(intent):
+    assert ConversationalSearchService._missing_required_subject(
+        SearchQuery(intent=intent)
+    ) is None
+
+
+@pytest.mark.unit
 def test_committed_referent_ids_bypass_open_set_reresolution():
     query = SearchQuery(
         intent=SearchIntent.SEARCH_VIDEO_ACTIONS,

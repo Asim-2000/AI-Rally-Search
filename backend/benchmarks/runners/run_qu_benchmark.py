@@ -9,7 +9,7 @@ import random
 from pathlib import Path
 from typing import Any
 
-from benchmarks.providers.anthropic_qu import AnthropicQUAdapter
+from benchmarks.providers.gemini_qu import GeminiQUAdapter
 from benchmarks.providers.openai_qu import OpenAIQUAdapter
 from benchmarks.runners.helpers import get_benchmark_api_keys
 from benchmarks.scoring.cost import calculate_cost
@@ -29,12 +29,11 @@ async def run_full_qu_benchmark() -> Path:
 
     models = [
         {"provider": "openai", "model": "gpt-5.6-luna", "adapter": OpenAIQUAdapter(api_key=keys["openai"], model="gpt-5.6-luna")},
-        {"provider": "anthropic", "model": "claude-haiku-4-5", "adapter": AnthropicQUAdapter(api_key=keys["claude"], model="claude-haiku-4-5")},
-        {"provider": "anthropic", "model": "claude-sonnet-5", "adapter": AnthropicQUAdapter(api_key=keys["claude"], model="claude-sonnet-5")},
+        {"provider": "gemini", "model": "gemini-3.5-flash-lite", "adapter": GeminiQUAdapter(api_key=keys["gemini"], model="gemini-3.5-flash-lite")},
     ]
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = Path(__file__).parent.parent / "results" / f"full_benchmark_{timestamp}"
+    results_dir = Path(__file__).parent.parent / "results" / f"full_{timestamp}"
     results_dir.mkdir(parents=True, exist_ok=True)
 
     model_records: dict[str, list[dict[str, Any]]] = {m["model"]: [] for m in models}
@@ -51,7 +50,7 @@ async def run_full_qu_benchmark() -> Path:
                 context_str=case.get("conversation_context"),
             )
 
-            raw_score = score_raw_query(case["expected"], raw_res.parsed_query)
+            raw_score = score_raw_query(case["expected"], raw_res.parsed_query, input_text=case["input_text"], context_text=case.get("conversation_context") or "")
             sys_score = await evaluate_system_pipeline(case, raw_res.parsed_query)
             cost_info = calculate_cost(
                 m_id,
@@ -94,6 +93,7 @@ async def run_full_qu_benchmark() -> Path:
                 "input_text": case["input_text"],
                 "conversation_context": case.get("conversation_context"),
                 "expected": case["expected"],
+                "expected_resolution": case.get("expected_resolution"),
                 "parsed_query": raw_res.parsed_query,
                 "raw_response": raw_res.raw_response,
                 "schema_valid": raw_res.schema_valid,
@@ -111,9 +111,10 @@ async def run_full_qu_benchmark() -> Path:
             }
 
     tasks = []
+    rng = random.Random(20260829)
     for case in all_cases:
         shuffled_models = list(models)
-        random.shuffle(shuffled_models)
+        rng.shuffle(shuffled_models)
         for m_info in shuffled_models:
             tasks.append((m_info["model"], _evaluate_single(case, m_info)))
 

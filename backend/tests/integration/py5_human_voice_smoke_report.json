@@ -45,12 +45,12 @@
     },
     {
       "fixtureId": "human-smoke-005",
-      "transcript": "rally Alusne drivers",
+      "transcript": "Rarely a loops neigh drivers",
       "expectedCanonicalName": "Rally Al\u016bksne 2026",
-      "topCandidateId": "0cea6942-72e3-4257-a8c1-0f8148747d82",
-      "topCandidateName": "Rally Al\u016bksne 2026",
-      "topScore": 0.7148717948717948,
-      "outcome": "RESOLVED",
+      "topCandidateId": "cdd6fb95-ecfc-45d3-a165-65cf3771fccc",
+      "topCandidateName": "Rapalloo",
+      "topScore": 0.6348492063492063,
+      "outcome": "CLARIFICATION",
       "model": "whisper-1"
     }
   ],

@@ -10,6 +10,7 @@ from .models import (
     EntityResolution,
     EntityResolutionResult,
     EntityType,
+    SearchEntityType,
 )
 from .normalization import extract_year, normalize, strip_year
 from .scorer import compute_composite_score
@@ -138,18 +139,21 @@ class DatabaseEntityResolver:
                     is_video_search=is_video_search,
                 )
 
-                # Cross-type recovery: If rally match is weak/missing, check if it is a driver (if intent is person-capable)
-                is_person_capable_intent = query.intent in (
-                    SearchIntent.SEARCH_RALLIES,
-                    SearchIntent.SEARCH_DRIVER_RALLIES,
-                    SearchIntent.SEARCH_DRIVER_WINS,
-                    SearchIntent.SEARCH_DRIVER_VIDEOS,
-                    SearchIntent.SEARCH_VIDEO_ACTIONS,
-                    SearchIntent.GET_TOP_DRIVERS_BY_WINS,
+                # Cross-type recovery: If rally match is weak/missing, check if it is a driver (if intent capability allows it)
+                from ..domain.router import INTENT_CAPABILITIES
+                capability = INTENT_CAPABILITIES.get(query.intent)
+                can_recover_person = (
+                    capability is not None
+                    and capability.allow_cross_type_recovery
+                    and (
+                        SearchEntityType.PERSON in capability.allowed_primary_entity_types
+                        or SearchEntityType.PERSON in capability.allowed_filter_entity_types
+                        or capability.allowed_recovery_transitions.get(SearchEntityType.RALLY) == SearchEntityType.PERSON
+                    )
                 )
                 if (
                     (rally_res.resolved_candidate is None or (rally_res.strategy == "plausible_candidates" and rally_res.confidence < 0.60))
-                    and is_person_capable_intent
+                    and can_recover_person
                     and not query.driver_names
                 ):
                     driver_check = await self._resolve_driver(

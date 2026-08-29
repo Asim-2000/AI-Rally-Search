@@ -6,6 +6,7 @@ from ..domain.conversation_reducer import reduce_turn
 from ..domain.conversation_session import SearchConversationSession
 from ..domain.referent_context import ResultReferentContext
 from ..domain.results import SearchResponse
+from ..domain.search_plan import SearchPlan
 from ..domain.search_query import SearchQuery
 from ..domain.summary import generate_interpreted_summary
 from ..entity_search.models import EntityCandidate, EntityResolution
@@ -13,6 +14,7 @@ from ..entity_search.resolver import DatabaseEntityResolver
 from ..query_understanding.context import SearchContext
 from ..query_understanding.service import QueryUnderstandingService
 from ..repositories.search_repository import SearchRepository
+from .search_plan_builder import SearchPlanBuilder, SearchPlanError, UnresolvedEntityError
 from .special_query import match_special_query
 
 
@@ -25,6 +27,7 @@ class ConversationalSearchResult(BaseModel):
 
     parsed_query: SearchQuery | None = Field(default=None, alias="parsedQuery")
     resolved_query: SearchQuery | None = Field(default=None, alias="resolvedQuery")
+    search_plan: SearchPlan | None = Field(default=None, alias="searchPlan")
     search_response: SearchResponse | None = Field(default=None, alias="searchResponse")
     requires_clarification: bool = Field(default=False, alias="requiresClarification")
     clarification_question: str | None = Field(default=None, alias="clarificationQuestion")
@@ -66,10 +69,12 @@ class ConversationalSearchService:
         query_parser: QueryUnderstandingService,
         entity_resolver: DatabaseEntityResolver | None = None,
         repository: SearchRepository | None = None,
+        plan_builder: SearchPlanBuilder | None = None,
     ) -> None:
         self.query_parser = query_parser
         self.entity_resolver = entity_resolver
         self.repository = repository
+        self.plan_builder = plan_builder or SearchPlanBuilder()
 
     @staticmethod
     def _reuse_committed_referent_ids(
@@ -260,19 +265,56 @@ class ConversationalSearchService:
                 "driver_ids": [*trusted_driver_ids, *resolved_query.driver_ids],
             })
 
-        # Step 3: Deterministic Database Search
+        # Step 3: Deterministic SearchPlan Compilation & Validation
+        try:
+            search_plan = self.plan_builder.build(resolved_query, resolutions=resolutions)
+        except UnresolvedEntityError as exc:
+            elapsed = (time.perf_counter() - started) * 1000
+            result = ConversationalSearchResult(
+                parsed_query=parsed_query,
+                resolved_query=resolved_query,
+                error=str(exc),
+                error_code="UNRESOLVED_ENTITY",
+                friendly_message="We couldn't resolve the entity mentioned in your query.",
+                referents=request_session.referents,
+                candidates=candidates,
+                resolutions=resolutions,
+                parse_latency_ms=parse_ms,
+                entity_resolution_latency_ms=er_ms,
+                total_latency_ms=elapsed,
+            )
+            return request_session, result
+        except SearchPlanError as exc:
+            elapsed = (time.perf_counter() - started) * 1000
+            result = ConversationalSearchResult(
+                parsed_query=parsed_query,
+                resolved_query=resolved_query,
+                error=str(exc),
+                error_code="INVALID_SEARCH_PLAN",
+                friendly_message="Invalid search parameters.",
+                referents=request_session.referents,
+                candidates=candidates,
+                resolutions=resolutions,
+                parse_latency_ms=parse_ms,
+                entity_resolution_latency_ms=er_ms,
+                total_latency_ms=elapsed,
+            )
+            return request_session, result
+
+        # Step 4: Deterministic Database Search via SearchPlan
         db_ms = 0.0
         search_response: SearchResponse | None = None
         if self.repository is not None:
             db_start = time.perf_counter()
             try:
-                search_response = await self.repository.search(resolved_query)
+                search_response = await self.repository.search(search_plan)
                 db_ms = (time.perf_counter() - db_start) * 1000
             except Exception as exc:
                 elapsed = (time.perf_counter() - started) * 1000
                 result = ConversationalSearchResult(
                     parsed_query=parsed_query,
                     resolved_query=resolved_query,
+                    search_plan=search_plan,
                     error=f"Database execution error: {exc}",
                     error_code="DATABASE_ERROR",
                     friendly_message="Database execution error.",
@@ -284,15 +326,15 @@ class ConversationalSearchService:
                 return request_session, result
         else:
             search_response = SearchResponse(
-                intent=resolved_query.intent,
+                intent=search_plan.intent,
                 results=[],
                 total_count=0,
                 has_more=False,
-                limit=resolved_query.limit,
-                offset=resolved_query.offset,
+                limit=search_plan.limit,
+                offset=search_plan.offset,
             )
 
-        # Step 4: Interpret Summary and Referents
+        # Step 5: Interpret Summary and Referents
         summary = generate_interpreted_summary(resolved_query)
         derived_referents = ResultReferentContext.from_search_response(
             search_response,
@@ -304,7 +346,7 @@ class ConversationalSearchService:
             query_person_role=resolved_query.person_role,
         )
 
-        # Step 5: Advance State Machine via Pure Reducer
+        # Step 6: Advance State Machine via Pure Reducer
         updated_session = reduce_turn(
             request_session,
             query=resolved_query,
@@ -318,6 +360,7 @@ class ConversationalSearchService:
         result = ConversationalSearchResult(
             parsed_query=parsed_query,
             resolved_query=resolved_query,
+            search_plan=search_plan,
             search_response=search_response,
             candidates=candidates,
             interpreted_summary=summary,

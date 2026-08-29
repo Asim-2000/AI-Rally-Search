@@ -1,28 +1,44 @@
+import warnings
 from sqlalchemy.ext.asyncio import AsyncConnection
 from ..domain.person import CanonicalPerson
 from ..domain.results import *
 from ..domain.search_intent import SearchIntent
+from ..domain.search_plan import ExecutionStrategy, SearchPlan
 from ..domain.search_query import MatchMode, SearchQuery
-from .sql import FINAL_STAGE, Filters, count, rows
+from ..services.search_plan_builder import SearchPlanBuilder
+from .sql import FINAL_STAGE, Filters, PlanOrQuery, count, rows
 
 class SearchRepository:
     def __init__(self, connection: AsyncConnection): self.conn = connection
 
-    async def search(self, q: SearchQuery) -> SearchResponse:
+    async def search(self, plan_or_query: SearchPlan | SearchQuery) -> SearchResponse:
+        """Execute deterministic database search using an executable SearchPlan.
+
+        Passing SearchQuery is deprecated; SearchPlan is the authoritative contract.
+        """
+        if isinstance(plan_or_query, SearchPlan):
+            plan = plan_or_query
+        else:
+            warnings.warn(
+                "Passing SearchQuery to SearchRepository.search is deprecated. Use SearchPlan instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            plan = SearchPlanBuilder().build(plan_or_query)
         handlers = {
-            SearchIntent.SEARCH_RALLIES: self.rallies,
-            SearchIntent.SEARCH_DRIVER_RALLIES: self.participations,
-            SearchIntent.SEARCH_DRIVER_WINS: self.driver_wins,
-            SearchIntent.GET_RALLY_RESULTS: self.rally_results,
-            SearchIntent.GET_RALLY_TOP_FINISHERS: self.top_finishers,
-            SearchIntent.SEARCH_VIDEO_ACTIONS: self.video_actions,
-            SearchIntent.SEARCH_DRIVER_VIDEOS: self.driver_videos,
-            SearchIntent.GET_TOP_UPLOADERS: self.top_uploaders,
-            SearchIntent.GET_TOP_DRIVERS_BY_WINS: self.top_drivers,
+            ExecutionStrategy.RALLIES: self.rallies,
+            ExecutionStrategy.PARTICIPATIONS: self.participations,
+            ExecutionStrategy.DRIVER_WINS: self.driver_wins,
+            ExecutionStrategy.RALLY_RESULTS: self.rally_results,
+            ExecutionStrategy.TOP_FINISHERS: self.top_finishers,
+            ExecutionStrategy.VIDEO_ACTIONS: self.video_actions,
+            ExecutionStrategy.DRIVER_VIDEOS: self.driver_videos,
+            ExecutionStrategy.TOP_UPLOADERS: self.top_uploaders,
+            ExecutionStrategy.TOP_DRIVERS_BY_WINS: self.top_drivers,
         }
-        items, total = await handlers[q.intent](q)
-        return SearchResponse(intent=q.intent, results=items, total_count=total,
-            has_more=q.offset + len(items) < total, limit=q.limit, offset=q.offset)
+        items, total = await handlers[plan.strategy](plan)
+        return SearchResponse(intent=plan.intent, results=items, total_count=total,
+            has_more=plan.offset + len(items) < total, limit=plan.limit, offset=plan.offset)
 
     async def rallies(self, q):
         f=Filters().common(q)

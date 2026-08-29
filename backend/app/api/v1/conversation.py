@@ -70,30 +70,10 @@ def _build_query_service(settings: Settings) -> QueryUnderstandingService:
     return QueryUnderstandingService(provider_types[name](config))
 
 
-import asyncio
-
-_shared_entity_search_service: InMemoryEntitySearchService | None = None
-_entity_search_lock = asyncio.Lock()
-
-
-async def get_shared_entity_search_service(connection: AsyncConnection) -> InMemoryEntitySearchService:
-    """Returns the pre-built singleton InMemoryEntitySearchService, building it once if not already initialized."""
-    global _shared_entity_search_service
-    if _shared_entity_search_service is not None:
-        return _shared_entity_search_service
-    async with _entity_search_lock:
-        if _shared_entity_search_service is not None:
-            return _shared_entity_search_service
-        source = MySqlEntitySearchDataSource(connection=connection)
-        entities = await source.load_entities()
-        _shared_entity_search_service = InMemoryEntitySearchService.from_entities(entities)
-        return _shared_entity_search_service
-
-
-def reset_shared_entity_search_service() -> None:
-    """Resets the singleton for testing."""
-    global _shared_entity_search_service
-    _shared_entity_search_service = None
+from ...entity_search.warmup import (
+    get_shared_entity_search_service,
+    reset_shared_entity_search_service,
+)
 
 
 async def get_conversational_service(

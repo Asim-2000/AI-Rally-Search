@@ -63,11 +63,9 @@ class MySqlEntitySearchDataSource:
 
         # 3. Stages
         stages_res = await conn.execute(text("""
-            SELECT stg.stage_id, stg.stage_name, stg.stage_number, stg.event_id,
-                   ev.event_name
-            FROM rally_stages stg
-            LEFT JOIN rally_events ev ON ev.event_id = stg.event_id
-            WHERE stg.stage_name IS NOT NULL AND TRIM(stg.stage_name) <> '';
+            SELECT stage_id, stage_name, stage_number, event_id
+            FROM rally_stages
+            WHERE stage_name IS NOT NULL AND TRIM(stage_name) <> '';
         """))
         stage_rows = [dict(row._mapping) for row in stages_res.fetchall()]
 
@@ -85,9 +83,12 @@ class MySqlEntitySearchDataSource:
         entities: list[CanonicalSearchEntity] = []
 
         # Rallies
+        rally_name_by_event_id: dict[str, str] = {}
         for row in rally_rows:
             event_id = str(row.get("event_id") or "")
             event_name = str(row.get("event_name") or "")
+            if event_id and event_name:
+                rally_name_by_event_id[event_id] = event_name
             year_val = row.get("event_year")
             entities.append(
                 CanonicalSearchEntity(
@@ -190,6 +191,8 @@ class MySqlEntitySearchDataSource:
         for row in stage_rows:
             stage_id = str(row.get("stage_id") or "")
             stage_name = str(row.get("stage_name") or "")
+            event_id = str(row.get("event_id")) if row.get("event_id") else None
+            event_name = rally_name_by_event_id.get(event_id) if event_id else None
             entities.append(
                 CanonicalSearchEntity(
                     canonical_id=stage_id,
@@ -198,8 +201,8 @@ class MySqlEntitySearchDataSource:
                     metadata={
                         "stageId": stage_id,
                         "stageNumber": str(row.get("stage_number")) if row.get("stage_number") is not None else None,
-                        "eventId": str(row.get("event_id")) if row.get("event_id") else None,
-                        "eventName": str(row.get("event_name")) if row.get("event_name") else None,
+                        "eventId": event_id,
+                        "eventName": event_name,
                     },
                 )
             )

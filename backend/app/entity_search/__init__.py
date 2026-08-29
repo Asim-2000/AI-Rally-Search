@@ -25,6 +25,15 @@ from .resolver import DatabaseEntityResolver, IEntityLookupRepository
 from .adapter import EntitySearchLookupAdapter
 from .fallback import ControlledFallbackEntityResolver, EntitySearchFallbackConfig
 from .telemetry import EntitySearchFallbackMetrics, EntitySearchShadowDiagnostic
+from .warmup import (
+    cancel_background_entity_search_warmup,
+    get_entity_count,
+    get_entity_index_stats,
+    get_shared_entity_search_service,
+    is_entity_search_ready,
+    reset_shared_entity_search_service,
+    start_background_entity_search_warmup,
+)
 
 __all__ = [
     "SearchEntityType",
@@ -56,4 +65,11 @@ __all__ = [
     "ControlledFallbackEntityResolver",
     "EntitySearchFallbackMetrics",
     "EntitySearchShadowDiagnostic",
+    "start_background_entity_search_warmup",
+    "cancel_background_entity_search_warmup",
+    "get_shared_entity_search_service",
+    "is_entity_search_ready",
+    "get_entity_index_stats",
+    "get_entity_count",
+    "reset_shared_entity_search_service",
 ]

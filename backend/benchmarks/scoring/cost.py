@@ -8,6 +8,7 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     "claude-haiku-4-5": {"input": 0.25, "output": 1.25, "cached": 0.025},
     "claude-sonnet-5": {"input": 3.00, "output": 15.00, "cached": 0.30},
     "gemini-3.5-flash-lite": {"input": 0.075, "output": 0.30, "cached": 0.01875},
+    "gemini-3.5-flash": {"input": 0.15, "output": 0.60, "cached": 0.0375},
     "gemini-3.7-flash": {"input": 0.15, "output": 0.60, "cached": 0.0375},
 }
 

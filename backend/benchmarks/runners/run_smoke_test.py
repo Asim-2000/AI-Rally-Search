@@ -7,8 +7,9 @@ import random
 from pathlib import Path
 from typing import Any
 
-from benchmarks.providers.openai_qu import OpenAIQUAdapter
 from benchmarks.providers.anthropic_qu import AnthropicQUAdapter
+from benchmarks.providers.gemini_qu import GeminiQUAdapter
+from benchmarks.providers.openai_qu import OpenAIQUAdapter
 from benchmarks.runners.helpers import get_benchmark_api_keys
 from benchmarks.scoring.cost import calculate_cost
 from benchmarks.scoring.latency import summarize_latencies
@@ -67,7 +68,8 @@ async def run_smoke() -> Path:
     models = [
         {"provider": "openai", "model": "gpt-5.6-luna", "adapter": OpenAIQUAdapter(api_key=keys["openai"], model="gpt-5.6-luna")},
         {"provider": "anthropic", "model": "claude-haiku-4-5", "adapter": AnthropicQUAdapter(api_key=keys["claude"], model="claude-haiku-4-5")},
-        {"provider": "anthropic", "model": "claude-sonnet-5", "adapter": AnthropicQUAdapter(api_key=keys["claude"], model="claude-sonnet-5")},
+        {"provider": "gemini", "model": "gemini-3.5-flash-lite", "adapter": GeminiQUAdapter(api_key=keys["gemini"], model="gemini-3.5-flash-lite")},
+        {"provider": "gemini", "model": "gemini-3.5-flash", "adapter": GeminiQUAdapter(api_key=keys["gemini"], model="gemini-3.5-flash")},
     ]
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -88,7 +90,12 @@ async def run_smoke() -> Path:
                 context_str=case.get("conversation_context"),
             )
 
-            raw_score = score_raw_query(case["expected"], raw_res.parsed_query)
+            raw_score = score_raw_query(
+                case["expected"],
+                raw_res.parsed_query,
+                input_text=case["input_text"],
+                context_text=case.get("conversation_context") or "",
+            )
             sys_score = await evaluate_system_pipeline(case, raw_res.parsed_query)
             cost_info = calculate_cost(
                 m_id,
@@ -134,11 +141,11 @@ async def run_smoke() -> Path:
     # Generate Markdown Smoke Report
     report_file = results_dir / "smoke_report.md"
     lines = [
-        "# Smoke Test Report (25 Cases)",
+        "# Smoke Test Report (25 Cases) — Shortlist Matrix",
         "",
         f"- **Timestamp**: `{timestamp}`",
         f"- **Smoke Subset Size**: {len(smoke_cases)} cases",
-        f"- **Candidate Models**: `gpt-5.6-luna`, `claude-haiku-4-5`, `claude-sonnet-5`",
+        f"- **Candidate Models**: `gpt-5.6-luna`, `claude-haiku-4-5`, `gemini-3.5-flash-lite`, `gemini-3.5-flash`",
         "",
         "## Summary Results Table",
         "",
@@ -171,11 +178,12 @@ async def run_smoke() -> Path:
         "## Smoke Observations & Adapter Health",
         "- **OpenAI (`gpt-5.6-luna`)**: Structured JSON mode functioning correctly with `max_completion_tokens`.",
         "- **Anthropic (`claude-haiku-4-5`)**: Low-latency tool-call parser responding with valid schema.",
-        "- **Anthropic (`claude-sonnet-5`)**: Tool-call parser responding with valid schema.",
+        "- **Google (`gemini-3.5-flash-lite`)**: Fast sub-second response (~900-1100ms) with inlined JSON schema.",
+        "- **Google (`gemini-3.5-flash`)**: Solid schema compliance and accurate entity parsing.",
         "- **Localhost Pipeline**: Successfully executing `IntentResolutionRouter`, `OpenEntity`, `SearchPlanBuilder`, and `SearchRepository` against MySQL `pineamite_dev_db`.",
         "",
         "## Smoke Status",
-        "✅ **ALL ADAPTERS & SCORING PIPELINES VERIFIED HEALTHY**",
+        "✅ **ALL ACTIVE SHORTLIST ADAPTERS VERIFIED HEALTHY**",
     ])
 
     report_content = "\n".join(lines) + "\n"

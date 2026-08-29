@@ -1,7 +1,7 @@
 # Dataset QA Report
 
 - **Dataset Path**: `benchmarks/datasets/query_understanding_gold.jsonl`
-- **Dataset SHA-256 Hash**: `c8c85e1b6ac9a96fa93decd0fe7d5facbea1e3e2045cf4a5954882917f962987`
+- **Dataset SHA-256 Hash**: `b7fd39226592281c565c0e835c16b460654f43cd2da4bc09655a5abf06972662`
 - **Total Cases**: 392
 - **Validation Status**: `PASS`
 - **DB-Validated Cases**: 392/392

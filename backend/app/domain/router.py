@@ -164,16 +164,22 @@ class IntentResolutionRouter:
     KNOWN_INTENT_FUNCTION_WORDS: set[str] = {
         "rally", "rallies", "in", "from", "to", "the", "a", "an", "all",
         "videos", "video", "clip", "clips", "action", "actions", "results",
-        "result", "winner", "winners", "win", "wins", "won", "top", "driver",
-        "drivers", "show", "me", "find", "search", "of", "by", "for", "on",
-        "at", "who", "what", "where", "which", "he", "him", "his", "her",
-        "she", "it", "that", "this", "both", "and", "or", "with", "only",
-        "just", "about", "stage", "stages", "full", "leaderboard",
-        "participat", "participate", "participated", "competed", "entered",
-        "drove", "driven", "co-drove", "co-driven", "co-driver", "codriver",
-        "navigator", "uploader", "uploaders", "most", "any", "is", "are",
-        "was", "were", "been", "being", "have", "has", "had", "do", "does",
-        "did", "get", "list", "see", "display", "tell"
+        "result", "winner", "winners", "win", "wins", "won", "winning", "top",
+        "finishers", "finisher", "driver", "drivers", "show", "shows", "showing",
+        "me", "find", "finds", "finding", "search", "searches", "searching", "of",
+        "by", "for", "on", "at", "who", "what", "where", "which", "when", "how",
+        "he", "him", "his", "her", "she", "it", "that", "this", "these", "those",
+        "both", "and", "or", "with", "only", "just", "about", "stage", "stages",
+        "full", "leaderboard", "participat", "participate", "participated", "compete",
+        "competed", "competing", "entered", "drove", "driven", "co-drove", "co-driven",
+        "co-driver", "codriver", "codrivers", "co-drivers", "navigator", "navigators",
+        "uploader", "uploaders", "most", "any", "some", "is", "are", "was", "were",
+        "been", "being", "have", "has", "had", "do", "does", "did", "get", "gets",
+        "getting", "list", "lists", "listing", "see", "display", "tell", "held", "hold",
+        "holds", "holding", "took", "take", "takes", "taking", "place", "places",
+        "featuring", "features", "featured", "stuck", "recorded", "shot", "captured",
+        "between", "during", "season", "seasons", "year", "years", "country", "countries",
+        "city", "cities", "event", "events"
     }
 
     ACTION_EXPANSIONS: dict[str, set[str]] = {

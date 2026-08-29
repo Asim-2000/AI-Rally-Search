@@ -1328,11 +1328,11 @@
     "entitySearchNoMatch": 78,
     "entitySearchRecoveredLegacyFailure": 95,
     "roleConstraintRejected": 49,
-    "yearConstraintRejected": 0,
+    "yearConstraintRejected": 288,
     "duplicateIdentityClarification": 11,
-    "legacyLatencyMicroseconds": 1972,
-    "entitySearchLatencyMicroseconds": 20031946,
-    "totalResolutionLatencyMicroseconds": 20037874
+    "legacyLatencyMicroseconds": 2498,
+    "entitySearchLatencyMicroseconds": 20160401,
+    "totalResolutionLatencyMicroseconds": 20167472
   },
   "nullAccountSafety": [
     {

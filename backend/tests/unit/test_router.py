@@ -189,6 +189,83 @@ def test_action_queries_no_false_unexplained_recovery():
     assert len(plan2.unexplained_tokens) == 0
 
 
+def test_video_action_featuring_residual_routes_to_person():
+    router = IntentResolutionRouter()
+    query = SearchQuery(
+        intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+        action_types=["jump"],
+        person_role=PersonRole.DRIVER,
+    )
+
+    plan = router.route("show me jump highlights featuring max freeman", query)
+
+    assert plan.unexplained_tokens == ["max", "freeman"]
+    assert len(plan.entity_routes) == 1
+    route = plan.entity_routes[0]
+    assert route.field_name == "unresolved_text"
+    assert route.raw_value == "max freeman"
+    assert route.entity_type == SearchEntityType.PERSON
+    assert route.person_role == PersonRole.DRIVER
+
+
+def test_video_action_explicit_entity_fields_keep_their_types():
+    router = IntentResolutionRouter()
+
+    person = router.route(
+        "show me jump highlights featuring max freeman",
+        SearchQuery(
+            intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+            action_types=["jump"],
+            driver_names=["max freeman"],
+            person_role=PersonRole.DRIVER,
+        ),
+    )
+    rally = router.route(
+        "show jump highlights from Rally Aluksne",
+        SearchQuery(
+            intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+            action_types=["jump"],
+            rally_names=["Rally Aluksne"],
+        ),
+    )
+    stage = router.route(
+        "show jump highlights from SS3",
+        SearchQuery(
+            intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+            action_types=["jump"],
+            stage_names=["SS3"],
+        ),
+    )
+
+    assert person.entity_routes[0].entity_type == SearchEntityType.PERSON
+    assert rally.entity_routes[0].entity_type == SearchEntityType.RALLY
+    assert stage.entity_routes[0].entity_type == SearchEntityType.STAGE
+
+
+def test_video_action_country_remains_direct_filter():
+    plan = IntentResolutionRouter().route(
+        "show jump highlights in Ireland",
+        SearchQuery(
+            intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+            action_types=["jump"],
+            countries=["Ireland"],
+        ),
+    )
+
+    assert not plan.entity_routes
+    assert any(route.field_name == "countries" for route in plan.direct_filters)
+
+
+def test_video_action_ambiguous_residual_is_not_forced_to_rally():
+    plan = IntentResolutionRouter().route(
+        "show jump highlights from mystery name",
+        SearchQuery(intent=SearchIntent.SEARCH_VIDEO_ACTIONS, action_types=["jump"]),
+    )
+
+    assert len(plan.entity_routes) == 1
+    assert plan.entity_routes[0].entity_type is None
+
+
 def test_intent_capability_invariants():
     """Verify strict intent capability invariants:
     - GET_RALLY_RESULTS and GET_RALLY_TOP_FINISHERS require RALLY and disallow cross-type transitions
@@ -259,4 +336,3 @@ def test_router_performance_benchmark_10000_iterations():
 
     assert p50_ms < 0.10, f"p50 latency {p50_ms:.4f} ms exceeds sub-millisecond threshold"
     assert p95_ms < 0.50, f"p95 latency {p95_ms:.4f} ms exceeds sub-millisecond threshold"
-

@@ -254,17 +254,20 @@ class DatabaseEntityResolver implements EntityResolver {
               }
               break;
             case PersonRole.any:
+              var addedCurrentCandidate = false;
               if (driverId != null &&
                   driverId.isNotEmpty &&
                   driverId != 'null') {
                 resolvedDriverIds.add(driverId);
+                addedCurrentCandidate = true;
               }
               if (codriverId != null &&
                   codriverId.isNotEmpty &&
                   codriverId != 'null') {
                 resolvedDriverIds.add(codriverId);
+                addedCurrentCandidate = true;
               }
-              if (resolvedDriverIds.isEmpty) {
+              if (!addedCurrentCandidate) {
                 resolvedDriverIds.add(cand.id);
               }
               break;
@@ -349,14 +352,16 @@ class DatabaseEntityResolver implements EntityResolver {
     String? city,
     bool isVideoSearch = false,
   }) async {
+    final phraseYear = _extractYear(phrase);
     final effectiveYear =
         year ?? (years != null && years.length == 1 ? years.first : null);
+    final lookupYear = phraseYear ?? effectiveYear;
     final effectiveCountry =
         country ??
         (countries != null && countries.length == 1 ? countries.first : null);
     final yearsKey = (years != null && years.isNotEmpty)
         ? years.join(',')
-        : (effectiveYear?.toString() ?? '');
+        : (lookupYear?.toString() ?? '');
     final countriesKey = (countries != null && countries.isNotEmpty)
         ? countries.join(',')
         : (effectiveCountry ?? '');
@@ -367,7 +372,7 @@ class DatabaseEntityResolver implements EntityResolver {
 
     final candidates = await _repository.lookupRallies(
       phrase,
-      year: effectiveYear,
+      year: lookupYear,
       country: effectiveCountry,
       city: city,
       limit: 35,
@@ -388,16 +393,36 @@ class DatabaseEntityResolver implements EntityResolver {
     final scored = _scoreCandidates(
       phrase,
       candidates,
-      year: effectiveYear,
-      years: years,
+      year: lookupYear,
+      years: phraseYear == null ? years : [phraseYear],
     );
+
+    // A normalized canonical-name match identifies a single, user-specified
+    // edition. It must not be downgraded into fuzzy multi-edition handling.
+    final normalizedPhrase = _normalizeName(phrase);
+    final exactCanonical = scored.where(
+      (candidate) =>
+          _normalizeName(candidate.canonicalName) == normalizedPhrase,
+    );
+    if (exactCanonical.isNotEmpty) {
+      final candidate = exactCanonical.first;
+      final res = EntityResolution(
+        type: EntityType.rally,
+        rawPhrase: phrase,
+        resolvedCandidate: candidate,
+        confidence: candidate.score ?? 1.0,
+        strategy: 'exact_canonical_match',
+      );
+      _putInCache(cacheKey, res);
+      return res;
+    }
 
     // Check for multi-edition ambiguity:
     // If user provided no year and multiple editions of the same rally exist (e.g. 2025, 2026),
     // trigger clarification for general rally queries, but allow video action highlights to resolve
     // to the most recent active edition.
     final hasExplicitYears =
-        (effectiveYear != null) || (years != null && years.isNotEmpty);
+        (lookupYear != null) || (years != null && years.isNotEmpty);
     if (!hasExplicitYears && scored.length > 1) {
       final topName = _normalizeName(scored[0].canonicalName);
       final secondName = _normalizeName(scored[1].canonicalName);
@@ -759,6 +784,11 @@ class DatabaseEntityResolver implements EntityResolver {
 
   String _normalizeName(String input) =>
       PhoneticMatchingHelper.normalize(input);
+
+  int? _extractYear(String input) {
+    final match = RegExp(r'\\b(?:19|20)\\d{2}\\b').firstMatch(input);
+    return match == null ? null : int.tryParse(match.group(0)!);
+  }
 
   String _stripYear(String input) => PhoneticMatchingHelper.stripYear(input);
 

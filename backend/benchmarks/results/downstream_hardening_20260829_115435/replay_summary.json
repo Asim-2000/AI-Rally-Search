@@ -1,0 +1,82 @@
+{
+  "models": {
+    "gpt-5.6-luna": {
+      "before": {
+        "success": 293,
+        "total": 392,
+        "success_rate": 0.7474489795918368,
+        "exact_success": 196,
+        "exact_total": 259,
+        "p_success_exact": 0.7567567567567568,
+        "correct_resolution": 254,
+        "clarification_correct": 20,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "after": {
+        "success": 54,
+        "total": 392,
+        "success_rate": 0.1377551020408163,
+        "exact_success": 54,
+        "exact_total": 259,
+        "p_success_exact": 0.2084942084942085,
+        "correct_resolution": 35,
+        "clarification_correct": 4,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "remaining": {
+        "ENTITY_RESOLUTION_WRONG": 233,
+        "MODEL_PARSE_WRONG": 82,
+        "ROUTER_WRONG": 22,
+        "EXPECTED_CLARIFICATION_MISMATCH": 1
+      }
+    },
+    "gemini-3.5-flash-lite": {
+      "before": {
+        "success": 298,
+        "total": 392,
+        "success_rate": 0.7602040816326531,
+        "exact_success": 197,
+        "exact_total": 252,
+        "p_success_exact": 0.7817460317460317,
+        "correct_resolution": 240,
+        "clarification_correct": 20,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "after": {
+        "success": 54,
+        "total": 392,
+        "success_rate": 0.1377551020408163,
+        "exact_success": 52,
+        "exact_total": 252,
+        "p_success_exact": 0.20634920634920634,
+        "correct_resolution": 35,
+        "clarification_correct": 4,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "remaining": {
+        "ENTITY_RESOLUTION_WRONG": 214,
+        "MODEL_PARSE_WRONG": 102,
+        "ROUTER_WRONG": 21,
+        "EXPECTED_CLARIFICATION_MISMATCH": 1
+      }
+    }
+  },
+  "both_fail": {
+    "before": 87,
+    "escaped": 25,
+    "fully_fixed": 23,
+    "remaining": 62
+  }
+}

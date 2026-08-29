@@ -1,0 +1,117 @@
+{
+  "timestamp": "20260829_122808",
+  "base_url": "http://127.0.0.1:8000",
+  "text_cases": 56,
+  "classifications": {
+    "CORRECT_RESULT": 27,
+    "WRONG_RESULT": 4,
+    "SAFE_RECOVERY": 12,
+    "CORRECT_CLARIFICATION": 13
+  },
+  "success_rate": 0.9285714285714286,
+  "false_confident": 0,
+  "latency_ms": {
+    "p50": 1522.0145,
+    "p95": 2039.4582500000001,
+    "max": 2886.015
+  },
+  "conversation_success": 4,
+  "conversation_total": 6,
+  "historical_success": 5,
+  "historical_total": 5,
+  "hardening_success": 5,
+  "hardening_total": 5,
+  "ungrounded_guard_activations": 2,
+  "error_contract": [
+    {
+      "case": "malformed",
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Request validation failed",
+          "details": [
+            {
+              "type": "string_type",
+              "loc": [
+                "body",
+                "query"
+              ],
+              "msg": "Input should be a valid string",
+              "input": 42
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "empty",
+      "status": 422,
+      "body": {
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Request validation failed",
+          "details": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "query"
+              ],
+              "msg": "String should have at least 1 character",
+              "input": "",
+              "ctx": {
+                "min_length": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case": "empty_voice",
+      "status": 422,
+      "body": {
+        "detail": "audio body must not be empty"
+      }
+    }
+  ],
+  "voice_cases": 2,
+  "voice_success": 2,
+  "voice_semantic_success": 1,
+  "voice_semantic_total": 2,
+  "effective_configuration": {
+    "query_understanding_provider": "gemini",
+    "query_understanding_model": "gemini-3.5-flash-lite",
+    "speech_provider": "openai",
+    "speech_model": "whisper-1",
+    "whisper_production_status": "PROVISIONAL",
+    "db_use_ssl_setting": true,
+    "db_tls_applied_by_sqlalchemy": false
+  },
+  "startup": {
+    "process_to_application_ready_ms_approx": 5800,
+    "health_status": 200,
+    "health_latency_ms": 1.472,
+    "ready_status": 200,
+    "ready_latency_ms": 0.691,
+    "entity_count": 11245
+  },
+  "additional_no_match_contract": {
+    "input": "Rallies in Antarctica in 1900",
+    "status": 200,
+    "result_count": 0,
+    "classification": "CORRECT_NO_MATCH"
+  },
+  "automated_tests": {
+    "backend_unit_parity": {"passed": 176, "failed": 0},
+    "backend_integration": {"passed": 22, "failed": 0, "deselected": 3},
+    "flutter_deployable": {"passed": 299, "failed": 3, "skipped": 4}
+  },
+  "production_blockers": [
+    "DB_USE_SSL is parsed but not applied to create_async_engine; AWS RDS CA verification is absent.",
+    "Three deployable Flutter tests fail, including the editable voice UI path.",
+    "Conversation video follow-ups failed 2/2 in the measured sessions.",
+    "Whisper human-audio semantic smoke passed only 1/2 and remains provisional."
+  ]
+}

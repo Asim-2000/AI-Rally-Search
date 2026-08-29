@@ -93,6 +93,7 @@ INTENT_CAPABILITIES: dict[SearchIntent, IntentCapability] = {
         allow_cross_type_recovery=True,
         allowed_recovery_transitions={
             SearchEntityType.STAGE: SearchEntityType.RALLY,
+            SearchEntityType.RALLY: SearchEntityType.PERSON,
         },
     ),
     SearchIntent.SEARCH_DRIVER_VIDEOS: IntentCapability(
@@ -164,6 +165,7 @@ class IntentResolutionRouter:
     KNOWN_INTENT_FUNCTION_WORDS: set[str] = {
         "rally", "rallies", "in", "from", "to", "the", "a", "an", "all",
         "videos", "video", "clip", "clips", "action", "actions", "results",
+        "highlight", "highlights", "moment", "moments",
         "result", "winner", "winners", "win", "wins", "won", "winning", "top",
         "finishers", "finisher", "driver", "drivers", "show", "shows", "showing",
         "me", "find", "finds", "finding", "search", "searches", "searching", "of",
@@ -179,7 +181,7 @@ class IntentResolutionRouter:
         "holds", "holding", "took", "take", "takes", "taking", "place", "places",
         "featuring", "features", "featured", "stuck", "recorded", "shot", "captured",
         "between", "during", "season", "seasons", "year", "years", "country", "countries",
-        "city", "cities", "event", "events"
+        "city", "cities", "event", "events", "located"
     }
 
     ACTION_EXPANSIONS: dict[str, set[str]] = {
@@ -193,6 +195,13 @@ class IntentResolutionRouter:
         "action": {"action", "actions"},
         "roll": {"roll", "rolls", "rolling", "rolled"},
         "save": {"save", "saves", "saving", "saved"},
+    }
+
+    # Aggregate intents describe a ranking over the corpus. Their remaining raw
+    # words are ranking language, not an omitted entity mention.
+    GLOBAL_AGGREGATE_INTENTS: set[SearchIntent] = {
+        SearchIntent.GET_TOP_DRIVERS_BY_WINS,
+        SearchIntent.GET_TOP_UPLOADERS,
     }
 
     def route(
@@ -336,7 +345,11 @@ class IntentResolutionRouter:
         unexplained_tokens: list[str] = []
         has_entity_field = any(r.route_type == ResolutionRouteType.ENTITY for r in routes)
 
-        if not has_entity_field and clean_raw:
+        if (
+            not has_entity_field
+            and clean_raw
+            and effective_query.intent not in self.GLOBAL_AGGREGATE_INTENTS
+        ):
             explained_tokens: set[str] = set()
             for r in routes:
                 val_str = str(r.raw_value).lower()
@@ -360,16 +373,25 @@ class IntentResolutionRouter:
                 capability = INTENT_CAPABILITIES.get(effective_query.intent)
                 if capability is not None:
                     # Choose recovery entity type constrained by capability matrix
-                    if SearchEntityType.PERSON in capability.allowed_primary_entity_types:
+                    person_cued = bool(re.search(r"\b(?:featuring|featured|driver|co-?driver)\b", normalized_raw))
+                    stage_cued = bool(re.search(r"\bss\s*\d+\b", normalized_raw))
+                    rally_cued = bool(re.search(r"\brally\b", normalized_raw))
+                    if stage_cued and SearchEntityType.STAGE in capability.allowed_filter_entity_types:
+                        target_entity_type = SearchEntityType.STAGE
+                    elif person_cued and SearchEntityType.PERSON in capability.allowed_filter_entity_types:
+                        target_entity_type = SearchEntityType.PERSON
+                    elif rally_cued and SearchEntityType.RALLY in capability.allowed_filter_entity_types:
+                        target_entity_type = SearchEntityType.RALLY
+                    elif SearchEntityType.PERSON in capability.allowed_primary_entity_types:
                         target_entity_type = SearchEntityType.PERSON
                     elif SearchEntityType.RALLY in capability.allowed_primary_entity_types:
                         target_entity_type = SearchEntityType.RALLY
-                    elif SearchEntityType.RALLY in capability.allowed_filter_entity_types:
-                        target_entity_type = SearchEntityType.RALLY
-                    elif SearchEntityType.PERSON in capability.allowed_filter_entity_types:
-                        target_entity_type = SearchEntityType.PERSON
+                    elif len(capability.allowed_primary_entity_types) == 1:
+                        target_entity_type = next(iter(capability.allowed_primary_entity_types))
                     else:
-                        target_entity_type = SearchEntityType.RALLY
+                        # Multiple filter entity types remain plausible. Preserve
+                        # that uncertainty for discovery/clarification downstream.
+                        target_entity_type = None
 
                     routes.append(ResolutionRoute(
                         field_name="unresolved_text",

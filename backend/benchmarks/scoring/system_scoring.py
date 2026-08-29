@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import time
+import re
 from typing import Any
 
 from app.db.engine import get_engine
 from app.domain.conversation_session import SearchConversationSession
+from app.domain.referent_context import ResultReferentContext
 from app.domain.router import IntentResolutionRouter
+from app.domain.search_intent import SearchIntent
 from app.domain.search_plan import SearchPlan
 from app.domain.search_query import SearchQuery
 from app.entity_search.adapter import EntitySearchLookupAdapter
@@ -33,6 +36,73 @@ class MockDirectQueryParser(QueryUnderstandingService):
             schema_version="v1",
             few_shot_version="v1",
         )
+
+
+def _session_from_benchmark_context(case: dict[str, Any]) -> SearchConversationSession:
+    """Reconstruct only context explicitly recorded in the benchmark case."""
+    context = case.get("conversation_context") or ""
+    rally_match = re.search(r'active rally is "([^"]+)"', context, re.IGNORECASE)
+    driver_match = re.search(r'active driver is "([^"]+)"', context, re.IGNORECASE)
+    # A year inside an active rally name is entity identity, not an inherited
+    # temporal filter. Only an explicitly recorded previous-query year is one.
+    previous_years = re.search(r"previous query filters[^\]]*years:\s*([^|\]]+)", context, re.IGNORECASE)
+    years = [
+        int(value)
+        for value in re.findall(r"(?<!\d)(?:19|20)\d{2}(?!\d)", previous_years.group(1))
+    ] if previous_years else []
+    rally = rally_match.group(1) if rally_match else None
+    driver = driver_match.group(1) if driver_match else None
+    active_query = SearchQuery(
+        intent=SearchIntent.SEARCH_RALLIES,
+        rally_names=[rally] if rally else [],
+        driver_names=[driver] if driver else [],
+        years=years,
+    )
+    return SearchConversationSession(
+        active_query=active_query,
+        referents=ResultReferentContext(
+            active_rally=rally,
+            active_rallies=[rally] if rally else [],
+            active_driver=driver,
+            active_drivers=[driver] if driver else [],
+        ),
+    )
+
+
+def _trace_payload(turn_result: ConversationalSearchResult) -> dict[str, Any]:
+    routing = turn_result.routing_plan
+    return {
+        "router_plan": {
+            "intent": routing.intent.value,
+            "unexplained_tokens": routing.unexplained_tokens,
+            "needs_entity_resolution": routing.needs_entity_resolution,
+            "routes": [
+                {
+                    "field_name": route.field_name,
+                    "raw_value": route.raw_value,
+                    "route_type": route.route_type.value,
+                    "entity_type": route.entity_type.value if route.entity_type else None,
+                    "person_role": route.person_role.value if route.person_role else None,
+                    "reason": route.reason,
+                }
+                for route in routing.routes
+            ],
+        } if routing else None,
+        "entity_candidates": [candidate.to_map() for candidate in turn_result.candidates],
+        "resolution_decisions": {
+            key: {
+                **resolution.to_dict(),
+                "candidateOptions": [candidate.to_map() for candidate in resolution.candidate_options],
+                "resolvedCandidateDetail": resolution.resolved_candidate.to_map() if resolution.resolved_candidate else None,
+            }
+            for key, resolution in turn_result.resolutions.items()
+        },
+        "canonical_resolved_query": turn_result.resolved_query.model_dump(mode="json", by_alias=True) if turn_result.resolved_query else None,
+        "search_plan": turn_result.search_plan.model_dump(mode="json", by_alias=True) if turn_result.search_plan else None,
+        "neutralized_temporal_filters": turn_result.neutralized_temporal_filters,
+        "clarification_question": turn_result.clarification_question,
+        "error_code": turn_result.error_code,
+    }
 
 
 async def evaluate_system_pipeline(
@@ -63,7 +133,7 @@ async def evaluate_system_pipeline(
     expected_outcome = exp_res.get("outcome", "RESOLVED")
     expected_entities = exp_res.get("canonical_entities") or []
 
-    session = SearchConversationSession()
+    session = _session_from_benchmark_context(case)
     started = time.perf_counter()
 
     try:
@@ -148,6 +218,7 @@ async def evaluate_system_pipeline(
                     "total": total_pipeline_ms,
                 },
                 "error": turn_result.error,
+                "trace": _trace_payload(turn_result),
             }
     except Exception as exc:
         total_pipeline_ms = (time.perf_counter() - started) * 1000.0

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/conversational_search_session.dart';
 import '../models/entity_candidate.dart';
+import '../models/pending_clarification.dart';
 import '../models/result_referent_context.dart';
 import '../models/search_intent.dart';
 import '../models/search_query.dart';
@@ -116,6 +117,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   String? _interpretedSummary;
   String? _clarificationQuestion;
   List<EntityCandidate> _clarificationCandidates = [];
+  PendingClarification? _pendingClarification;
   NaturalLanguageSearchResult? _lastNlResult;
 
   // Pagination state
@@ -233,6 +235,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         ),
       );
     });
+    // This screen submits the editable transcript as typed text, so it never
+    // forwards captured audio to a downstream search request.
+    detailed?.disposeAudio();
   }
 
   // ===========================================================================
@@ -274,6 +279,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _emptyResultsMessage = null;
       _clarificationQuestion = null;
       _clarificationCandidates = [];
+      _pendingClarification = null;
       _currentPage = 1;
     });
 
@@ -349,6 +355,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           _isLoading = false;
           _clarificationQuestion = result.clarificationQuestion;
           _clarificationCandidates = result.candidates;
+          final pendingQuery = result.parsedQuery ?? result.query;
+          _pendingClarification = pendingQuery == null
+              ? null
+              : PendingClarification(
+                  query: pendingQuery,
+                  referents: result.referents,
+                  requestId: nextRequestId,
+                );
           _interpretedSummary = null;
         });
         return;
@@ -435,6 +449,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _lastNlResult = result;
         _clarificationQuestion = null;
         _clarificationCandidates = [];
+        _pendingClarification = null;
         _errorMessage = null;
         _specialMessage = null;
         _emptyResultsMessage = result.friendlyMessage;
@@ -549,58 +564,26 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _interpretedSummary = null;
       _clarificationQuestion = null;
       _clarificationCandidates = [];
+      _pendingClarification = null;
       _lastNlResult = null;
     });
     _executeDeterministicSearch(resetPage: true);
   }
 
   void _onSelectCandidate(EntityCandidate candidate) {
+    final selection = _pendingClarification?.select(
+      candidate,
+      currentRequestId: _session.activeRequestId,
+    );
+    if (selection == null) return;
     setState(() {
       _clarificationQuestion = null;
       _clarificationCandidates = [];
-
-      SearchQuery updated = _session.activeQuery;
-      ResultReferentContext referents = _session.referents;
-
-      switch (candidate.type) {
-        case EntityType.rally:
-          final yr = candidate.metadata?['year'] as int?;
-          updated = updated.copyWith(
-            rallyNames: [candidate.canonicalName],
-            years: yr != null ? [yr] : updated.years,
-          );
-          referents = referents.copyWith(
-            activeRally: candidate.canonicalName,
-            activeRallyId: candidate.id,
-            activeRallies: [candidate.canonicalName],
-            lastSelectedRally: candidate.canonicalName,
-            lastSelectedRallyId: candidate.id,
-          );
-          break;
-        case EntityType.driver:
-          final driverId = candidate.id;
-          updated = updated.copyWith(
-            driverNames: [candidate.canonicalName],
-            driverIds: driverId.isNotEmpty ? [driverId] : updated.driverIds,
-          );
-          referents = referents.copyWith(
-            activeDriver: candidate.canonicalName,
-            activeDriverId: driverId,
-            activeDrivers: [candidate.canonicalName],
-          );
-          break;
-        case EntityType.city:
-          updated = updated.copyWith(cities: [candidate.canonicalName]);
-          break;
-        case EntityType.stage:
-          updated = updated.copyWith(stageNames: [candidate.canonicalName]);
-          break;
-        case EntityType.uploader:
-          updated = updated.copyWith(uploaders: [candidate.canonicalName]);
-          break;
-      }
-
-      _session = _session.copyWith(activeQuery: updated, referents: referents);
+      _pendingClarification = null;
+      _session = _session.copyWith(
+        activeQuery: selection.query,
+        referents: selection.referents,
+      );
     });
     _executeDeterministicSearch(resetPage: true);
   }
@@ -1304,6 +1287,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               onDismiss: () => setState(() {
                 _clarificationQuestion = null;
                 _clarificationCandidates = [];
+                _pendingClarification = null;
               }),
             ),
 

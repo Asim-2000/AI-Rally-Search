@@ -56,6 +56,23 @@ class _MockScoreGapRepo:
         return self.cands
 
 
+class _YearIdentityRepo(_MockScoreGapRepo):
+    def __init__(self):
+        super().__init__([
+            EntityCandidate(
+                id="kortrijk-2024",
+                type=EntityType.RALLY,
+                canonical_name="6 Uren van Kortrijk 2024",
+                metadata={"year": 2024},
+            )
+        ])
+        self.lookup_year = None
+
+    async def lookup_rallies(self, phrase, **kwargs):
+        self.lookup_year = kwargs.get("year")
+        return self.cands
+
+
 @pytest.mark.unit
 def test_person_role_eligibility_matrix():
     driver_only = {"accountId": "a-1", "driverId": "d-1", "codriverId": None, "role": "driver"}
@@ -122,3 +139,20 @@ async def test_score_gap_and_confidence_boundary_thresholds():
     assert res.requires_clarification is False
     assert res.resolutions["rally"].is_resolved is True
     assert res.resolutions["rally"].resolved_candidate.id == "1"
+
+
+@pytest.mark.unit
+async def test_entity_identity_year_is_separate_from_search_filter_year():
+    repo = _YearIdentityRepo()
+    resolver = DatabaseEntityResolver(repository=repo)
+    result = await resolver.resolve(SearchQuery(
+        intent=SearchIntent.SEARCH_VIDEO_ACTIONS,
+        rally_names=["6 Uren van Kortrijk 2024"],
+        years=[2022],
+        action_types=["jump"],
+    ))
+
+    assert repo.lookup_year == 2024
+    assert result.requires_clarification is False
+    assert result.resolutions["rally"].resolved_candidate.id == "kortrijk-2024"
+    assert result.resolved_query.years == [2022]

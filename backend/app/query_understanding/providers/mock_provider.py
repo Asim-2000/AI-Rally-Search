@@ -136,6 +136,12 @@ class MockProvider(QueryUnderstandingProvider):
                     drivers = [d_name]
                 intent = "SEARCH_DRIVER_VIDEOS"
 
+            elif any(w in lower for w in ("videos from that rally", "show videos from that rally", "videos of that rally", "clips from that rally")):
+                r_name = (ref.active_rally if ref else None) or getattr(context, "active_rally", None) or (prev_q.target_rally_name if prev_q else None)
+                if r_name and not rallies:
+                    rallies = [r_name]
+                intent = "SEARCH_VIDEO_ACTIONS"
+
             if any(w in lower for w in ("only show jumps", "only jumps", "just jumps")):
                 actions = ["jump"]
                 r_name = (ref.active_rally if ref else None) or getattr(context, "active_rally", None) or (prev_q.target_rally_name if prev_q else None)
@@ -213,4 +219,3 @@ class MockProvider(QueryUnderstandingProvider):
             "personRole": person_role,
             "driverMatchMode": driver_match_mode,
         }
-

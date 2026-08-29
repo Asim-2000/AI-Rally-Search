@@ -1,0 +1,82 @@
+{
+  "models": {
+    "gpt-5.6-luna": {
+      "before": {
+        "success": 293,
+        "total": 392,
+        "success_rate": 0.7474489795918368,
+        "exact_success": 196,
+        "exact_total": 259,
+        "p_success_exact": 0.7567567567567568,
+        "correct_resolution": 254,
+        "clarification_correct": 20,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "after": {
+        "success": 0,
+        "total": 392,
+        "success_rate": 0.0,
+        "exact_success": 0,
+        "exact_total": 259,
+        "p_success_exact": 0.0,
+        "correct_resolution": 0,
+        "clarification_correct": 0,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "remaining": {
+        "REPOSITORY_RESULT_WRONG": 283,
+        "MODEL_PARSE_WRONG": 82,
+        "ROUTER_WRONG": 26,
+        "EXPECTED_CLARIFICATION_MISMATCH": 1
+      }
+    },
+    "gemini-3.5-flash-lite": {
+      "before": {
+        "success": 298,
+        "total": 392,
+        "success_rate": 0.7602040816326531,
+        "exact_success": 197,
+        "exact_total": 252,
+        "p_success_exact": 0.7817460317460317,
+        "correct_resolution": 240,
+        "clarification_correct": 20,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "after": {
+        "success": 0,
+        "total": 392,
+        "success_rate": 0.0,
+        "exact_success": 0,
+        "exact_total": 252,
+        "p_success_exact": 0.0,
+        "correct_resolution": 0,
+        "clarification_correct": 0,
+        "clarification_total": 28,
+        "no_match_correct": 0,
+        "no_match_total": 0,
+        "false_confident": 0
+      },
+      "remaining": {
+        "REPOSITORY_RESULT_WRONG": 263,
+        "MODEL_PARSE_WRONG": 104,
+        "ROUTER_WRONG": 24,
+        "EXPECTED_CLARIFICATION_MISMATCH": 1
+      }
+    }
+  },
+  "both_fail": {
+    "before": 87,
+    "escaped": 0,
+    "fully_fixed": 0,
+    "remaining": 87
+  }
+}

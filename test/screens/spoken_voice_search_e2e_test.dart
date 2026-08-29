@@ -352,7 +352,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Tap the VoiceSearchButton to start recording
-        final micFinder = find.byType(VoiceSearchButton);
+        final micFinder = find.byKey(const Key('native_voice_button'));
         expect(micFinder, findsOneWidget);
         await tester.tap(micFinder);
         await tester.pump();

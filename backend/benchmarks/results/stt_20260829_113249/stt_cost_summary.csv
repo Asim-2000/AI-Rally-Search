@@ -1,0 +1,4 @@
+model,audio_minutes_per_condition,conditions,total_billed_audio_minutes,verified_price_per_minute,vanilla_cost_usd,total_stt_benchmark_cost_usd,cost_per_1000_average_utterances
+whisper-1,3.5654,2,7.1308,0.006,0.021393,0.042785,0.186
+gpt-4o-mini-transcribe,3.5654,2,7.1308,0.003,0.010696,0.021393,0.093
+gpt-transcribe,3.5654,2,7.1308,0.0045,0.016044,0.032089,0.1395

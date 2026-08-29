@@ -111,14 +111,23 @@ class DatabaseEntityResolver:
         # Empty entity recovery: if no entity fields were populated, check context/routing for unresolved mentions
         if not raw_rallies and not query.driver_names and not query.stage_names and not query.cities:
             unresolved = []
+            routing_plan = None
             if isinstance(context, dict):
                 unresolved = context.get("unresolved_mentions", [])
+                routing_plan = context.get("routing_plan")
             elif hasattr(context, "extra") and isinstance(context.extra, dict):
                 unresolved = context.extra.get("unresolved_mentions", [])
+                routing_plan = context.extra.get("routing_plan")
             elif hasattr(context, "unresolved_mentions"):
                 unresolved = getattr(context, "unresolved_mentions", [])
+            rally_mentions = {
+                str(route.raw_value)
+                for route in getattr(routing_plan, "entity_routes", [])
+                if route.field_name == "unresolved_text"
+                and route.entity_type == SearchEntityType.RALLY
+            }
             for mention in unresolved:
-                if mention and mention.strip():
+                if mention and mention.strip() and mention.strip() in rally_mentions:
                     raw_rallies.append(mention.strip())
 
         if raw_rallies:
@@ -152,7 +161,7 @@ class DatabaseEntityResolver:
                     )
                 )
                 if (
-                    (rally_res.resolved_candidate is None or (rally_res.strategy == "plausible_candidates" and rally_res.confidence < 0.60))
+                    (rally_res.resolved_candidate is None or rally_res.is_ambiguous)
                     and can_recover_person
                     and not query.driver_names
                 ):
@@ -483,7 +492,16 @@ class DatabaseEntityResolver:
             self._resolution_cache[cache_key] = res
             return res
 
-        scored = self._score_candidates(phrase, candidates, year=effective_year, years=years)
+        # A year embedded in the entity phrase identifies the edition. A
+        # separate query year remains a downstream search filter and must not
+        # penalize the correctly retrieved entity during identity scoring.
+        identity_years = [phrase_year] if phrase_year is not None else years
+        scored = self._score_candidates(
+            phrase,
+            candidates,
+            year=phrase_year if phrase_year is not None else effective_year,
+            years=identity_years,
+        )
 
         has_explicit_years = (effective_year is not None) or bool(years) or (extract_year(phrase) is not None)
         if not has_explicit_years and len(scored) > 1:

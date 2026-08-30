@@ -13,24 +13,18 @@ import '../models/search_results.dart';
 import '../models/supported_language.dart';
 import '../models/video_action.dart';
 import '../models/speech/speech_transcription_result.dart';
-import '../services/llm/entity_resolution/database_entity_resolver.dart';
-import '../services/llm/entity_resolution/spoken_entity_resolver.dart';
-import '../services/llm/entity_resolution/entity_lookup_repository.dart';
-import '../services/entity_search/controlled_fallback_entity_resolver.dart';
-import '../services/entity_search/entity_search_lookup_adapter.dart';
-import '../services/entity_search/in_memory_entity_search_service.dart';
-import '../services/entity_search/mysql_entity_search_data_source.dart';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import '../services/llm/follow_up_suggestion_engine.dart';
 import '../services/llm/llm_query_parser.dart';
-import '../services/llm/llm_query_parser_factory.dart';
 import '../services/llm/natural_language_search_service.dart';
 import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
 import '../services/python_search_api_client.dart';
 import '../services/friendly_response_service.dart';
+import '../services/offline/offline_messaging.dart';
+import '../services/offline/offline_search_engine.dart';
+import '../services/offline/offline_search_router.dart';
+import '../services/offline/offline_snapshot_sync.dart';
+import '../widgets/offline_banner.dart';
 import '../widgets/action_player_modal.dart';
 import '../widgets/active_context_chips_bar.dart';
 import '../widgets/advanced_filters_sheet.dart';
@@ -46,6 +40,19 @@ import '../widgets/video_result_card.dart';
 import '../widgets/voice_search_button.dart';
 import '../services/speech/speech_to_text_service.dart';
 import '../services/speech/speech_service_factory.dart';
+import '../theme/app_theme.dart';
+import '../widgets/results_skeleton.dart';
+import 'rally_streams_page.dart';
+
+/// User-facing category of a results-area failure. Presentation only — the
+/// underlying exception/state is unchanged; this only selects friendly copy.
+enum _SearchErrorKind {
+  /// Backend/network could not be reached.
+  service,
+
+  /// The query could not be understood / turned into a search.
+  understanding,
+}
 
 /// Phase 5E Continuous Conversational Search Screen.
 ///
@@ -68,6 +75,13 @@ class GeneralSearchScreen extends StatefulWidget {
   final ISpeechToTextService? cloudSpeechService;
   final PythonSearchApiClient? pythonApiClient;
 
+  /// Offline search stack (optional). When supplied (production, via main.dart),
+  /// the screen applies NETWORK_FIRST_WITH_LOCAL_FALLBACK and offline messaging.
+  /// When null (most tests), behaviour is exactly the online-only path.
+  final OfflineSearchEngine? offlineEngine;
+  final OfflineSnapshotSync? offlineSync;
+  final ConnectivityProbe? connectivityProbe;
+
   const GeneralSearchScreen({
     super.key,
     this.initialQuery,
@@ -78,6 +92,9 @@ class GeneralSearchScreen extends StatefulWidget {
     this.nativeSpeechService,
     this.cloudSpeechService,
     this.pythonApiClient,
+    this.offlineEngine,
+    this.offlineSync,
+    this.connectivityProbe,
   });
 
   @override
@@ -85,8 +102,13 @@ class GeneralSearchScreen extends StatefulWidget {
 }
 
 class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
-  late final ISearchRepository _repository;
-  late final NaturalLanguageSearchService _nlSearchService;
+  // Python FastAPI is authoritative. `_repository` is a Python-backed
+  // repository in production, or a caller-injected fake in tests; it is null
+  // only when the backend is unconfigured (a clean error is shown then).
+  late final ISearchRepository? _repository;
+  // Legacy in-app NL search is retained ONLY as a test seam and is never
+  // constructed in production.
+  late final NaturalLanguageSearchService? _nlSearchService;
   late final ISpeechToTextService _nativeSpeechService;
   late final ISpeechToTextService _cloudSpeechService;
   PythonSearchApiClient? _pythonApiClient;
@@ -114,7 +136,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   SearchConversationSession _session = SearchConversationSession.initial;
 
   // Search & Clarification state
-  String? _interpretedSummary;
   String? _clarificationQuestion;
   List<EntityCandidate> _clarificationCandidates = [];
   PendingClarification? _pendingClarification;
@@ -125,60 +146,48 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   final int _pageSize = 20;
   int _totalCount = 0;
 
+  // Whether the user has run at least one search this session. Until then the
+  // screen shows the first-launch hero (title + examples) instead of results.
+  // No backend search is performed automatically on launch.
+  bool _hasSearched = false;
+
   bool _isLoading = false;
-  String _loadingStatus = 'Searching...';
+  String _loadingStatus = 'Searching…';
   String? _errorMessage;
+  _SearchErrorKind _errorKind = _SearchErrorKind.service;
   String? _specialMessage;
   String? _emptyResultsMessage;
   SearchResponse<dynamic>? _searchResponse;
 
+  // Offline / connectivity state.
+  OfflineSearchEngine? _offlineEngine;
+  OfflineSnapshotSync? _offlineSync;
+  ConnectivityProbe? _connectivityProbe;
+  OfflineUxState _offlineState = OfflineUxState.online;
+  Duration? _offlineAge;
+  bool get _offlineActive => _offlineState != OfflineUxState.online;
+  static const OfflineMessagingService _offlineMessaging = OfflineMessagingService();
+
   @override
   void initState() {
     super.initState();
+    _offlineEngine = widget.offlineEngine;
+    _offlineSync = widget.offlineSync;
+    _connectivityProbe = widget.connectivityProbe;
     final backendConfig = SearchBackendConfig.fromEnvironment();
-    _usePythonBackend =
-        widget.pythonApiClient != null ||
-        backendConfig.backend == SearchBackend.python;
-    _pythonApiClient =
-        widget.pythonApiClient ??
-        (_usePythonBackend
-            ? PythonSearchApiClient.fromConfig(backendConfig)
-            : null);
+    // Python FastAPI is the sole authoritative search backend. There is no
+    // runtime legacy switch and no silent in-app Dart fallback: when the Python
+    // backend is unreachable/unconfigured the UI shows a clean error instead of
+    // executing the legacy engine.
+    _pythonApiClient = widget.pythonApiClient ?? backendConfig.tryCreateClient();
+    _usePythonBackend = _pythonApiClient != null;
     _repository =
         widget.repository ??
         (_pythonApiClient != null
             ? PythonSearchRepository(_pythonApiClient!)
-            : SearchRepository());
-    final parser = widget.llmParser ?? LlmQueryParserFactory.create();
-    final lookupRepo = DatabaseEntityLookupRepository();
-    final fallbackMetrics = EntitySearchFallbackMetrics();
-    final controlledResolver = ControlledFallbackEntityResolver(
-      legacyResolver: DatabaseEntityResolver(repository: lookupRepo),
-      entitySearchResolver: DatabaseEntityResolver(
-        repository: EntitySearchLookupAdapter(
-          searchService: InMemoryEntitySearchService(
-            dataSource: MySqlEntitySearchDataSource(),
-          ),
-          cityFallback: lookupRepo,
-          metrics: fallbackMetrics,
-        ),
-      ),
-      config: EntitySearchFallbackConfig.fromValue(
-        dotenv.isInitialized ? dotenv.env['ENTITY_SEARCH_FALLBACK_MODE'] : null,
-      ),
-      metrics: fallbackMetrics,
-    );
-    final resolver = SpokenEntityResolver(
-      repository: lookupRepo,
-      baseResolver: controlledResolver,
-    );
-    _nlSearchService =
-        widget.nlSearchService ??
-        NaturalLanguageSearchService(
-          parser: parser,
-          entityResolver: resolver,
-          repository: _repository,
-        );
+            : null);
+    // Legacy in-app NL search is a test-only seam; production is Python-only.
+    _nlSearchService = widget.nlSearchService;
     _nativeSpeechService = widget.nativeSpeechService ??
         widget.speechService ??
         SpeechServiceFactory.createNative();
@@ -187,10 +196,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     _searchController.addListener(_onSearchControllerChanged);
 
+    // Search-first: do NOT auto-search on launch. Only run an initial search
+    // when an explicit initialQuery is supplied (e.g. deep link / test seam);
+    // otherwise the first-launch hero is shown until the user searches.
     if (widget.initialQuery != null) {
       _session = _session.copyWith(activeQuery: widget.initialQuery!);
-      _executeDeterministicSearch(resetPage: true);
-    } else {
       _executeDeterministicSearch(resetPage: true);
     }
   }
@@ -271,6 +281,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
     setState(() {
       if (queryText.isNotEmpty) _searchController.text = queryText;
+      _hasSearched = true;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
       _loadingStatus = 'Understanding your search...';
@@ -282,6 +293,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _pendingClarification = null;
       _currentPage = 1;
     });
+
+    // NETWORK_FIRST_WITH_LOCAL_FALLBACK: if the device is plainly offline, skip
+    // the online attempt entirely and answer from the local snapshot.
+    if (queryText.isNotEmpty && _offlineEngine != null && await _isPlainlyOffline()) {
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+      await _runOfflineFallback(queryText, OfflineUxState.offlineLocalResults);
+      return;
+    }
 
     try {
       final searchContext = SearchContext(
@@ -323,28 +342,41 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         }
         backendSession = response.session;
         result = response.result;
-      } else if (spokenResult != null) {
-        result = await _nlSearchService.searchSpoken(
-          spokenResult,
-          context: searchContext,
-        );
+      } else if (_nlSearchService != null) {
+        // Test-only injected in-app search path.
+        result = spokenResult != null
+            ? await _nlSearchService.searchSpoken(
+                spokenResult,
+                context: searchContext,
+              )
+            : await _nlSearchService.search(queryText, context: searchContext);
       } else {
-        result = await _nlSearchService.search(
-          queryText,
-          context: searchContext,
+        // No backend configured: surface a clean error instead of any legacy
+        // fallback.
+        throw const PythonApiException(
+          'config',
+          'Search backend is not configured (PYTHON_BACKEND_BASE_URL missing).',
         );
       }
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
 
       if (result.isSpecialResponse) {
+        // Easter-egg / personality response: show only the playful message.
+        // No DB results, no zero-results state, no clarification, no stale
+        // pagination. The rally conversation context (referents/active query)
+        // from any prior search is intentionally preserved.
         setState(() {
           if (backendSession != null) _session = backendSession;
           _isLoading = false;
           _specialMessage = result.friendlyMessage;
           _searchResponse = null;
-          _interpretedSummary = null;
+          _totalCount = 0;
+          _clarificationQuestion = null;
           _clarificationCandidates = [];
+          _pendingClarification = null;
+          _errorMessage = null;
+          _emptyResultsMessage = null;
         });
         return;
       }
@@ -363,7 +395,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   referents: result.referents,
                   requestId: nextRequestId,
                 );
-          _interpretedSummary = null;
         });
         return;
       }
@@ -372,9 +403,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         setState(() {
           if (backendSession != null) _session = backendSession;
           _isLoading = false;
+          _errorKind = _SearchErrorKind.understanding;
           _errorMessage = result.friendlyMessage ?? 'Query parsing failed';
           _clarificationCandidates = [];
-          _interpretedSummary = null;
         });
         return;
       }
@@ -445,7 +476,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _session = updatedSession;
         _searchResponse = result.searchResponse;
         _totalCount = result.totalCount;
-        _interpretedSummary = localizedSummary;
         _lastNlResult = result;
         _clarificationQuestion = null;
         _clarificationCandidates = [];
@@ -454,17 +484,31 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _specialMessage = null;
         _emptyResultsMessage = result.friendlyMessage;
         _isLoading = false;
+        // Authoritative online answer: clear any offline chrome.
+        _offlineState = OfflineUxState.online;
+        _offlineAge = null;
       });
+      // Opportunistic, non-blocking refresh of the offline snapshot.
+      unawaited(_offlineSync?.maybeSync() ?? Future.value());
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
+      // The authoritative backend failed. If we have a local snapshot, answer
+      // from it (clearly labelled) rather than showing a dead end.
+      if (queryText.isNotEmpty && _offlineEngine != null && e is PythonApiException) {
+        await _runOfflineFallback(queryText, OfflineUxState.backendUnreachableLocalAvailable);
+        if (_usePythonBackend && spokenResult?.audioContext != null) {
+          spokenResult!.disposeAudio();
+        }
+        return;
+      }
       setState(() {
+        _errorKind = _SearchErrorKind.service;
         _errorMessage = e is PythonApiException
             ? e.friendlyMessage
             : const FriendlyResponseService().responseFor(
                 FriendlyResponseCategory.serverError,
               );
         _clarificationCandidates = [];
-        _interpretedSummary = null;
         _isLoading = false;
       });
     } finally {
@@ -481,13 +525,34 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     final nextRequestId = _session.activeRequestId + 1;
     setState(() {
+      _hasSearched = true;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
-      _loadingStatus = 'Searching database...';
+      _loadingStatus = _loadingCopyForIntent(_session.activeQuery.intent);
       _errorMessage = null;
       _specialMessage = null;
       _emptyResultsMessage = null;
     });
+
+    // Offline / low-bandwidth: execute the resolved query over the local
+    // snapshot (pagination and clarification selections included).
+    if (_offlineEngine != null && (_offlineActive || await _isPlainlyOffline())) {
+      await _executeDeterministicOffline(nextRequestId);
+      return;
+    }
+
+    final repository = _repository;
+    if (repository == null) {
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+      setState(() {
+        _errorKind = _SearchErrorKind.service;
+        _errorMessage = const FriendlyResponseService().responseFor(
+          FriendlyResponseCategory.serverError,
+        );
+        _isLoading = false;
+      });
+      return;
+    }
 
     try {
       final offset = (_currentPage - 1) * _pageSize;
@@ -496,9 +561,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         offset: offset,
       );
 
-      final response = await _repository.search(queryToExecute);
+      final response = await repository.search(queryToExecute);
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
+
+      // Authoritative online answer: drop any offline chrome.
+      _offlineState = OfflineUxState.online;
+      _offlineAge = null;
 
       final updatedReferents = ResultReferentContext.fromSearchResponse(
         response,
@@ -509,9 +578,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         queryDrivers: queryToExecute.driverNames,
       );
 
-      final l10n = AppLocalizations.of(context);
-      final summary = _buildLocalizedInterpretedSummary(queryToExecute, l10n);
-
       setState(() {
         _session = _session.copyWith(
           activeQuery: queryToExecute,
@@ -519,7 +585,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         );
         _searchResponse = response;
         _totalCount = response.totalCount;
-        _interpretedSummary = summary;
         _emptyResultsMessage = response.totalCount == 0
             ? const FriendlyResponseService().responseFor(
                 FriendlyResponseCategory.noResults,
@@ -530,11 +595,211 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
+        _errorKind = _SearchErrorKind.service;
         _errorMessage = const FriendlyResponseService().responseFor(
           FriendlyResponseCategory.serverError,
         );
         _isLoading = false;
       });
+    }
+  }
+
+  // ===========================================================================
+  // OFFLINE FALLBACK
+  // ===========================================================================
+
+  Future<bool> _isPlainlyOffline() async {
+    final probe = _connectivityProbe;
+    if (probe == null) return false;
+    try {
+      return !(await probe.isOnline());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Duration?> _snapshotAge() async {
+    final last = await _offlineEngine?.database.lastSyncUtc();
+    if (last == null) return null;
+    return DateTime.now().toUtc().difference(last);
+  }
+
+  static const Duration _staleThreshold = Duration(hours: 12);
+
+  /// Runs the deterministic offline pipeline for a raw query and maps its
+  /// outcome onto the shared result/clarification/special/error state, plus the
+  /// product-tone offline banner state.
+  Future<void> _runOfflineFallback(String queryText, OfflineUxState baseState) async {
+    final engine = _offlineEngine;
+    if (engine == null) return;
+    if (!await engine.database.hasSnapshot()) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _searchResponse = null;
+        _totalCount = 0;
+        _clarificationQuestion = null;
+        _clarificationCandidates = [];
+        _pendingClarification = null;
+        _specialMessage = null;
+        _emptyResultsMessage = null;
+        _errorMessage = null;
+        _offlineState = OfflineUxState.noLocalSnapshot;
+        _offlineAge = null;
+      });
+      return;
+    }
+    final age = await _snapshotAge();
+    OfflineSearchOutcome outcome;
+    try {
+      outcome = await engine.search(queryText, limit: _pageSize, offset: (_currentPage - 1) * _pageSize);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _searchResponse = null;
+        _totalCount = 0;
+        _offlineState = OfflineUxState.offlineSafeNoMatch;
+        _emptyResultsMessage = const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+      });
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _hasSearched = true;
+      _clarificationQuestion = null;
+      _clarificationCandidates = [];
+      _pendingClarification = null;
+      _errorMessage = null;
+      _specialMessage = null;
+      _emptyResultsMessage = null;
+      _searchResponse = null;
+      _totalCount = 0;
+      _offlineAge = age;
+      switch (outcome.kind) {
+        case OfflineOutcomeKind.results:
+          _session = _session.copyWith(activeQuery: outcome.query!);
+          _searchResponse = outcome.response;
+          _totalCount = outcome.response!.totalCount;
+          final stale = age != null && age > _staleThreshold;
+          _offlineState = stale ? OfflineUxState.offlineStaleResults : baseState;
+          if (_totalCount == 0) {
+            _offlineState = OfflineUxState.offlineSafeNoMatch;
+            _emptyResultsMessage =
+                const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+          }
+          break;
+        case OfflineOutcomeKind.clarification:
+          _offlineState = OfflineUxState.offlineAmbiguity;
+          _clarificationQuestion = outcome.clarificationQuestion;
+          _clarificationCandidates = outcome.candidates;
+          _pendingClarification = PendingClarification(
+            query: SearchQuery(intent: outcome.intent ?? SearchIntent.searchRallies),
+            referents: _session.referents,
+            requestId: _session.activeRequestId,
+          );
+          break;
+        case OfflineOutcomeKind.special:
+          _offlineState = baseState;
+          _specialMessage =
+              const FriendlyResponseService().responseFor(outcome.specialCategory!);
+          break;
+        case OfflineOutcomeKind.noMatch:
+          _offlineState = OfflineUxState.offlineSafeNoMatch;
+          _emptyResultsMessage =
+              const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+          break;
+        case OfflineOutcomeKind.unsupported:
+          _offlineState = OfflineUxState.offlineQueryUnsupported;
+          _errorKind = _SearchErrorKind.service;
+          _errorMessage =
+              _offlineMessaging.messageFor(OfflineUxState.offlineQueryUnsupported).explanation;
+          break;
+      }
+    });
+  }
+
+  /// Offline execution of an already-resolved active query (pagination / a
+  /// chosen clarification candidate).
+  Future<void> _executeDeterministicOffline(int requestId) async {
+    final engine = _offlineEngine;
+    if (engine == null) return;
+    if (!await engine.database.hasSnapshot()) {
+      if (!mounted || _session.activeRequestId != requestId) return;
+      setState(() {
+        _isLoading = false;
+        _offlineState = OfflineUxState.noLocalSnapshot;
+      });
+      return;
+    }
+    final age = await _snapshotAge();
+    final offset = (_currentPage - 1) * _pageSize;
+    final queryToExecute = _session.activeQuery.copyWith(limit: _pageSize, offset: offset);
+    SearchResponse<dynamic> response;
+    try {
+      response = await engine.execute(queryToExecute);
+    } catch (_) {
+      if (!mounted || _session.activeRequestId != requestId) return;
+      setState(() {
+        _isLoading = false;
+        _offlineState = OfflineUxState.offlineSafeNoMatch;
+        _emptyResultsMessage =
+            const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+      });
+      return;
+    }
+    if (!mounted || _session.activeRequestId != requestId) return;
+    final updatedReferents = ResultReferentContext.fromSearchResponse(
+      response,
+      previous: _session.referents,
+      queryRally: queryToExecute.targetRallyName,
+      queryDriver: queryToExecute.driverName,
+      queryRallies: queryToExecute.targetRallyNames,
+      queryDrivers: queryToExecute.driverNames,
+    );
+    final stale = age != null && age > _staleThreshold;
+    setState(() {
+      _session = _session.copyWith(activeQuery: queryToExecute, referents: updatedReferents);
+      _searchResponse = response;
+      _totalCount = response.totalCount;
+      _offlineAge = age;
+      _offlineState = stale ? OfflineUxState.offlineStaleResults : OfflineUxState.offlineLocalResults;
+      _emptyResultsMessage = response.totalCount == 0
+          ? const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults)
+          : null;
+      _isLoading = false;
+    });
+  }
+
+  /// Video discovery works offline; playback is gated (network-only).
+  void _showPlaybackGated(BuildContext context) {
+    final msg = _offlineMessaging.messageFor(OfflineUxState.videoPlaybackUnavailable);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${msg.headline} ${msg.explanation}'), duration: const Duration(seconds: 3)),
+    );
+  }
+
+  /// Contextual, non-technical loading copy derived from the (known) intent of
+  /// a deterministic search. Never exposes pipeline internals.
+  String _loadingCopyForIntent(SearchIntent intent) {
+    switch (intent) {
+      case SearchIntent.searchRallies:
+        return 'Searching rallies…';
+      case SearchIntent.searchDriverRallies:
+      case SearchIntent.searchDriverWins:
+        return 'Finding rally participations…';
+      case SearchIntent.getRallyResults:
+      case SearchIntent.getRallyTopFinishers:
+        return 'Loading results…';
+      case SearchIntent.searchVideoActions:
+        return 'Finding highlights…';
+      case SearchIntent.searchDriverVideos:
+        return 'Finding videos…';
+      case SearchIntent.getTopUploaders:
+        return 'Ranking uploaders…';
+      case SearchIntent.getTopDriversByWins:
+        return 'Ranking drivers…';
     }
   }
 
@@ -561,7 +826,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _sttRawTranscript = null;
       _voiceGeneration++;
       _session = _session.clearAll();
-      _interpretedSummary = null;
       _clarificationQuestion = null;
       _clarificationCandidates = [];
       _pendingClarification = null;
@@ -675,18 +939,24 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     final filters = <String>[];
-    if (query.driverNames.isNotEmpty)
+    if (query.driverNames.isNotEmpty) {
       filters.add('${l10n.filterDriver}: ${query.driverNames.join(', ')}');
-    if (query.rallyNames.isNotEmpty)
+    }
+    if (query.rallyNames.isNotEmpty) {
       filters.add('${l10n.filterRally}: ${query.rallyNames.join(', ')}');
-    if (query.countries.isNotEmpty)
+    }
+    if (query.countries.isNotEmpty) {
       filters.add('${l10n.filterCountry}: ${query.countries.join(', ')}');
-    if (query.cities.isNotEmpty)
+    }
+    if (query.cities.isNotEmpty) {
       filters.add('${l10n.filterCity}: ${query.cities.join(', ')}');
-    if (query.stageNames.isNotEmpty)
+    }
+    if (query.stageNames.isNotEmpty) {
       filters.add('${l10n.filterStage}: ${query.stageNames.join(', ')}');
-    if (query.years.isNotEmpty)
+    }
+    if (query.years.isNotEmpty) {
       filters.add('${l10n.filterYear}: ${query.years.join(', ')}');
+    }
 
     if (filters.isEmpty) {
       return parts.join();
@@ -725,274 +995,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
   }
 
-  void _showTelemetryDialog(
-    BuildContext context,
-    NaturalLanguageSearchResult result,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final parseResult = result.parseResult;
-    final theme = Theme.of(context);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.analytics_outlined,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'AI Query Telemetry & Evaluation',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Provider & Model
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.hub_outlined, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Provider: ${parseResult.provider?.name.toUpperCase() ?? 'UNKNOWN'} (${parseResult.model ?? 'default'})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 1: Cost
-              const Text(
-                '💰 Cost & Token Usage',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Prompt Tokens:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${parseResult.promptTokens ?? 0}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Completion Tokens:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${parseResult.completionTokens ?? 0}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Estimated USD Cost:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    parseResult.formattedCost,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 2: Latency
-              const Text(
-                '⏱️ Latency Breakdown',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'LLM Parse Time:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.parseLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Entity Resolution Time:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.entityResolutionLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Database Execution Time:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.dbLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total End-to-End Latency:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.totalLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Referents Context
-              const Text(
-                '🧠 Result-Derived Referent Context',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Active Rally: ${result.referents.activeRally ?? 'none'}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      'Active Driver: ${result.referents.activeDriver ?? 'none'}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      'Last Winner: ${result.referents.lastWinner ?? 'none'}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Structured SearchQuery
-              if (result.query != null) ...[
-                const Text(
-                  '🔍 Structured Query JSON',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF1E1E1E)
-                        : Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    result.query!.toMap().toString(),
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1007,11 +1009,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       appBar: AppBar(
         title: const Row(
           children: [
-            Icon(Icons.search_rounded, color: Color(0xFF1E88E5)),
+            Icon(Icons.search_rounded, color: kRallyAccent),
             SizedBox(width: 8),
             Flexible(
               child: Text(
-                'AI Rally Search',
+                'Rally Search',
                 style: TextStyle(fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1038,6 +1040,17 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 dropdownColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                // Closed state shows only the compact language code so the app
+                // bar never overflows on narrow phones; the open menu keeps the
+                // full native names.
+                selectedItemBuilder: (context) => SupportedLanguages.all
+                    .map(
+                      (lang) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(lang.languageCode.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
                 items: SupportedLanguages.all.map((lang) {
                   return DropdownMenuItem<SupportedLanguage>(
                     value: lang,
@@ -1052,12 +1065,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                     unawaited(_cloudSpeechService.cancelListening());
                     setState(() {
                       _selectedLanguage = lang;
-                      if (_lastNlResult?.query != null) {
-                        _interpretedSummary = _buildLocalizedInterpretedSummary(
-                          _lastNlResult!.query!,
-                          AppLocalizations.of(context),
-                        );
-                      }
                     });
                   }
                 },
@@ -1073,6 +1080,19 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             onPressed: _openAdvancedFilters,
           ),
 
+          // Browse the raw stream registry (secondary area).
+          IconButton(
+            tooltip: 'Browse streams',
+            icon: const Icon(Icons.video_library_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const RallyStreamsPage(),
+                ),
+              );
+            },
+          ),
+
           // Reset Session Button
           IconButton(
             tooltip: 'Reset Session',
@@ -1083,11 +1103,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       ),
       body: Column(
         children: [
-          // 1. Prominent Continuous Search Bar
+          // 1. Hero search field + two intentional voice modes.
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               border: Border(
                 bottom: BorderSide(
                   color: isDark ? Colors.white12 : Colors.black12,
@@ -1095,177 +1118,170 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Full-width hero field (~56dp). Search icon prefix; clear +
+                // inline submit appear only when there is text.
+                TextField(
+                  controller: _searchController,
+                  textInputAction: TextInputAction.search,
+                  style: const TextStyle(fontSize: 15),
+                  textDirection: _selectedLanguage.isRtl
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  textAlign: _selectedLanguage.isRtl
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  decoration: InputDecoration(
+                    hintText: 'Search rallies, drivers, or moments',
+                    hintStyle: const TextStyle(fontSize: 15),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: kRallyAccent,
+                      size: 22,
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Clear',
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  unawaited(
+                                      _nativeSpeechService.cancelListening());
+                                  unawaited(
+                                      _cloudSpeechService.cancelListening());
+                                  setState(() {
+                                    _searchController.clear();
+                                    _sttSource = null;
+                                    _sttRawTranscript = null;
+                                    _voiceGeneration++;
+                                    _session = _session.copyWith(
+                                      activeRequestId:
+                                          _session.activeRequestId + 1,
+                                    );
+                                    _isLoading = false;
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                key: const Key('submit_search_button'),
+                                tooltip: 'Search',
+                                icon: const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 20,
+                                  color: kRallyAccent,
+                                ),
+                                onPressed: _executeNaturalLanguageSearch,
+                              ),
+                            ],
+                          )
+                        : null,
+                    filled: true,
+                    fillColor:
+                        isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF1F4F9),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.lg,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      borderSide: const BorderSide(
+                        color: kRallyAccent,
+                        width: 1.5,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                  ),
+                  onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // Two voice modes presented as deliberate product choices.
+                // Both remain fully operational and independent; neither falls
+                // back to the other. Transcript is editable and never
+                // auto-submitted.
                 Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        textDirection: _selectedLanguage.isRtl
-                            ? TextDirection.rtl
-                            : TextDirection.ltr,
-                        textAlign: _selectedLanguage.isRtl
-                            ? TextAlign.right
-                            : TextAlign.left,
-                        decoration: InputDecoration(
-                          hintText: 'Search rallies, drivers, jumps, or ask a question...',
-                          hintStyle: const TextStyle(fontSize: 13),
-                          prefixIcon: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Color(0xFF1E88E5),
-                            size: 20,
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 18),
-                                  onPressed: () {
-                                    unawaited(_nativeSpeechService.cancelListening());
-                                    unawaited(_cloudSpeechService.cancelListening());
-                                    setState(() {
-                                      _searchController.clear();
-                                      _sttSource = null;
-                                      _sttRawTranscript = null;
-                                      _voiceGeneration++;
-                                      _session = _session.copyWith(
-                                        activeRequestId:
-                                            _session.activeRequestId + 1,
-                                      );
-                                      _isLoading = false;
-                                    });
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: isDark
-                              ? const Color(0xFF2A2A2A)
-                              : Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF1E88E5),
-                              width: 1.5,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? Colors.blue.withValues(alpha: 0.4)
-                                  : Colors.blue.withValues(alpha: 0.3),
-                            ),
-                          ),
-                        ),
-                        onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                      child: VoiceSearchButton(
+                        key: const Key('cloud_voice_button'),
+                        speechService: _cloudSpeechService,
+                        selectedLanguage: _selectedLanguage,
+                        showLabel: true,
+                        label: 'Cloud voice',
+                        tooltipPrefix: 'Cloud voice',
+                        idleIcon: Icons.cloud_rounded,
+                        onBeforeStart: () async {
+                          setState(() {
+                            _voiceGeneration++;
+                          });
+                          await _nativeSpeechService.cancelListening();
+                        },
+                        onTranscriptReceived: (transcript) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: transcript,
+                            source: 'CLOUD',
+                            generation: _voiceGeneration,
+                          );
+                        },
+                        onResultDetailed: (result) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: result.text,
+                            source: 'CLOUD',
+                            generation: _voiceGeneration,
+                            detailed: result,
+                          );
+                        },
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    VoiceSearchButton(
-                      key: const Key('native_voice_button'),
-                      speechService: _nativeSpeechService,
-                      selectedLanguage: _selectedLanguage,
-                      label: 'Native Voice',
-                      tooltipPrefix: 'Native Voice',
-                      idleIcon: Icons.phone_android_rounded,
-                      onBeforeStart: () async {
-                        setState(() {
-                          _voiceGeneration++;
-                        });
-                        await _cloudSpeechService.cancelListening();
-                      },
-                      onTranscriptReceived: (transcript) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: transcript,
-                          source: 'NATIVE',
-                          generation: _voiceGeneration,
-                        );
-                      },
-                      onResultDetailed: (result) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: result.text,
-                          source: 'NATIVE',
-                          generation: _voiceGeneration,
-                          detailed: result,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 6),
-                    VoiceSearchButton(
-                      key: const Key('cloud_voice_button'),
-                      speechService: _cloudSpeechService,
-                      selectedLanguage: _selectedLanguage,
-                      label: 'Cloud Whisper',
-                      tooltipPrefix: 'Cloud Whisper',
-                      idleIcon: Icons.cloud_outlined,
-                      onBeforeStart: () async {
-                        setState(() {
-                          _voiceGeneration++;
-                        });
-                        await _nativeSpeechService.cancelListening();
-                      },
-                      onTranscriptReceived: (transcript) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: transcript,
-                          source: 'CLOUD',
-                          generation: _voiceGeneration,
-                        );
-                      },
-                      onResultDetailed: (result) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: result.text,
-                          source: 'CLOUD',
-                          generation: _voiceGeneration,
-                          detailed: result,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: _executeNaturalLanguageSearch,
-                      icon: const Icon(Icons.search_rounded, size: 18),
-                      label: const Text('Search'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: VoiceSearchButton(
+                        key: const Key('native_voice_button'),
+                        speechService: _nativeSpeechService,
+                        selectedLanguage: _selectedLanguage,
+                        showLabel: true,
+                        label: 'On-device voice',
+                        tooltipPrefix: 'On-device voice',
+                        idleIcon: Icons.smartphone_rounded,
+                        onBeforeStart: () async {
+                          setState(() {
+                            _voiceGeneration++;
+                          });
+                          await _cloudSpeechService.cancelListening();
+                        },
+                        onTranscriptReceived: (transcript) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: transcript,
+                            source: 'NATIVE',
+                            generation: _voiceGeneration,
+                          );
+                        },
+                        onResultDetailed: (result) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: result.text,
+                            source: 'NATIVE',
+                            generation: _voiceGeneration,
+                            detailed: result,
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
-                if (_sttSource != null && _searchController.text.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6, left: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _sttSource == 'NATIVE'
-                              ? Icons.phone_android_rounded
-                              : Icons.cloud_outlined,
-                          size: 14,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_sttSource == 'NATIVE' ? 'Native' : 'Cloud Whisper'} transcript'
-                          '${(_sttRawTranscript != null && _sttRawTranscript!.trim().toLowerCase() != _searchController.text.trim().toLowerCase()) ? ' (edited)' : ''}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white60 : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
@@ -1277,6 +1293,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             onRollbackHistory: _handleRollbackHistory,
             onClearAll: _handleClearAll,
           ),
+
+          // 2b. Offline / connectivity banner (product-tone: headline +
+          //     literal explanation). Never styles results as an error.
+          if (_offlineActive)
+            OfflineBanner(
+              state: _offlineState,
+              age: _offlineAge,
+              actionLabel: _offlineState == OfflineUxState.noLocalSnapshot ? 'Sync now' : null,
+              onAction: _offlineState == OfflineUxState.noLocalSnapshot
+                  ? () => unawaited(_offlineSync?.sync() ?? Future.value())
+                  : null,
+            ),
 
           // 3. Inline Clarification Card (if disambiguation required)
           if (_clarificationQuestion != null)
@@ -1291,87 +1319,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               }),
             ),
 
-          // 4. Interpreted Natural-Language Feedback Bar + Telemetry
-          if (_interpretedSummary != null)
+          // 4. Results summary line. The interpretation itself is shown as the
+          //    removable chip bar above (ActiveContextChipsBar); no raw
+          //    schema/intent/pipe string is exposed here. Shown only when there
+          //    are results to describe.
+          if (_searchResponse != null &&
+              _searchResponse!.results.isNotEmpty &&
+              !_isLoading)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                border: Border(
-                  bottom: BorderSide(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _interpretedSummary!,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (_lastNlResult != null) ...[
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () =>
-                          _showTelemetryDialog(context, _lastNlResult!),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.25,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.analytics_outlined,
-                              size: 13,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_lastNlResult!.totalLatencyMs > 0 ? "${_lastNlResult!.totalLatencyMs}ms" : _lastNlResult!.parseResult.formattedLatency} · ${_lastNlResult!.parseResult.formattedCost}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-          // 5. Results Count & Header Bar
-          Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: isDark ? const Color(0xFF141414) : Colors.grey.shade100,
             child: Row(
@@ -1425,7 +1380,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               _searchResponse != null &&
               _searchResponse!.results.isNotEmpty)
             SuggestedFollowUpsBar(
-              suggestions: suggestions,
+              suggestions: suggestions.take(3).toList(),
               onSuggestionSelected: _handleSuggestionSelected,
             ),
 
@@ -1458,125 +1413,353 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
   }
 
-  Widget _buildDynamicResultsView(BuildContext context) {
-    if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  // Curated, non-overwhelming example queries for the first-launch state.
+  static const List<String> _exampleQueries = [
+    'Rallies in Ireland in 2025',
+    "Show Max Freeman's rallies",
+    'Jump highlights from Rally Alūksne',
+    'Who won Rally Donegal?',
+  ];
+
+  void _runExampleQuery(String query) {
+    _searchController.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
+    _executeNaturalLanguageSearch();
+  }
+
+  Widget _buildFirstLaunchHero(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rally Search',
+            style: AppText.screenTitle.copyWith(color: palette.primaryText),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Search rallies, drivers, and moments using natural language or voice.',
+            style: AppText.body.copyWith(
+              color: palette.secondaryText,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Text(
+            'Try',
+            style: AppText.label.copyWith(color: palette.secondaryText),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ..._exampleQueries.map(
+            (q) => Semantics(
+              button: true,
+              label: 'Example search: $q',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadii.control),
+                onTap: () => _runExampleQuery(q),
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppRadii.control),
+                    border: Border.all(color: palette.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.north_east_rounded,
+                        size: 16,
+                        color: kRallyAccent,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          q,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: palette.primaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Collects the active query's filters as removable chips (field/value/label)
+  /// using the same deterministic removal path as [ActiveContextChipsBar].
+  List<({String field, dynamic value, String label})> _activeFilters() {
+    final q = _session.activeQuery;
+    final out = <({String field, dynamic value, String label})>[];
+    for (final r in q.rallyNames) {
+      out.add((field: 'rally', value: r, label: r));
+    }
+    for (final d in q.driverNames) {
+      out.add((field: 'driver', value: d, label: d));
+    }
+    for (final c in q.countries) {
+      if (c.toUpperCase() == 'ALL') continue;
+      out.add((field: 'country', value: c, label: c));
+    }
+    for (final y in q.years) {
+      out.add((field: 'year', value: y, label: '$y'));
+    }
+    for (final a in q.actionTypes) {
+      if (a.toUpperCase() == 'ALL') continue;
+      final label = a.isNotEmpty ? '${a[0].toUpperCase()}${a.substring(1)}' : a;
+      out.add((field: 'action', value: a, label: label));
+    }
+    for (final city in q.cities) {
+      out.add((field: 'city', value: city, label: city));
+    }
+    return out;
+  }
+
+  Widget _removableFilterChip(
+    AppPalette palette, {
+    required String label,
+    required VoidCallback onRemove,
+  }) {
+    return Semantics(
+      button: true,
+      label: 'Remove filter $label',
+      child: Material(
+        color: palette.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadii.control),
+        child: InkWell(
+          onTap: onRemove,
+          borderRadius: BorderRadius.circular(AppRadii.control),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: palette.primaryText,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.close_rounded, size: 15, color: palette.secondaryText),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Lightweight inline easter-egg / personality response card. Search-first,
+  /// not a chatbot: a small rally-themed card, no avatar/persona, no bubble.
+  Widget _buildSpecialResponse(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Container(
+        key: const Key('special_response_card'),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: palette.surface,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+          border: Border.all(color: palette.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              _loadingStatus,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            const Text('🏁', style: TextStyle(fontSize: 22)),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  _specialMessage ?? '',
+                  style: AppText.body.copyWith(
+                    color: palette.primaryText,
+                    height: 1.35,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    if (_specialMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.sports_motorsports_rounded,
-                size: 52,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _specialMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
-          ),
+  Widget _buildErrorState(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final understanding = _errorKind == _SearchErrorKind.understanding;
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
         ),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                color: Colors.red,
-                size: 48,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _errorMessage!,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              understanding
+                  ? Icons.search_off_rounded
+                  : Icons.cloud_off_rounded,
+              size: 52,
+              color: palette.secondaryText,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                understanding
+                    ? "We couldn't turn that into a search"
+                    : 'Search is temporarily unavailable',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+                style: AppText.sectionTitle
+                    .copyWith(fontSize: 17, color: palette.primaryText),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              understanding
+                  ? 'Try rephrasing — for example, “rallies in Ireland in 2025”.'
+                  : 'Please check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: AppText.metadata.copyWith(color: palette.secondaryText),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            if (understanding)
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final q in _exampleQueries.take(2))
+                    ActionChip(
+                      label: Text(q, style: const TextStyle(fontSize: 12.5)),
+                      onPressed: () => _runExampleQuery(q),
+                    ),
+                ],
+              )
+            else
+              FilledButton.icon(
                 onPressed: () => _executeDeterministicSearch(),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Try again'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final filters = _activeFilters();
+    final candidates = _lastNlResult?.candidates ?? const [];
+    final resultLabel = _resultTypeLabel(_session.activeQuery.intent);
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off_rounded, size: 56, color: palette.secondaryText),
+            const SizedBox(height: AppSpacing.md),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                'No $resultLabel found',
+                textAlign: TextAlign.center,
+                style: AppText.sectionTitle
+                    .copyWith(fontSize: 18, color: palette.primaryText),
+              ),
+            ),
+            if (_emptyResultsMessage != null &&
+                _emptyResultsMessage!.trim().isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _emptyResultsMessage!,
+                textAlign: TextAlign.center,
+                style: AppText.metadata.copyWith(color: palette.secondaryText),
               ),
             ],
-          ),
-        ),
-      );
-    }
-
-    if (_searchResponse == null || _searchResponse!.results.isEmpty) {
-      final theme = Theme.of(context);
-      final availableCandidates = _lastNlResult?.candidates ?? const [];
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.search_off_rounded,
-                size: 64,
-                color: Colors.grey.withValues(alpha: 0.4),
-              ),
-              const SizedBox(height: 16),
+            if (filters.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.lg),
               Text(
-                _emptyResultsMessage ?? 'No search results found',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+                'Filters',
+                style: AppText.label.copyWith(color: palette.secondaryText),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Active search context is preserved. Try removing a filter or searching for another event.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final f in filters)
+                    _removableFilterChip(
+                      palette,
+                      label: f.label,
+                      onRemove: () => _handleRemoveFilter(f.field, f.value),
+                    ),
+                ],
               ),
-              if (availableCandidates.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Did you mean?',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.center,
-                  children: availableCandidates.map((cand) {
-                    final icon = _getCandidateIcon(cand.type);
-                    return ActionChip(
-                      avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Tap a filter to remove it and broaden your search.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12.5, color: palette.secondaryText),
+              ),
+            ],
+            if (candidates.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Did you mean',
+                style: AppText.label.copyWith(color: palette.secondaryText),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final cand in candidates)
+                    ActionChip(
+                      avatar: Icon(_getCandidateIcon(cand.type),
+                          size: 16, color: palette.accent),
                       label: Text(
                         cand.subtitle != null
-                            ? '${cand.canonicalName} (${cand.subtitle})'
+                            ? '${cand.canonicalName} · ${cand.subtitle}'
                             : cand.canonicalName,
                         style: const TextStyle(
                           fontSize: 12.5,
@@ -1584,19 +1767,22 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                         ),
                       ),
                       onPressed: () => _onSelectCandidate(cand),
-                    );
-                  }).toList(),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _handleClearAll,
+                  icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                  label: const Text('Start over'),
                 ),
-              ],
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _handleClearAll,
-                    icon: const Icon(Icons.clear_all_rounded),
-                    label: const Text('Reset Session'),
-                  ),
+                if (_session.activeQuery.intent != SearchIntent.searchRallies)
                   FilledButton.icon(
                     onPressed: () {
                       setState(() {
@@ -1608,15 +1794,38 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                       });
                       _executeDeterministicSearch(resetPage: true);
                     },
-                    icon: const Icon(Icons.flag_rounded),
-                    label: const Text('Show All Rallies'),
+                    icon: const Icon(Icons.flag_rounded, size: 18),
+                    label: const Text('Search all rallies'),
                   ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  Widget _buildDynamicResultsView(BuildContext context) {
+    // First-launch hero: no automatic search runs on open, so until the user
+    // searches we show the product title + example queries instead of results.
+    if (!_hasSearched && !_isLoading) {
+      return _buildFirstLaunchHero(context);
+    }
+
+    if (_isLoading) {
+      return ResultsSkeleton(label: _loadingStatus);
+    }
+
+    if (_specialMessage != null) {
+      return _buildSpecialResponse(context);
+    }
+
+    if (_errorMessage != null) {
+      return _buildErrorState(context);
+    }
+
+    if (_searchResponse == null || _searchResponse!.results.isEmpty) {
+      return _buildNoResultsState(context);
     }
 
     final resp = _searchResponse!;
@@ -1676,7 +1885,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           itemCount: actions.length,
           itemBuilder: (ctx, idx) => VideoActionCard(
             action: actions[idx],
-            onPlay: (act) => ActionPlayerModal.show(ctx, act),
+            onPlay: _offlineActive
+                ? (act) => _showPlaybackGated(ctx)
+                : (act) => ActionPlayerModal.show(ctx, act),
           ),
         );
 
@@ -1685,7 +1896,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: driverVids.length,
-          itemBuilder: (ctx, idx) => VideoResultCard(video: driverVids[idx]),
+          itemBuilder: (ctx, idx) => VideoResultCard(video: driverVids[idx], offline: _offlineActive),
         );
 
       case SearchIntent.getTopUploaders:

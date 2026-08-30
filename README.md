@@ -4,6 +4,8 @@ AI Rally Search is a search-first Flutter + FastAPI application for rally events
 
 The core rule is simple: **LLMs interpret language; deterministic backend code owns identity, execution, and relational truth.**
 
+The Flutter app's AI-search path runs against the **Python FastAPI backend exclusively**. There is no legacy in-app search engine at runtime and no `SEARCH_BACKEND` switch; if the backend is unreachable the app shows a clean error rather than falling back to any in-app engine.
+
 ## Final stack
 
 ### Text
@@ -12,7 +14,7 @@ The core rule is simple: **LLMs interpret language; deterministic backend code o
 User text
 → Gemini `gemini-3.5-flash-lite`
 → SearchQuery
-→ Conversation Semantics
+→ Conversation Semantics + deterministic direct-filter / intent recovery
 → IntentResolutionRouter
 → OpenEntity / Direct Filters
 → SearchPlanBuilder
@@ -110,14 +112,22 @@ REMOVE
 CLEAR
 ```
 
-Resolved canonical referents are preserved across turns. Example:
+Resolved canonical referents are preserved across turns, and are backed by deterministic protections so conversation correctness does not depend solely on the model re-emitting context:
+
+- **Canonical identities persist**: a confidently-resolved rally/driver keeps its canonical ID (`activeRallyId` / `activeDriverId`) across follow-ups, so `Show Max Freeman's rallies → show his videos` reuses the same canonical driver rather than re-resolving by fuzzy match.
+- **Referent before clarification**: a missing required subject falls back to a type-compatible active referent before asking (`Show Rally Aluksne → who won it?` reuses the active rally; a driver referent is never used as a rally).
+- **Grounded direct-filter recovery**: explicit countries/years present in the raw text but dropped by the model are restored deterministically (e.g. `crashes in ireland in 2025`). Only literal raw-text values are restored — nothing is invented.
+- **Safe follow-up intent recovery**: a strong video/action follow-up about the active rally (`show videos from that rally`) is corrected to a video intent even if the model returns `SEARCH_RALLIES`; broad rally searches like `Rallies in Ireland` are left untouched.
+- **Ambiguity beats cross-type recovery**: an ambiguous rally clarifies rather than being silently substituted with a person.
+
+Example:
 
 ```text
 Show Rally Aluksne
 → Show videos from that rally
 ```
 
-The second turn reuses the canonical event identity.
+The second turn reuses the canonical event identity and executes a video-action search.
 
 Clarification selections preserve the **pending query**, replace only the ambiguous dimension, use the selected canonical ID directly, preserve referents/generation, and do not trigger another LLM call.
 
@@ -219,11 +229,21 @@ Final 392-case comparison:
 
 Selected QU model: `gemini-3.5-flash-lite`.
 
-After deterministic hardening replay:
+After deterministic hardening replay (historical baseline):
 
-- system success: **80.36%**
+- system success: **80.36%** (315/392)
 - `P(success | exact query)`: **84.92%**
 - false confident: **0**
+
+After the ACC-1/2/3/4/6 accuracy hardening, the **same frozen Gemini outputs** were replayed through the newer downstream pipeline (no new paid QU run; the model did not change). Downstream-only frozen replay progression (same evaluator/gold; not interchangeable with the raw-model or historical-harness numbers above):
+
+- pre-ACC controlled re-measurement: **80.10%** (314/392) — the A/B reference for the ACC deltas (vs the 315/392 historical-harness baseline above)
+- initial post-ACC replay: **79.08%** (310/392) — the strict ambiguity-before-cross-type-recovery rule
+- **refined ACC-6 (current): 79.59% (312/392)** — recovery now gates on rally-match *strength*
+- false confident: **0** throughout
+- conversation flows: **8/8**, adversarial: **21/22** (0 wrong-confident), live sanity check: **26 calls, 0 wrong-confident**
+
+The refined replay recovers the two `act_*` cases (confident PERSON misfiled into `rallyNames`) while keeping the two `nsy_*` "Mayo …" cases as safe RALLY clarifications. The pre-ACC `314/392` is **not** the target: two of those prior "successes" were wrong-entity executions ("Mayo …" → driver "Simon May") the lenient evaluator scored as passing. The conversation-facing fixes (ACC-1/3/4) barely register on the single-turn frozen set; they are validated by the conversation/live runs. See `backend/benchmarks/results/post_accuracy_hardening_20260829_212927/` and `backend/benchmarks/results/acc6_refinement_20260830_024000/`.
 
 ### STT
 
@@ -248,6 +268,9 @@ Current provisional STT: `whisper-1`.
 - Clarification chip context preservation.
 - Exact canonical rally-name precedence before fuzzy ambiguity.
 - Multi-driver fallback-ID resolution fix.
+- Python-only AI-search cutover (legacy runtime backend switch removed).
+- Query-understanding config hardening (no silent mock, fail-fast on missing key, pinned model).
+- Deterministic downstream accuracy protections: follow-up video-intent recovery (ACC-1), grounded direct-filter recovery (ACC-2), canonical driver-referent preservation (ACC-3), referent-before-clarification (ACC-4), strength-gated ambiguity-before-cross-type-recovery (ACC-6, refined).
 
 ## Deployment
 
@@ -268,6 +291,12 @@ OPENAI_API_KEY=<secret>
 
 `ENTITY_SEARCH_FALLBACK_MODE` must use an approved explicit value and invalid values should fail fast.
 
+Query-understanding configuration is hardened:
+
+- The **mock** parser cannot activate silently in production — `provider=mock` is rejected unless `ALLOW_MOCK_QUERY_UNDERSTANDING=true` (tests only).
+- A real provider with a missing key **fails fast** with a clear error (e.g. `provider=gemini` without `GEMINI_API_KEY`).
+- Only the explicit `QUERY_UNDERSTANDING_*` variables select provider/model. There is **no** implicit fallback to a stale provider or to an unbenchmarked model; when unset, Gemini pins to `gemini-3.5-flash-lite`.
+
 ## Deferred items
 
 - Larger human Whisper validation.
@@ -282,3 +311,28 @@ OPENAI_API_KEY=<secret>
 - [LEARNINGS](LEARNINGS.md)
 - [SUMMARY](SUMMARY.md)
 - [CONTEXT](CONTEXT.md)
+- [OFFLINE_SEARCH_ARCHITECTURE](OFFLINE_SEARCH_ARCHITECTURE.md)
+
+## Offline / low-bandwidth search
+
+Normal rally search works offline, on intermittent connectivity, and on very low
+bandwidth — deterministically and without any on-device LLM, DB credentials, or
+direct MySQL access.
+
+- **Snapshot:** the backend serves a compact, read-only snapshot at
+  `GET /v1/offline/snapshot?segment=core|full`. The device stores it in SQLite
+  (`sqflite`). `core` (~5 MB) is the mandatory bootstrap; video metadata is an
+  opt-in `full` segment.
+- **Offline pipeline:** `raw text → local special-query matcher → deterministic
+  parser → local entity resolver → 9 fixed SQLite strategies`, all in
+  `lib/services/offline/`. It emits the same `SearchQuery`/`SearchResponse`
+  shapes as online, so the UI render path is shared.
+- **Connectivity policy:** `NETWORK_FIRST_WITH_LOCAL_FALLBACK` — online is
+  authoritative when reachable; on offline/timeout/error the clearly-labelled
+  local result is shown; a late online result is **never** swapped in silently.
+- **Safety:** the offline benchmark holds **wrong-confident = 0**, matches the
+  online oracle on all 9 intents (16/16), and clarifies rather than guesses.
+  See `test/offline/` and `OFFLINE_SEARCH_ARCHITECTURE.md`.
+- **Voice/video offline:** cloud voice = network-only; on-device voice =
+  device-dependent (transcript editable, no auto-submit); video discovery works
+  offline, playback is gated.

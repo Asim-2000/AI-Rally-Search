@@ -138,17 +138,18 @@ class RallyParticipationResult {
     );
   }
 
+  /// Compact finish-position label: `P1 · Winner`, `P2`, … and `Participated`
+  /// (or `DNF`) when there is no classified position. Meaning is preserved; the
+  /// verbose "1st Place (Winner)" form was retired in Phase 3.
   String get finishPositionDisplay {
-    if (posOverall == null || posOverall! <= 0) {
-      if (role != null && role!.isNotEmpty) {
-        return 'Participated ($role)';
-      }
+    final p = posOverall;
+    if (p == null || p <= 0) {
+      final r = role?.trim().toLowerCase();
+      if (r == 'dnf' || r == 'retired') return 'DNF';
       return 'Participated';
     }
-    if (posOverall == 1) return '🏆 1st Place (Winner)';
-    if (posOverall == 2) return '🥈 2nd Place';
-    if (posOverall == 3) return '🥉 3rd Place';
-    return 'Finished ${posOverall}th';
+    if (p == 1) return 'P1 · Winner';
+    return 'P$p';
   }
 }
 

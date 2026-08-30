@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/search_results.dart';
+import '../theme/app_theme.dart';
+import 'rally_card_shell.dart';
 
 class DriverParticipationCard extends StatelessWidget {
   final RallyParticipationResult participation;
@@ -17,24 +19,12 @@ class DriverParticipationCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final isWin = participation.posOverall == 1;
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isWin
-              ? Colors.amber.shade400
-              : (isDark ? Colors.white12 : Colors.grey.shade200),
-          width: isWin ? 1.5 : 1.0,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+    return RallyCardShell(
+      onTap: onTap,
+      edgeColor: isWin ? kRallyGold : null,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Event header with trophy badge if winner
@@ -47,10 +37,7 @@ class DriverParticipationCard extends StatelessWidget {
                       children: [
                         Text(
                           participation.eventName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                          style: AppText.cardTitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -166,7 +153,7 @@ class DriverParticipationCard extends StatelessWidget {
                           const Icon(Icons.timer_outlined, size: 14, color: Colors.blueGrey),
                           const SizedBox(width: 4),
                           Text(
-                            '${participation.totalTime}s',
+                            formatRaceTime(participation.totalTime),
                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                           ),
                         ],
@@ -177,7 +164,6 @@ class DriverParticipationCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

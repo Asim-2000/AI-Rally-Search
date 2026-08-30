@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/entity_candidate.dart';
+import '../theme/app_theme.dart';
 
-/// Inline clarification card presenting disambiguation candidates while preserving
-/// already-resolved context.
+/// Inline clarification presented as a helpful question with comfortably
+/// tappable candidate rows. Presentation only — selection still flows through
+/// [onCandidateSelected], preserving the pending parsed query and canonical-ID
+/// behaviour unchanged.
 class ClarificationCard extends StatelessWidget {
   final String question;
   final List<EntityCandidate> candidates;
@@ -17,89 +20,144 @@ class ClarificationCard extends StatelessWidget {
     this.onDismiss,
   });
 
+  /// Contextual title derived from the candidate type when they agree,
+  /// otherwise the backend-provided question.
+  String get _title {
+    if (candidates.isEmpty) return question;
+    final types = candidates.map((c) => c.type).toSet();
+    if (types.length != 1) return question;
+    switch (types.first) {
+      case EntityType.driver:
+        return 'Which driver did you mean?';
+      case EntityType.rally:
+        return 'Which rally did you mean?';
+      case EntityType.stage:
+        return 'Which stage did you mean?';
+      case EntityType.city:
+        return 'Which location did you mean?';
+      case EntityType.uploader:
+        return 'Which uploader did you mean?';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final palette = AppPalette.of(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2000) : const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.amber.shade700.withValues(alpha: 0.4),
-          width: 1,
-        ),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: palette.accent.withValues(alpha: 0.35)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.help_outline_rounded, color: Colors.amber.shade800, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Clarification Needed',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Colors.amber.shade900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      question,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-              if (onDismiss != null)
-                InkWell(
-                  onTap: onDismiss,
-                  borderRadius: BorderRadius.circular(12),
-                  child: const Padding(
-                    padding: EdgeInsets.all(4.0),
-                    child: Icon(Icons.close_rounded, size: 16),
-                  ),
-                ),
-            ],
-          ),
-          if (candidates.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: candidates.map((candidate) {
-                final icon = _getCandidateIcon(candidate.type);
-                return ActionChip(
-                  avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
-                  label: Text(
-                    candidate.subtitle != null
-                        ? '${candidate.canonicalName} (${candidate.subtitle})'
-                        : candidate.canonicalName,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                  backgroundColor: isDark ? Colors.white12 : Colors.white,
-                  side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.4)),
-                  onPressed: () => onCandidateSelected(candidate),
-                );
-              }).toList(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.sm,
             ),
-          ],
+            child: Row(
+              children: [
+                Icon(Icons.help_outline_rounded,
+                    color: palette.accent, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    _title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: palette.primaryText,
+                    ),
+                  ),
+                ),
+                if (onDismiss != null)
+                  IconButton(
+                    tooltip: 'Dismiss',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: onDismiss,
+                  ),
+              ],
+            ),
+          ),
+          ...candidates.map((c) => _candidateRow(context, palette, c)),
+          const SizedBox(height: AppSpacing.xs),
         ],
       ),
     );
   }
 
-  IconData _getCandidateIcon(EntityType type) {
+  Widget _candidateRow(
+    BuildContext context,
+    AppPalette palette,
+    EntityCandidate candidate,
+  ) {
+    final subtitle = candidate.subtitle;
+    return Semantics(
+      button: true,
+      label: subtitle != null
+          ? '${candidate.canonicalName}, $subtitle'
+          : candidate.canonicalName,
+      child: InkWell(
+        onTap: () => onCandidateSelected(candidate),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: palette.border)),
+          ),
+          child: Row(
+            children: [
+              Icon(_iconFor(candidate.type), size: 20, color: palette.accent),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      candidate.canonicalName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: palette.primaryText,
+                      ),
+                    ),
+                    if (subtitle != null && subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: palette.secondaryText,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  size: 20, color: palette.secondaryText),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _iconFor(EntityType type) {
     switch (type) {
       case EntityType.driver:
         return Icons.person_rounded;

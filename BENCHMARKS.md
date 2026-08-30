@@ -748,3 +748,114 @@ Still deferred:
 - future model re-benchmarking if provider quality, latency, or pricing changes materially
 
 No additional model benchmarking is currently required for the existing product scope.
+
+# Post-Accuracy-Hardening Benchmark
+
+> This section is additive. It does **not** revise any historical phase above. It records a **downstream-only** re-evaluation after the ACC-1/2/3/4/6 accuracy hardening.
+
+- **Date**: 2026-08-29 (`post_accuracy_hardening_20260829_212927`)
+- **Dataset**: 392 cases · SHA256 `b7fd39226592281c565c0e835c16b460654f43cd2da4bc09655a5abf06972662` (verified)
+- **Frozen Flash-Lite output source**: `full_20260829_053539/qu_raw_results.jsonl` (392 cached `parsed_query`)
+- **Prompt SHA256**: `c82c75d4d10017478084b4c37ee0be005b910bd67cb6c45cf64452d3a2e2c09b` — unchanged vs the frozen run
+- **Why cached replay**: the change is downstream-only (deterministic pipeline). Replaying the frozen model outputs isolates the pipeline's effect and avoids paying for a new QU run.
+- **No full paid 392-case QU rerun occurred.** Only a 26-call live sanity check used the model.
+
+## Historical raw model results (unchanged)
+
+The Gemini Flash-Lite raw metrics (Field F1 89.3%, exact match 64.3%, etc.) are historical facts from the frozen run and are preserved as-is. **The model did not become more accurate; only the deterministic downstream pipeline changed.**
+
+## Current downstream system results
+
+Using the **same frozen Gemini outputs**, the newer deterministic pipeline changed system success as follows:
+
+| Metric | Previous (hardened baseline) | Current (post-ACC) | Delta |
+|---|---:|---:|---:|
+| System success | 315/392 (80.36%) documented · 314/392 (80.10%) re-measured | **310/392 (79.08%)** | −4 (−1.02 pp) |
+| False confident | 0 | **0** | 0 |
+| P(success \| exact query) | 84.92% | **84.52%** | ~0 |
+
+The −4 is entirely the stricter **ACC-6** rule. Case fixes: **0**; regressions (by score): **4** — `act_0344`, `act_0352` (safe over-clarification of a misfiled person), `nsy_0207`, `nsy_0208` (ACC-6 replaced a *wrong-entity* execution — "Mayo Forestry" → driver "Simon May" — with a safe clarification; the lenient evaluator had scored the wrong execution as success). No wrong-confident was introduced anywhere. **The `act_*` over-clarifications were subsequently fixed — see [ACC-6 Refinement](#acc-6-refinement) below.**
+
+## ACC-6 Refinement
+
+*Follow-up (`20260830_024000`) that replaced the overly-strict ACC-6 rule. Same frozen Flash-Lite outputs, same evaluator/gold, live index, **0 paid LLM calls**. The `310/392` above is preserved as historical.*
+
+Downstream frozen-replay progression (same evaluator/gold throughout):
+
+| Stage | System success | False confident |
+|---|---:|---:|
+| Pre-ACC controlled baseline | 314/392 (80.10%) | 0/392 |
+| Initial ACC hardening (strict ACC-6) | 310/392 (79.08%) | 0/392 |
+| **Refined ACC-6 (current)** | **312/392 (79.59%)** | **0/392** |
+
+New regressions after refinement: **0**.
+
+**Distinguishing signal.** Cross-type PERSON recovery now gates on rally-match *strength*, not the raw `is_ambiguous` flag: a **weak/spurious** rally candidate *below* the confidence threshold (0.75) no longer blocks recovery, while a **genuine strong** rally ambiguity (≥1 candidate at/above the threshold) still clarifies. Measured tops: `act_0344` 0.543, `act_0352` 0.518 (spurious → recover PERSON); `nsy_0207`/`nsy_0208` 0.940 (genuine → clarify RALLY).
+
+**Case-level interpretation.**
+
+- `act_0344`, `act_0352` → **genuine regressions fixed** (CLARIFY → RESOLVED, correct driver recovered).
+- `nsy_0207`, `nsy_0208` → **remain evaluator-scored failures** but are semantically **safer/correct** RALLY clarifications (the "Mayo …" phrase is genuinely ambiguous across two real editions).
+
+**The final resolver was NOT tuned to force the score back to 314/392.** Doing so would reintroduce the `nsy_*` wrong-entity executions ("Mayo …" → driver "Simon May"). Verdict: **`ACC6_REFINEMENT_VALIDATED`**. Artifacts: `backend/benchmarks/results/acc6_refinement_20260830_024000/`.
+
+## ACC impact (frozen set)
+
+- **ACC-1** (follow-up video intent): 1 activation, neutral.
+- **ACC-2** (grounded direct-filter recovery): **0 activations** — no frozen case had a model-dropped grounded country/year.
+- **ACC-3** (canonical driver referent): not exercised (single-turn set).
+- **ACC-4** (referent before clarification): 0 activations (single-turn set).
+- **ACC-6** (ambiguity before cross-type recovery): 4 flips (the entire delta).
+
+The conversation-facing fixes (ACC-1/3/4) barely register on the single-turn frozen set; they are validated below.
+
+## Conversation results
+
+8 end-to-end multi-turn flows through the real `ConversationalSearchService` + live DB (prebuilt per-turn model outputs, including the known buggy ones): **8/8 passed, 0 wrong-confident.**
+
+## Adversarial results
+
+22 single-turn adversarial cases through the live pipeline: **21/22 expected outcomes, 0 wrong-confident** (7 safe clarifications, 1 safe no-match; the one miss is a safe ASCII-vs-`ū` clarification). Plus 49 deterministic accuracy/safety unit tests pass.
+
+## Live validation
+
+- **Calls**: 26 real Gemini Flash-Lite calls · **Cost**: ~$0.0085
+- **Outcomes**: 23 RESOLVE / 2 safe CLARIFY / 1 ZERO · **0 exceptions · 0 wrong-confident**
+- **Latency** (pipeline incl. model): p50 ~1,310 ms, p95 ~1,895 ms
+- Both prior measured failures fixed: `show videos from that rally` → VIDEO_ACTIONS; `crashes in ireland in 2025` → resolved.
+
+## Failure categories (new this pass)
+
+`CROSS_TYPE_RECOVERY` — 2 safe over-clarifications (`act_*`; **fixed by the ACC-6 refinement above** — now RESOLVED to the correct driver); `EVALUATOR`/`GOLD` leniency — 2 (`nsy_*`, previously wrong-entity executions scored as success; now safe clarifications).
+
+## Final verdict
+
+`ACCURACY_HARDENING_VALIDATED_WITH_REGRESSIONS` — safety gate passes (false-confident 0 everywhere; ACC-6 net-removed real wrong-entity executions); conversation/live runs confirm ACC-1/2/3/4 deliver their intended fixes; the frozen −4 was a small, safe ACC-6 tradeoff. **Follow-up:** the ACC-6 refinement (see section above) recovered the 2 `act_*` cases → current **312/392 (79.59%)**, still 0 false-confident, verdict `ACC6_REFINEMENT_VALIDATED`.
+
+---
+
+## Offline Search Benchmark (2026-08-30)
+
+Deterministic corpus (`test/offline/offline_benchmark_test.dart`) over the real
+live-DB snapshot, plus execution parity against an oracle captured from the
+authoritative online pipeline (`backend/scripts/generate_offline_oracle.py`).
+
+| Metric | Value |
+|---|---|
+| **Wrong-confident (primary gate)** | **0** |
+| Intent accuracy | 100% |
+| Field F1 | 1.00 |
+| Entity-resolution accuracy | 100% |
+| Clarification accuracy | 100% |
+| Safe-unsupported rate | 100% |
+| Special-query accuracy (9 categories) | 100% |
+| Execution parity vs online oracle | **16/16 exact** (all 9 intents) |
+| `OFFLINE_COVERAGE_RATE` | 88.9% |
+
+Snapshot sizes (live DB): **core ~5.1 MB**, **full ~37 MB** (video metadata
+dominates; URLs only, no media). Artifacts:
+`backend/benchmarks/results/offline_search_<ts>/`.
+
+Verdict: `OFFLINE_SEARCH_VALIDATED` — coverage is honest and narrower than the
+online LLM by design; correctness/safety are exact, and the primary
+wrong-confident gate holds at 0.

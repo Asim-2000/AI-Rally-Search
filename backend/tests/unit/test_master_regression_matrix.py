@@ -101,7 +101,13 @@ async def test_shape_b_empty_entity_fields_recovery_aluqsne(entity_resolver):
     plan = router.route(query, raw_text="aluqsne")
     assert plan.needs_entity_resolution
 
-    context = SearchContext(extra={"unresolved_mentions": plan.unresolved_text_mentions})
+    # Mirror the production orchestrator, which populates BOTH the routing plan
+    # and the unresolved mentions in the context extras. Empty-entity recovery
+    # requires the routing plan to know which residual mentions are RALLY-typed.
+    context = SearchContext(extra={
+        "routing_plan": plan,
+        "unresolved_mentions": plan.unresolved_text_mentions,
+    })
     res = await entity_resolver.resolve(query, context=context)
 
     assert not res.requires_clarification

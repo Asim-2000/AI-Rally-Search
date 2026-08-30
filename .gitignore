@@ -55,3 +55,7 @@ test/eval/audio/human/*
 !test/eval/audio/human/.gitkeep
 test/eval/audio/human_private/*
 
+
+# Offline snapshot fixtures (large, generated from the live DB via backend/scripts)
+parity/offline/snapshot_*.json
+*.sqlite

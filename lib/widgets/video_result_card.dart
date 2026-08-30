@@ -2,18 +2,33 @@ import 'package:flutter/material.dart';
 import '../models/search_results.dart';
 import '../models/video_action.dart';
 import 'action_player_modal.dart';
+import 'rally_card_shell.dart';
 
 class VideoResultCard extends StatelessWidget {
   final VideoSearchResult video;
   final Function(VideoSearchResult)? onPlay;
 
+  /// When true, the clip is discoverable but streaming is gated (offline).
+  final bool offline;
+
   const VideoResultCard({
     super.key,
     required this.video,
     this.onPlay,
+    this.offline = false,
   });
 
   void _handlePlay(BuildContext context) {
+    if (offline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Found the clip — but the stream's off-stage. "
+              "You're offline, so the video can't play right now."),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
     if (onPlay != null) {
       onPlay!(video);
       return;
@@ -53,19 +68,10 @@ class VideoResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isDark ? Colors.white12 : Colors.grey.shade200,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => _handlePlay(context),
-        child: Row(
+    return RallyCardShell(
+      clip: true,
+      onTap: () => _handlePlay(context),
+      child: Row(
           children: [
             // Thumbnail container with play button
             Stack(
@@ -166,7 +172,6 @@ class VideoResultCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

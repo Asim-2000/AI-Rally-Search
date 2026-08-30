@@ -1,0 +1,282 @@
+{
+  "act_0344": {
+    "phrase": "Aaron Duville",
+    "rally_res_video": {
+      "strategy": "plausible_candidates",
+      "confidence": 0.543,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Ronde della Val Merula 2025",
+          "score": 0.543,
+          "baseScore": 0.543,
+          "type": "rally"
+        },
+        {
+          "name": "Rallye National du Pays de Fayence 2025",
+          "score": 0.461,
+          "baseScore": 0.461,
+          "type": "rally"
+        },
+        {
+          "name": "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "score": 0.46,
+          "baseScore": 0.46,
+          "type": "rally"
+        },
+        {
+          "name": "Rally Internazionale Golfo dell'Asinara 2026",
+          "score": 0.459,
+          "baseScore": 0.459,
+          "type": "rally"
+        },
+        {
+          "name": "Rallye Casinos do Algarve 2025",
+          "score": 0.449,
+          "baseScore": 0.449,
+          "type": "rally"
+        }
+      ]
+    },
+    "rally_res_nonvideo": {
+      "strategy": "plausible_candidates",
+      "confidence": 0.543,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Ronde della Val Merula 2025",
+          "score": 0.543,
+          "baseScore": 0.543,
+          "type": "rally"
+        },
+        {
+          "name": "Rallye National du Pays de Fayence 2025",
+          "score": 0.461,
+          "baseScore": 0.461,
+          "type": "rally"
+        },
+        {
+          "name": "AMF Mobilidade Rally Series - Ponte de Lima 2026",
+          "score": 0.46,
+          "baseScore": 0.46,
+          "type": "rally"
+        },
+        {
+          "name": "Rally Internazionale Golfo dell'Asinara 2026",
+          "score": 0.459,
+          "baseScore": 0.459,
+          "type": "rally"
+        },
+        {
+          "name": "Rallye Casinos do Algarve 2025",
+          "score": 0.449,
+          "baseScore": 0.449,
+          "type": "rally"
+        }
+      ]
+    },
+    "driver_check": {
+      "strategy": "clear_winner",
+      "confidence": 1.0,
+      "is_ambiguous": false,
+      "resolved": "Aaron Duville",
+      "options": []
+    },
+    "driver_top_conf": 1.0,
+    "min_conf_threshold": 0.75
+  },
+  "act_0352": {
+    "phrase": "Aaron Nau",
+    "rally_res_video": {
+      "strategy": "plausible_candidates",
+      "confidence": 0.518,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Rallye National du Pays de Fayence 2025",
+          "score": 0.518,
+          "baseScore": 0.518,
+          "type": "rally"
+        },
+        {
+          "name": "Samsonas Rally Fivemiletown 2026",
+          "score": 0.518,
+          "baseScore": 0.518,
+          "type": "rally"
+        },
+        {
+          "name": "Ronde della Val Merula 2025",
+          "score": 0.509,
+          "baseScore": 0.509,
+          "type": "rally"
+        },
+        {
+          "name": "McCafferty's Bars Donegal Forestry Rally 2025",
+          "score": 0.498,
+          "baseScore": 0.498,
+          "type": "rally"
+        },
+        {
+          "name": "Qatar International Rally 2026",
+          "score": 0.487,
+          "baseScore": 0.487,
+          "type": "rally"
+        }
+      ]
+    },
+    "rally_res_nonvideo": {
+      "strategy": "plausible_candidates",
+      "confidence": 0.518,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Rallye National du Pays de Fayence 2025",
+          "score": 0.518,
+          "baseScore": 0.518,
+          "type": "rally"
+        },
+        {
+          "name": "Samsonas Rally Fivemiletown 2026",
+          "score": 0.518,
+          "baseScore": 0.518,
+          "type": "rally"
+        },
+        {
+          "name": "Ronde della Val Merula 2025",
+          "score": 0.509,
+          "baseScore": 0.509,
+          "type": "rally"
+        },
+        {
+          "name": "McCafferty's Bars Donegal Forestry Rally 2025",
+          "score": 0.498,
+          "baseScore": 0.498,
+          "type": "rally"
+        },
+        {
+          "name": "Qatar International Rally 2026",
+          "score": 0.487,
+          "baseScore": 0.487,
+          "type": "rally"
+        }
+      ]
+    },
+    "driver_check": {
+      "strategy": "clear_winner",
+      "confidence": 1.0,
+      "is_ambiguous": false,
+      "resolved": "Aaron Nau",
+      "options": []
+    },
+    "driver_top_conf": 1.0,
+    "min_conf_threshold": 0.75
+  },
+  "nsy_0207": {
+    "phrase": "Mayo Forestry",
+    "rally_res_video": {
+      "strategy": "insufficient_gap",
+      "confidence": 0.94,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Mayo Forestry Rally 2025",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        },
+        {
+          "name": "Mayo Stages Rally 2026",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        }
+      ]
+    },
+    "rally_res_nonvideo": {
+      "strategy": "insufficient_gap",
+      "confidence": 0.94,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Mayo Forestry Rally 2025",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        },
+        {
+          "name": "Mayo Stages Rally 2026",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        }
+      ]
+    },
+    "driver_check": {
+      "strategy": "clear_winner",
+      "confidence": 0.846,
+      "is_ambiguous": false,
+      "resolved": "Simon May",
+      "options": []
+    },
+    "driver_top_conf": 0.846,
+    "min_conf_threshold": 0.75
+  },
+  "nsy_0208": {
+    "phrase": "Mayo Stages",
+    "rally_res_video": {
+      "strategy": "insufficient_gap",
+      "confidence": 0.94,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Mayo Forestry Rally 2025",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        },
+        {
+          "name": "Mayo Stages Rally 2026",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        }
+      ]
+    },
+    "rally_res_nonvideo": {
+      "strategy": "insufficient_gap",
+      "confidence": 0.94,
+      "is_ambiguous": true,
+      "resolved": null,
+      "options": [
+        {
+          "name": "Mayo Forestry Rally 2025",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        },
+        {
+          "name": "Mayo Stages Rally 2026",
+          "score": 0.94,
+          "baseScore": 0.94,
+          "type": "rally"
+        }
+      ]
+    },
+    "driver_check": {
+      "strategy": "clear_winner",
+      "confidence": 0.846,
+      "is_ambiguous": false,
+      "resolved": "Simon May",
+      "options": []
+    },
+    "driver_top_conf": 0.846,
+    "min_conf_threshold": 0.75
+  }
+}

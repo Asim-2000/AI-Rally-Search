@@ -1,0 +1,12 @@
+{
+  "calls": 26,
+  "outcomes": {
+    "RESOLVE": 23,
+    "CLARIFY": 2,
+    "ZERO": 1
+  },
+  "p50_ms": 1309.9,
+  "p95_ms": 1895.4,
+  "est_cost_usd": 0.008476,
+  "exceptions": 0
+}

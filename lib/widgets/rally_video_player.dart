@@ -13,6 +13,11 @@ class RallyVideoPlayer extends StatefulWidget {
   final double? initialEndTime;
   final VoidCallback? onActionCompleted;
 
+  /// When true, playback is gated: the video is discoverable from offline
+  /// metadata but streaming is unavailable. The player shows the rally-themed
+  /// "stream's off-stage" state instead of attempting a network load.
+  final bool offline;
+
   const RallyVideoPlayer({
     super.key,
     required this.videoUrl,
@@ -24,6 +29,7 @@ class RallyVideoPlayer extends StatefulWidget {
     this.initialStartTime,
     this.initialEndTime,
     this.onActionCompleted,
+    this.offline = false,
   });
 
   @override
@@ -82,6 +88,15 @@ class RallyVideoPlayerState extends State<RallyVideoPlayer> {
 
   Future<void> _initializePlayer({double? seekToSeconds, bool autoPlay = false}) async {
     if (_isLoading) return;
+
+    // Offline: never attempt a network stream. Playback is gated.
+    if (widget.offline) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = "You're offline, so the video can't play right now.";
+      });
+      return;
+    }
 
     final targetUrl = _activeAction?.videoUrl ?? _currentUrl ?? widget.videoUrl;
     if (targetUrl.isEmpty) {
@@ -356,8 +371,30 @@ class RallyVideoPlayerState extends State<RallyVideoPlayer> {
             if (_isInitialized && !_hasError && widget.showControls)
               _buildControlsOverlay(theme),
 
+            // Offline playback gate: metadata found, stream unavailable.
+            if (widget.offline && !_isInitialized)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.cloud_off_rounded, color: Colors.white70, size: 34),
+                      SizedBox(height: 8),
+                      Text("Found the clip — but the stream's off-stage",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 4),
+                      Text("You're offline, so the video can't play right now.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ),
+
             // Initial Play Button before load
-            if (!_isInitialized && !_isLoading && !_hasError)
+            if (!widget.offline && !_isInitialized && !_isLoading && !_hasError)
               Center(
                 child: InkWell(
                   onTap: () => _initializePlayer(

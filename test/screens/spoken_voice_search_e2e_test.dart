@@ -374,7 +374,7 @@ void main() {
         expect(textField.controller?.text, 'Donegal rally 2025');
 
         // Explicit submission enters the ordinary typed path.
-        await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+        await tester.tap(find.byKey(const Key('submit_search_button')));
         await tester.pump(const Duration(milliseconds: 300));
         expect(trackingNlService.searchTypedCallCount, 1);
         expect(trackingNlService.searchSpokenCallCount, 0);

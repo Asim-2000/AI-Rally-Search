@@ -1,0 +1,225 @@
+{
+  "total_flows": 8,
+  "passed": 8,
+  "failed": 0,
+  "flows": [
+    {
+      "flow": "A_videos_from_that_rally",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Rally Aluksne",
+          "ok": true,
+          "note": "turn1 rallies",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        },
+        {
+          "turn": 2,
+          "raw": "show videos from that rally",
+          "ok": true,
+          "note": "ACC-1 -> VIDEO_ACTIONS",
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "plan": "VIDEO_ACTIONS",
+          "clarify": false,
+          "active_driver_id": null
+        }
+      ]
+    },
+    {
+      "flow": "B_jump_highlights_from_that_rally",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Rally Aluksne",
+          "ok": true,
+          "note": "",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        },
+        {
+          "turn": 2,
+          "raw": "show jump highlights from that rally",
+          "ok": true,
+          "note": "ACC-1 jump preserved",
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "plan": "VIDEO_ACTIONS",
+          "clarify": false,
+          "active_driver_id": null
+        }
+      ]
+    },
+    {
+      "flow": "C_who_won_it",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Rally Aluksne",
+          "ok": true,
+          "note": "",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        },
+        {
+          "turn": 2,
+          "raw": "who won it?",
+          "ok": true,
+          "note": "ACC-4 reuse active rally",
+          "intent": "GET_RALLY_RESULTS",
+          "plan": "RALLY_RESULTS",
+          "clarify": false,
+          "active_driver_id": null
+        }
+      ]
+    },
+    {
+      "flow": "D_driver_year_refine",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Max Freeman's rallies",
+          "ok": true,
+          "note": "ACC-3 driver id pinned",
+          "intent": "SEARCH_DRIVER_RALLIES",
+          "plan": "PARTICIPATIONS",
+          "clarify": false,
+          "active_driver_id": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        },
+        {
+          "turn": 2,
+          "raw": "what about 2025?",
+          "ok": true,
+          "note": "year refine, driver kept",
+          "intent": "SEARCH_DRIVER_RALLIES",
+          "plan": "PARTICIPATIONS",
+          "clarify": false,
+          "active_driver_id": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        }
+      ]
+    },
+    {
+      "flow": "E_show_his_videos",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Max Freeman's rallies",
+          "ok": true,
+          "note": "ACC-3 id set turn1",
+          "intent": "SEARCH_DRIVER_RALLIES",
+          "plan": "PARTICIPATIONS",
+          "clarify": false,
+          "active_driver_id": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        },
+        {
+          "turn": 2,
+          "raw": "show his videos",
+          "ok": true,
+          "note": "ACC-3 canonical driver reused",
+          "intent": "SEARCH_DRIVER_VIDEOS",
+          "plan": "DRIVER_VIDEOS",
+          "clarify": false,
+          "active_driver_id": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        }
+      ]
+    },
+    {
+      "flow": "F_rallies_in_ireland_stays",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Rally Aluksne",
+          "ok": true,
+          "note": "",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        },
+        {
+          "turn": 2,
+          "raw": "Rallies in Ireland",
+          "ok": true,
+          "note": "ACC-1 not triggered; rally search",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        }
+      ]
+    },
+    {
+      "flow": "G_latest_referent_wins",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Rally Aluksne",
+          "ok": true,
+          "note": "",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        },
+        {
+          "turn": 2,
+          "raw": "Show Donegal test rally",
+          "ok": true,
+          "note": "",
+          "intent": "SEARCH_RALLIES",
+          "plan": "RALLIES",
+          "clarify": false,
+          "active_driver_id": null
+        },
+        {
+          "turn": 3,
+          "raw": "show videos from that rally",
+          "ok": true,
+          "note": "latest (Donegal) wins",
+          "intent": "SEARCH_VIDEO_ACTIONS",
+          "plan": "VIDEO_ACTIONS",
+          "clarify": false,
+          "active_driver_id": null
+        }
+      ]
+    },
+    {
+      "flow": "J_driver_only_who_won",
+      "passed": true,
+      "turns": [
+        {
+          "turn": 1,
+          "raw": "Show Max Freeman's rallies",
+          "ok": true,
+          "note": "",
+          "intent": "SEARCH_DRIVER_RALLIES",
+          "plan": "PARTICIPATIONS",
+          "clarify": false,
+          "active_driver_id": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        },
+        {
+          "turn": 2,
+          "raw": "who won it?",
+          "ok": true,
+          "note": "ACC-4 does not misuse driver as rally",
+          "intent": null,
+          "plan": null,
+          "clarify": true,
+          "active_driver_id": "7a633b52-950e-49ef-8cab-34cd43e99366"
+        }
+      ]
+    }
+  ]
+}

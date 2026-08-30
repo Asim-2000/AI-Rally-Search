@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/search_results.dart';
+import '../theme/app_theme.dart';
+import 'leaderboard_scaffold.dart';
 
 class RallyLeaderboard extends StatelessWidget {
   final List<RallyResult> results;
@@ -20,76 +22,14 @@ class RallyLeaderboard extends StatelessWidget {
 
     final headerTitle = rallyName ?? (results.isNotEmpty ? results.first.eventName : 'Rally Leaderboard');
 
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? Colors.white12 : Colors.grey.shade200),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return LeaderboardScaffold(
+      icon: Icons.leaderboard_rounded,
+      title: headerTitle,
+      subtitle: 'Official Overall Classification',
+      countLabel: '${results.length} finishers',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [const Color(0xFF1E3A8A), const Color(0xFF1E293B)]
-                    : [const Color(0xFF2563EB), const Color(0xFF3B82F6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.leaderboard_rounded, color: Colors.amber, size: 24),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        headerTitle,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Text(
-                        'Official Overall Classification',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${results.length} finishers',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Table Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -229,11 +169,11 @@ class RallyLeaderboard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    res.totalTime != null ? '${res.totalTime}s' : '--',
+                    formatRaceTime(res.totalTime),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12.5,
-                      color: res.posOverall == 1 ? Colors.amber.shade700 : null,
+                      color: res.posOverall == 1 ? kRallyGold : null,
                     ),
                     textAlign: TextAlign.right,
                   ),

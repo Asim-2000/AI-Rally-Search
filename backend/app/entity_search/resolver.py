@@ -160,8 +160,31 @@ class DatabaseEntityResolver:
                         or capability.allowed_recovery_transitions.get(SearchEntityType.RALLY) == SearchEntityType.PERSON
                     )
                 )
+                # ACC-6: a GENUINE rally ambiguity must clarify as a RALLY
+                # rather than being silently hijacked into a person search.
+                # But rally ambiguity is only genuine when at least one rally
+                # candidate is actually a STRONG match (clears the confidence
+                # threshold) — e.g. multiple real editions of the same event.
+                # When every rally candidate is weak/spurious (all below the
+                # threshold), the "ambiguity" is retrieval noise: a phrase the
+                # model misfiled into rallyNames that is really a PERSON. In
+                # that case a confident PERSON recovery should win.
+                #
+                # ACC-6 refinement: gate on rally-match STRENGTH, not the raw
+                # ambiguity flag. This preserves the safe RALLY clarification
+                # for genuine ambiguity (nsy_* "Mayo Forestry"/"Mayo Stages")
+                # while restoring PERSON recovery for a spuriously-ambiguous
+                # rally that is really a driver (act_* "Aaron Duville"/"Aaron
+                # Nau"). The downstream confidence gate on the PERSON candidate
+                # is unchanged, so a weak PERSON still never wins.
+                rally_has_strong_candidate = bool(
+                    rally_res.candidate_options
+                    and rally_res.candidate_options[0].score >= self.min_confidence_threshold
+                )
+                rally_blocks_recovery = rally_res.is_ambiguous and rally_has_strong_candidate
                 if (
-                    (rally_res.resolved_candidate is None or rally_res.is_ambiguous)
+                    rally_res.resolved_candidate is None
+                    and not rally_blocks_recovery
                     and can_recover_person
                     and not query.driver_names
                 ):

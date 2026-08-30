@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .api.v1.conversation import router as conversation_router
 from .api.v1.health import router as health_router
+from .api.v1.offline import router as offline_router
 from .api.v1.query_understanding import router as query_understanding_router
 from .api.v1.search import router as search_router
 from .api.v1.voice import router as voice_router
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="AI Rally Search deterministic backend", version="0.1.0", lifespan=lifespan)
 app.include_router(health_router)
 app.include_router(search_router)
+app.include_router(offline_router)
 app.include_router(query_understanding_router)
 app.include_router(conversation_router)
 app.include_router(voice_router)

@@ -34,6 +34,29 @@ class AppRadii {
 /// The single restrained motorsport accent used across the shell.
 const Color kRallyAccent = Color(0xFF1E88E5);
 
+/// Coherent type ramp for the primary search/result journey. Styles carry
+/// size/weight only; callers apply a palette colour via `.copyWith(color:)`.
+/// Titles are clearly dominant; metadata stays compact; nothing important is
+/// smaller than 11. All sizes scale with the platform text-scale factor.
+class AppText {
+  AppText._();
+
+  static const TextStyle screenTitle =
+      TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.15);
+  static const TextStyle sectionTitle =
+      TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
+  static const TextStyle cardTitle =
+      TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1.25);
+  static const TextStyle body =
+      TextStyle(fontSize: 14, fontWeight: FontWeight.w500);
+  static const TextStyle metadata = TextStyle(fontSize: 12.5);
+  static const TextStyle label = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.4,
+  );
+}
+
 /// Resolves surface/text/border roles for the current brightness.
 ///
 /// Modern-search-utility direction: flat surfaces, hairline borders, one

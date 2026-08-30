@@ -283,7 +283,8 @@ void main() {
 
       expect(find.text('Josh Moffett'), findsOneWidget);
       expect(find.text('Donegal International Rally 2025'), findsOneWidget);
-      expect(find.text('🏆 1st Place (Winner)'), findsOneWidget);
+      // Phase 3: compact finish-position copy (was "🏆 1st Place (Winner)").
+      expect(find.text('P1 · Winner'), findsOneWidget);
     });
 
     testWidgets('RallyLeaderboard renders top finishers in rank order', (

@@ -327,12 +327,21 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
 
       if (result.isSpecialResponse) {
+        // Easter-egg / personality response: show only the playful message.
+        // No DB results, no zero-results state, no clarification, no stale
+        // pagination. The rally conversation context (referents/active query)
+        // from any prior search is intentionally preserved.
         setState(() {
           if (backendSession != null) _session = backendSession;
           _isLoading = false;
           _specialMessage = result.friendlyMessage;
           _searchResponse = null;
+          _totalCount = 0;
+          _clarificationQuestion = null;
           _clarificationCandidates = [];
+          _pendingClarification = null;
+          _errorMessage = null;
+          _emptyResultsMessage = null;
         });
         return;
       }
@@ -789,6 +798,17 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 dropdownColor: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                // Closed state shows only the compact language code so the app
+                // bar never overflows on narrow phones; the open menu keeps the
+                // full native names.
+                selectedItemBuilder: (context) => SupportedLanguages.all
+                    .map(
+                      (lang) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(lang.languageCode.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
                 items: SupportedLanguages.all.map((lang) {
                   return DropdownMenuItem<SupportedLanguage>(
                     value: lang,
@@ -1167,26 +1187,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         children: [
           Text(
             'Rally Search',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: palette.primaryText,
-            ),
+            style: AppText.screenTitle.copyWith(color: palette.primaryText),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Search rallies, drivers, and moments using natural language or voice.',
-            style: TextStyle(fontSize: 15, color: palette.secondaryText),
+            style: AppText.body.copyWith(
+              color: palette.secondaryText,
+              fontWeight: FontWeight.w400,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
             'Try',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.4,
-              color: palette.secondaryText,
-            ),
+            style: AppText.label.copyWith(color: palette.secondaryText),
           ),
           const SizedBox(height: AppSpacing.sm),
           ..._exampleQueries.map(
@@ -1307,6 +1321,43 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     );
   }
 
+  /// Lightweight inline easter-egg / personality response card. Search-first,
+  /// not a chatbot: a small rally-themed card, no avatar/persona, no bubble.
+  Widget _buildSpecialResponse(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Container(
+        key: const Key('special_response_card'),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: palette.surface,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+          border: Border.all(color: palette.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('🏁', style: TextStyle(fontSize: 22)),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  _specialMessage ?? '',
+                  style: AppText.body.copyWith(
+                    color: palette.primaryText,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildErrorState(BuildContext context) {
     final palette = AppPalette.of(context);
     final understanding = _errorKind == _SearchErrorKind.understanding;
@@ -1335,11 +1386,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                     ? "We couldn't turn that into a search"
                     : 'Search is temporarily unavailable',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: palette.primaryText,
-                ),
+                style: AppText.sectionTitle
+                    .copyWith(fontSize: 17, color: palette.primaryText),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -1348,7 +1396,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   ? 'Try rephrasing — for example, “rallies in Ireland in 2025”.'
                   : 'Please check your connection and try again.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: palette.secondaryText),
+              style: AppText.metadata.copyWith(color: palette.secondaryText),
             ),
             const SizedBox(height: AppSpacing.lg),
             if (understanding)
@@ -1399,11 +1447,8 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               child: Text(
                 'No $resultLabel found',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: palette.primaryText,
-                ),
+                style: AppText.sectionTitle
+                    .copyWith(fontSize: 18, color: palette.primaryText),
               ),
             ),
             if (_emptyResultsMessage != null &&
@@ -1412,19 +1457,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               Text(
                 _emptyResultsMessage!,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: palette.secondaryText),
+                style: AppText.metadata.copyWith(color: palette.secondaryText),
               ),
             ],
             if (filters.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Filters',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.4,
-                  color: palette.secondaryText,
-                ),
+                style: AppText.label.copyWith(color: palette.secondaryText),
               ),
               const SizedBox(height: AppSpacing.sm),
               Wrap(
@@ -1451,12 +1491,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Did you mean',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.4,
-                  color: palette.secondaryText,
-                ),
+                style: AppText.label.copyWith(color: palette.secondaryText),
               ),
               const SizedBox(height: AppSpacing.sm),
               Wrap(
@@ -1528,27 +1563,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     if (_specialMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.sports_motorsports_rounded,
-                size: 52,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _specialMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildSpecialResponse(context);
     }
 
     if (_errorMessage != null) {

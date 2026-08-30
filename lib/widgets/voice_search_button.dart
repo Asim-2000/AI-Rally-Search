@@ -317,11 +317,13 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
                   borderRadius: BorderRadius.circular(24),
                   onTap: _toggleListening,
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 44),
+                    width: double.infinity,
+                    constraints: const BoxConstraints(minHeight: 48),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 8,
                     ),
+                    alignment: Alignment.center,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,

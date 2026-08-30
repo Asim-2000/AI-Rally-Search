@@ -111,7 +111,8 @@ void main() {
         'driver_name': 'Josh Moffett',
         'pos_overall': 1,
       });
-      expect(win.finishPositionDisplay, contains('1st Place (Winner)'));
+      // Phase 3: compact finish-position copy; winner meaning preserved.
+      expect(win.finishPositionDisplay, equals('P1 · Winner'));
 
       final second = RallyParticipationResult.fromMap({
         'rally_id': 'r-1',
@@ -119,7 +120,7 @@ void main() {
         'driver_name': 'Jordan Hone',
         'pos_overall': 2,
       });
-      expect(second.finishPositionDisplay, contains('2nd Place'));
+      expect(second.finishPositionDisplay, equals('P2'));
 
       final fourth = RallyParticipationResult.fromMap({
         'rally_id': 'r-1',
@@ -127,7 +128,7 @@ void main() {
         'driver_name': 'Gareth Mimnagh',
         'pos_overall': 4,
       });
-      expect(fourth.finishPositionDisplay, equals('Finished 4th'));
+      expect(fourth.finishPositionDisplay, equals('P4'));
     });
 
     test('RallyResult formats top finisher badges correctly', () {

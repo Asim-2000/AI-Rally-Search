@@ -611,10 +611,21 @@ Flutter, no new package). Follow-ups capped at 3. Accessibility: semantics/live-
 states, ≥44dp targets, removable chips announce what they remove. Voice unchanged — **both
 modes retained**.
 
-**Phase 3 — Remaining polish (deferred)**
-Migrate the leaderboard rows and remaining cards fully onto the token type ramp; distinctive
-display typeface; richer rally imagery; load-more on mobile; optional bottom-nav shell; broader
-contrast/text-scaling audit across untouched surfaces.
+**Phase 3 — Visual consistency + mobile finishing (IMPLEMENTED)**
+Added a coherent type ramp (`AppText`: screen/section/card title, body, metadata, label) and
+migrated the primary journey's prominent text (hero, no-results, error, section labels, rally &
+participation card titles) onto it, removing those magic font sizes. Compacted the participation
+finish-position copy to `P1 · Winner` / `P2` / `DNF` / `Participated` (meaning preserved; tests
+updated intentionally). Balanced the two voice pills (full-width, centered, consistent 48dp
+height). Added an explicit tap semantic to the rally card ("View results for …"). **Fixed a
+real ~90px app-bar overflow at 320px** by compacting the language selector's closed state to the
+language code via `selectedItemBuilder` (the open menu keeps full native names). Added a
+narrow-width (320px) no-overflow regression test. Pagination kept (numbered prev/next). Voice
+semantics and both modes unchanged.
+
+**Deferred (genuinely optional):** distinctive display typeface; richer rally imagery
+pipeline; load-more on mobile; bottom-nav shell; full token migration of leaderboard row
+internals; a broader contrast/text-scaling audit of surfaces outside the core journey.
 
 Each phase is independently shippable and touches only presentation.
 

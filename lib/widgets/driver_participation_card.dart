@@ -37,10 +37,7 @@ class DriverParticipationCard extends StatelessWidget {
                       children: [
                         Text(
                           participation.eventName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                          style: AppText.cardTitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

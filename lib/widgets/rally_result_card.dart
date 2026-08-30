@@ -18,7 +18,10 @@ class RallyResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return RallyCardShell(
+    return Semantics(
+      button: onTap != null,
+      label: onTap != null ? 'View results for ${rally.eventName}' : null,
+      child: RallyCardShell(
       onTap: onTap,
       clip: true,
       child: Column(
@@ -102,10 +105,7 @@ class RallyResultCard extends StatelessWidget {
                 children: [
                   Text(
                     rally.eventName,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+                    style: AppText.cardTitle.copyWith(fontSize: 18),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -175,6 +175,7 @@ class RallyResultCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
     );
   }
 

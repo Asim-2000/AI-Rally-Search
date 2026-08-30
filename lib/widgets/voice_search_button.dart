@@ -21,6 +21,11 @@ class VoiceSearchButton extends StatefulWidget {
   final String tooltipPrefix;
   final Future<void> Function()? onBeforeStart;
 
+  /// When true the control renders as a labelled, full-width "pill" (icon +
+  /// product label) instead of a bare circular icon. Used to present the two
+  /// voice modes as intentional product choices rather than dev A/B controls.
+  final bool showLabel;
+
   const VoiceSearchButton({
     super.key,
     required this.speechService,
@@ -33,6 +38,7 @@ class VoiceSearchButton extends StatefulWidget {
     this.idleIcon = Icons.mic_rounded,
     this.tooltipPrefix = 'Voice Search',
     this.onBeforeStart,
+    this.showLabel = false,
   });
 
   @override
@@ -265,26 +271,102 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton>
         break;
     }
 
+    // Product-facing state label used by the labelled pill and screen readers.
+    final String stateLabel;
+    switch (_state) {
+      case VoiceState.listening:
+        stateLabel = 'Listening…';
+        break;
+      case VoiceState.processing:
+        stateLabel = 'Transcribing…';
+        break;
+      case VoiceState.requestingPermission:
+        stateLabel = 'Requesting mic…';
+        break;
+      case VoiceState.error:
+        stateLabel = 'Tap to retry';
+        break;
+      case VoiceState.idle:
+        stateLabel = widget.label;
+        break;
+    }
+
+    // Active (recording) is signalled by icon + label + motion, never colour
+    // alone, for accessibility.
+    final bool isActive = _state == VoiceState.listening;
+
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
-        final scale = _state == VoiceState.listening
-            ? _pulseAnimation.value
-            : 1.0;
+        final scale = isActive ? _pulseAnimation.value : 1.0;
+
+        if (widget.showLabel) {
+          final Color pillFg = _state == VoiceState.idle
+              ? (isDark ? Colors.white : theme.colorScheme.primary)
+              : Colors.white;
+          return Semantics(
+            button: true,
+            label: '${widget.tooltipPrefix}. $stateLabel',
+            child: Tooltip(
+              message: tooltipText,
+              child: Material(
+                color: buttonColor,
+                borderRadius: BorderRadius.circular(24),
+                elevation: isActive ? 3 : 0,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: _toggleListening,
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Transform.scale(scale: scale, child: iconWidget),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            stateLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: pillFg,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
         return Transform.scale(
           scale: scale,
-          child: Tooltip(
-            message: tooltipText,
-            child: Material(
-              color: buttonColor,
-              shape: const CircleBorder(),
-              elevation: _state == VoiceState.listening ? 4 : 0,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: _toggleListening,
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: iconWidget,
+          child: Semantics(
+            button: true,
+            label: '${widget.tooltipPrefix}. $stateLabel',
+            child: Tooltip(
+              message: tooltipText,
+              child: Material(
+                color: buttonColor,
+                shape: const CircleBorder(),
+                elevation: isActive ? 4 : 0,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: _toggleListening,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: iconWidget,
+                  ),
                 ),
               ),
             ),

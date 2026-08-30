@@ -292,7 +292,7 @@ void main() {
           find.byType(TextField).first,
           'Max McRae at Aluksne edited',
         );
-        await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+        await tester.tap(find.byKey(const Key('submit_search_button')));
         await tester.pumpAndSettle();
 
         expect(requestedPaths, ['/v1/conversation/search']);
@@ -392,7 +392,7 @@ void main() {
         await tester.enterText(textFieldFinder, 'Moffett crashes 2025');
         await tester.pumpAndSettle();
 
-        final searchButton = find.widgetWithText(FilledButton, 'Search');
+        final searchButton = find.byKey(const Key('submit_search_button'));
         await tester.tap(searchButton);
         await tester.pump(const Duration(milliseconds: 250));
 

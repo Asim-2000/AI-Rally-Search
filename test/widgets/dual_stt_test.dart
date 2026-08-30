@@ -289,7 +289,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Explicitly press Search
-      final searchBtn = find.widgetWithText(FilledButton, 'Search');
+      final searchBtn = find.byKey(const Key('submit_search_button'));
       await tester.tap(searchBtn);
       await tester.pumpAndSettle();
 
@@ -326,7 +326,7 @@ void main() {
       // Typed search remains usable!
       final textFieldFinder = find.byType(TextField).first;
       await tester.enterText(textFieldFinder, 'typed search query');
-      await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+      await tester.tap(find.byKey(const Key('submit_search_button')));
       await tester.pumpAndSettle();
 
       expect(conversationPayloads.last['query'], 'typed search query');
@@ -442,13 +442,13 @@ void main() {
       await tester.tap(find.byKey(const Key('native_voice_button')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+      await tester.tap(find.byKey(const Key('submit_search_button')));
       await tester.pumpAndSettle();
 
       expect(conversationPayloads.last['language'], 'de');
     });
 
-    testWidgets('20: wasEditedBeforeSubmit telemetry correctly detects edits and STT Source indicator is shown', (tester) async {
+    testWidgets('20: wasEditedBeforeSubmit telemetry retained internally; no provider/provenance text is shown to users', (tester) async {
       setupScreen(tester);
       await tester.pumpWidget(createDualTestApp(
         repository: mockRepo,
@@ -464,20 +464,27 @@ void main() {
       await tester.tap(find.byKey(const Key('cloud_voice_button')));
       await tester.pumpAndSettle();
 
-      // Verify STT source indicator is displayed
-      expect(find.text('Cloud Whisper transcript'), findsOneWidget);
+      // Transcript lands in the editable field.
+      final textFieldFinder = find.byType(TextField).first;
+      expect(
+        tester.widget<TextField>(textFieldFinder).controller?.text,
+        'show rallies where Max Freeman participated cloud',
+      );
+
+      // No user-facing STT provenance / provider labels are shown.
+      expect(find.textContaining('Whisper'), findsNothing);
+      expect(find.textContaining('transcript'), findsNothing);
+      expect(find.textContaining('Provider'), findsNothing);
 
       // Edit transcript
-      final textFieldFinder = find.byType(TextField).first;
       await tester.enterText(textFieldFinder, 'edited query');
       await tester.pumpAndSettle();
 
-      expect(find.text('Cloud Whisper transcript (edited)'), findsOneWidget);
-
       // Submit search
-      await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+      await tester.tap(find.byKey(const Key('submit_search_button')));
       await tester.pumpAndSettle();
 
+      // Telemetry is retained internally (not surfaced in the UI).
       final dynamic state = tester.state(find.byType(GeneralSearchScreen));
       expect(state.lastVoiceTelemetry?['sttMethod'], 'CLOUD');
       expect(state.lastVoiceTelemetry?['wasEditedBeforeSubmit'], isTrue);

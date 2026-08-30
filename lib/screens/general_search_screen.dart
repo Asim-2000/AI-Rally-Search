@@ -35,6 +35,8 @@ import '../widgets/video_result_card.dart';
 import '../widgets/voice_search_button.dart';
 import '../services/speech/speech_to_text_service.dart';
 import '../services/speech/speech_service_factory.dart';
+import '../theme/app_theme.dart';
+import 'rally_streams_page.dart';
 
 /// Phase 5E Continuous Conversational Search Screen.
 ///
@@ -119,6 +121,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   final int _pageSize = 20;
   int _totalCount = 0;
 
+  // Whether the user has run at least one search this session. Until then the
+  // screen shows the first-launch hero (title + examples) instead of results.
+  // No backend search is performed automatically on launch.
+  bool _hasSearched = false;
+
   bool _isLoading = false;
   String _loadingStatus = 'Searching...';
   String? _errorMessage;
@@ -151,10 +158,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     _searchController.addListener(_onSearchControllerChanged);
 
+    // Search-first: do NOT auto-search on launch. Only run an initial search
+    // when an explicit initialQuery is supplied (e.g. deep link / test seam);
+    // otherwise the first-launch hero is shown until the user searches.
     if (widget.initialQuery != null) {
       _session = _session.copyWith(activeQuery: widget.initialQuery!);
-      _executeDeterministicSearch(resetPage: true);
-    } else {
       _executeDeterministicSearch(resetPage: true);
     }
   }
@@ -235,6 +243,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
     setState(() {
       if (queryText.isNotEmpty) _searchController.text = queryText;
+      _hasSearched = true;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
       _loadingStatus = 'Understanding your search...';
@@ -450,9 +459,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     final nextRequestId = _session.activeRequestId + 1;
     setState(() {
+      _hasSearched = true;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
-      _loadingStatus = 'Searching database...';
+      _loadingStatus = 'Searching rallies…';
       _errorMessage = null;
       _specialMessage = null;
       _emptyResultsMessage = null;
@@ -706,274 +716,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
   }
 
-  void _showTelemetryDialog(
-    BuildContext context,
-    NaturalLanguageSearchResult result,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final parseResult = result.parseResult;
-    final theme = Theme.of(context);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.analytics_outlined,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'AI Query Telemetry & Evaluation',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Provider & Model
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.hub_outlined, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Provider: ${parseResult.provider?.name.toUpperCase() ?? 'UNKNOWN'} (${parseResult.model ?? 'default'})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 1: Cost
-              const Text(
-                '💰 Cost & Token Usage',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Prompt Tokens:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${parseResult.promptTokens ?? 0}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Completion Tokens:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${parseResult.completionTokens ?? 0}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Estimated USD Cost:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    parseResult.formattedCost,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 2: Latency
-              const Text(
-                '⏱️ Latency Breakdown',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'LLM Parse Time:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.parseLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Entity Resolution Time:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.entityResolutionLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Database Execution Time:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.dbLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total End-to-End Latency:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '${result.totalLatencyMs} ms',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Referents Context
-              const Text(
-                '🧠 Result-Derived Referent Context',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Active Rally: ${result.referents.activeRally ?? 'none'}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      'Active Driver: ${result.referents.activeDriver ?? 'none'}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      'Last Winner: ${result.referents.lastWinner ?? 'none'}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Structured SearchQuery
-              if (result.query != null) ...[
-                const Text(
-                  '🔍 Structured Query JSON',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF1E1E1E)
-                        : Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    result.query!.toMap().toString(),
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -988,11 +730,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       appBar: AppBar(
         title: const Row(
           children: [
-            Icon(Icons.search_rounded, color: Color(0xFF1E88E5)),
+            Icon(Icons.search_rounded, color: kRallyAccent),
             SizedBox(width: 8),
             Flexible(
               child: Text(
-                'AI Rally Search',
+                'Rally Search',
                 style: TextStyle(fontWeight: FontWeight.bold),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1054,6 +796,19 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             onPressed: _openAdvancedFilters,
           ),
 
+          // Browse the raw stream registry (secondary area).
+          IconButton(
+            tooltip: 'Browse streams',
+            icon: const Icon(Icons.video_library_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const RallyStreamsPage(),
+                ),
+              );
+            },
+          ),
+
           // Reset Session Button
           IconButton(
             tooltip: 'Reset Session',
@@ -1064,11 +819,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       ),
       body: Column(
         children: [
-          // 1. Prominent Continuous Search Bar
+          // 1. Hero search field + two intentional voice modes.
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
+            ),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               border: Border(
                 bottom: BorderSide(
                   color: isDark ? Colors.white12 : Colors.black12,
@@ -1076,177 +834,170 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Full-width hero field (~56dp). Search icon prefix; clear +
+                // inline submit appear only when there is text.
+                TextField(
+                  controller: _searchController,
+                  textInputAction: TextInputAction.search,
+                  style: const TextStyle(fontSize: 15),
+                  textDirection: _selectedLanguage.isRtl
+                      ? TextDirection.rtl
+                      : TextDirection.ltr,
+                  textAlign: _selectedLanguage.isRtl
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  decoration: InputDecoration(
+                    hintText: 'Search rallies, drivers, or moments',
+                    hintStyle: const TextStyle(fontSize: 15),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: kRallyAccent,
+                      size: 22,
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Clear',
+                                icon: const Icon(Icons.clear_rounded, size: 18),
+                                onPressed: () {
+                                  unawaited(
+                                      _nativeSpeechService.cancelListening());
+                                  unawaited(
+                                      _cloudSpeechService.cancelListening());
+                                  setState(() {
+                                    _searchController.clear();
+                                    _sttSource = null;
+                                    _sttRawTranscript = null;
+                                    _voiceGeneration++;
+                                    _session = _session.copyWith(
+                                      activeRequestId:
+                                          _session.activeRequestId + 1,
+                                    );
+                                    _isLoading = false;
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                key: const Key('submit_search_button'),
+                                tooltip: 'Search',
+                                icon: const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 20,
+                                  color: kRallyAccent,
+                                ),
+                                onPressed: _executeNaturalLanguageSearch,
+                              ),
+                            ],
+                          )
+                        : null,
+                    filled: true,
+                    fillColor:
+                        isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF1F4F9),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.lg,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      borderSide: const BorderSide(
+                        color: kRallyAccent,
+                        width: 1.5,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                      ),
+                    ),
+                  ),
+                  onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // Two voice modes presented as deliberate product choices.
+                // Both remain fully operational and independent; neither falls
+                // back to the other. Transcript is editable and never
+                // auto-submitted.
                 Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        textDirection: _selectedLanguage.isRtl
-                            ? TextDirection.rtl
-                            : TextDirection.ltr,
-                        textAlign: _selectedLanguage.isRtl
-                            ? TextAlign.right
-                            : TextAlign.left,
-                        decoration: InputDecoration(
-                          hintText: 'Search rallies, drivers, jumps, or ask a question...',
-                          hintStyle: const TextStyle(fontSize: 13),
-                          prefixIcon: const Icon(
-                            Icons.auto_awesome_rounded,
-                            color: Color(0xFF1E88E5),
-                            size: 20,
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 18),
-                                  onPressed: () {
-                                    unawaited(_nativeSpeechService.cancelListening());
-                                    unawaited(_cloudSpeechService.cancelListening());
-                                    setState(() {
-                                      _searchController.clear();
-                                      _sttSource = null;
-                                      _sttRawTranscript = null;
-                                      _voiceGeneration++;
-                                      _session = _session.copyWith(
-                                        activeRequestId:
-                                            _session.activeRequestId + 1,
-                                      );
-                                      _isLoading = false;
-                                    });
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: isDark
-                              ? const Color(0xFF2A2A2A)
-                              : Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF1E88E5),
-                              width: 1.5,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? Colors.blue.withValues(alpha: 0.4)
-                                  : Colors.blue.withValues(alpha: 0.3),
-                            ),
-                          ),
-                        ),
-                        onSubmitted: (_) => _executeNaturalLanguageSearch(),
+                      child: VoiceSearchButton(
+                        key: const Key('cloud_voice_button'),
+                        speechService: _cloudSpeechService,
+                        selectedLanguage: _selectedLanguage,
+                        showLabel: true,
+                        label: 'Cloud voice',
+                        tooltipPrefix: 'Cloud voice',
+                        idleIcon: Icons.cloud_rounded,
+                        onBeforeStart: () async {
+                          setState(() {
+                            _voiceGeneration++;
+                          });
+                          await _nativeSpeechService.cancelListening();
+                        },
+                        onTranscriptReceived: (transcript) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: transcript,
+                            source: 'CLOUD',
+                            generation: _voiceGeneration,
+                          );
+                        },
+                        onResultDetailed: (result) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: result.text,
+                            source: 'CLOUD',
+                            generation: _voiceGeneration,
+                            detailed: result,
+                          );
+                        },
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    VoiceSearchButton(
-                      key: const Key('native_voice_button'),
-                      speechService: _nativeSpeechService,
-                      selectedLanguage: _selectedLanguage,
-                      label: 'Native Voice',
-                      tooltipPrefix: 'Native Voice',
-                      idleIcon: Icons.phone_android_rounded,
-                      onBeforeStart: () async {
-                        setState(() {
-                          _voiceGeneration++;
-                        });
-                        await _cloudSpeechService.cancelListening();
-                      },
-                      onTranscriptReceived: (transcript) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: transcript,
-                          source: 'NATIVE',
-                          generation: _voiceGeneration,
-                        );
-                      },
-                      onResultDetailed: (result) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: result.text,
-                          source: 'NATIVE',
-                          generation: _voiceGeneration,
-                          detailed: result,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 6),
-                    VoiceSearchButton(
-                      key: const Key('cloud_voice_button'),
-                      speechService: _cloudSpeechService,
-                      selectedLanguage: _selectedLanguage,
-                      label: 'Cloud Whisper',
-                      tooltipPrefix: 'Cloud Whisper',
-                      idleIcon: Icons.cloud_outlined,
-                      onBeforeStart: () async {
-                        setState(() {
-                          _voiceGeneration++;
-                        });
-                        await _nativeSpeechService.cancelListening();
-                      },
-                      onTranscriptReceived: (transcript) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: transcript,
-                          source: 'CLOUD',
-                          generation: _voiceGeneration,
-                        );
-                      },
-                      onResultDetailed: (result) {
-                        _handleVoiceTranscriptReceived(
-                          transcript: result.text,
-                          source: 'CLOUD',
-                          generation: _voiceGeneration,
-                          detailed: result,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: _executeNaturalLanguageSearch,
-                      icon: const Icon(Icons.search_rounded, size: 18),
-                      label: const Text('Search'),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: VoiceSearchButton(
+                        key: const Key('native_voice_button'),
+                        speechService: _nativeSpeechService,
+                        selectedLanguage: _selectedLanguage,
+                        showLabel: true,
+                        label: 'On-device voice',
+                        tooltipPrefix: 'On-device voice',
+                        idleIcon: Icons.smartphone_rounded,
+                        onBeforeStart: () async {
+                          setState(() {
+                            _voiceGeneration++;
+                          });
+                          await _cloudSpeechService.cancelListening();
+                        },
+                        onTranscriptReceived: (transcript) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: transcript,
+                            source: 'NATIVE',
+                            generation: _voiceGeneration,
+                          );
+                        },
+                        onResultDetailed: (result) {
+                          _handleVoiceTranscriptReceived(
+                            transcript: result.text,
+                            source: 'NATIVE',
+                            generation: _voiceGeneration,
+                            detailed: result,
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
-                if (_sttSource != null && _searchController.text.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6, left: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _sttSource == 'NATIVE'
-                              ? Icons.phone_android_rounded
-                              : Icons.cloud_outlined,
-                          size: 14,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_sttSource == 'NATIVE' ? 'Native' : 'Cloud Whisper'} transcript'
-                          '${(_sttRawTranscript != null && _sttRawTranscript!.trim().toLowerCase() != _searchController.text.trim().toLowerCase()) ? ' (edited)' : ''}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white60 : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
@@ -1303,56 +1054,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (_lastNlResult != null) ...[
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () =>
-                          _showTelemetryDialog(context, _lastNlResult!),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.25,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.analytics_outlined,
-                              size: 13,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_lastNlResult!.totalLatencyMs > 0 ? "${_lastNlResult!.totalLatencyMs}ms" : _lastNlResult!.parseResult.formattedLatency} · ${_lastNlResult!.parseResult.formattedCost}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
 
-          // 5. Results Count & Header Bar
-          Container(
+          // 5. Results Count & Header Bar (only after a search has run)
+          if (_hasSearched)
+            Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: isDark ? const Color(0xFF141414) : Colors.grey.shade100,
             child: Row(
@@ -1439,7 +1147,111 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
   }
 
+  // Curated, non-overwhelming example queries for the first-launch state.
+  static const List<String> _exampleQueries = [
+    'Rallies in Ireland in 2025',
+    "Show Max Freeman's rallies",
+    'Jump highlights from Rally Alūksne',
+    'Who won Rally Donegal?',
+  ];
+
+  void _runExampleQuery(String query) {
+    _searchController.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
+    _executeNaturalLanguageSearch();
+  }
+
+  Widget _buildFirstLaunchHero(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rally Search',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: palette.primaryText,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Search rallies, drivers, and moments using natural language or voice.',
+            style: TextStyle(fontSize: 15, color: palette.secondaryText),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Text(
+            'Try',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.4,
+              color: palette.secondaryText,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ..._exampleQueries.map(
+            (q) => Semantics(
+              button: true,
+              label: 'Example search: $q',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadii.control),
+                onTap: () => _runExampleQuery(q),
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppRadii.control),
+                    border: Border.all(color: palette.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.north_east_rounded,
+                        size: 16,
+                        color: kRallyAccent,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          q,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: palette.primaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDynamicResultsView(BuildContext context) {
+    // First-launch hero: no automatic search runs on open, so until the user
+    // searches we show the product title + example queries instead of results.
+    if (!_hasSearched && !_isLoading) {
+      return _buildFirstLaunchHero(context);
+    }
+
     if (_isLoading) {
       return Center(
         child: Column(

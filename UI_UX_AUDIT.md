@@ -4,6 +4,15 @@
 > search semantics, model, or navigation-logic changes are proposed for implementation in
 > this pass. The search architecture (Flutter → FastAPI → QU → SearchPlan → MySQL) is
 > treated as fixed and correct. See §26 for the protected list.
+>
+> **Product decision (supersedes the original single-mic recommendation): BOTH voice
+> modes are intentionally retained.** The two voice inputs — "Cloud voice" and "On-device
+> voice" — are a deliberate product choice, not dev A/B scaffolding. The redesign keeps both
+> fully operational and independent; it removes only the *developer framing* (provider/model
+> names, "Native"/"Whisper" wording, and the transcript-provenance line) and re-presents them
+> as two clearly labelled, product-facing input modes. Wherever this document earlier said to
+> "collapse to one mic", read it as: **keep both, restyle both, strip the debug framing.**
+> (Implemented in Phase 1.)
 
 ---
 
@@ -29,8 +38,9 @@ is a genuine strength — see §3).
 
 1. Make search the front door (promote `GeneralSearchScreen`, demote the streams registry to
    an optional "Browse" area) and give it a real first-launch hero state.
-2. Collapse the dual voice buttons into **one mic**, and remove all user-facing
-   telemetry/provider/JSON surfaces.
+2. Re-present the two voice buttons as **intentional product modes** ("Cloud voice" /
+   "On-device voice") — both retained — and remove all user-facing telemetry/provider/JSON
+   surfaces and the transcript-provenance line.
 3. Replace the pipe-delimited interpreted summary with **inspectable interpretation chips**,
    and give clarification/empty/error states contextual, non-technical copy.
 
@@ -74,8 +84,10 @@ work is re-composition, copy, a token layer, and removing dev scaffolding — no
 - **Wrong front door.** `main.dart` → `RallyStreamsPage`, a technical registry exposing Stream
   ID, Video ID, `videoType='sendObs'`, clip windows, share/download counters, on-demand URLs.
   Search is buried behind an app-bar button.
-- **Dev A/B scaffolding shipped as UI.** Two mics (Native + Cloud Whisper) with a
-  "transcript (edited)" provenance line — an internal STT comparison surfaced to users.
+- **Voice modes framed as dev scaffolding.** Two mics labelled "Native Voice" / "Cloud
+  Whisper" with a "transcript (edited)" provenance line read as an internal STT comparison.
+  (Both modes are a valid product choice — see the Product decision note; the issue is the
+  developer *framing*, which Phase 1 replaces with product labels.)
 - **Telemetry leakage.** Latency+cost chip and a dialog printing provider, model, tokens,
   cost, "Entity Resolution Time", referent context, and raw query JSON.
 - **Schema-shaped interpretation.** The "interpreted summary" bar reads as backend fields.
@@ -154,9 +166,10 @@ dropdown (18 locales) sits in the app bar adding weight; no examples, no recents
 provenance line ("Native transcript (edited)").
 
 **Redesign:**
-- **One field, one mic.** Mic sits inside the field as the trailing icon. Drop the standalone
-  Search button on mobile (Enter/keyboard "Search" action submits); an inline submit arrow may
-  appear only when text is present.
+- **One full-width hero field, two voice modes below it.** The search icon is the prefix; a
+  clear button and an inline submit arrow appear in the field only when text is present
+  (Enter/keyboard "Search" also submits). The two voice modes ("Cloud voice" / "On-device
+  voice") are **both retained** as labelled pills directly beneath the field (§16).
 - **Remove the STT provenance line** for users. If provider comparison is still needed, gate it
   behind a hidden debug flag — it is not product UI.
 - **Sticky field.** After a search, the field stays pinned at top and shows the current query,
@@ -334,10 +347,12 @@ snackbars. No differentiation; the interpreted-summary path can show `"Query par
 (red pulse) → processing (spinner) → error. Transcript lands editable in the field; no
 auto-submit. State handling is solid.
 
-**Redesign (preserve the flow, fix the surface):**
-- **One mic.** Pick the production STT path behind it (backend already owns provider). Remove
-  the second button and the provider provenance line from the UI.
-- Idle: mic glyph in the field. Recording: red pulsing ring + subtle waveform/amplitude; a
+**Redesign (preserve the flow, fix the surface) — BOTH modes retained:**
+- **Two intentional voice modes**, presented as labelled pills: "Cloud voice" and "On-device
+  voice". Both stay fully operational and independent (neither silently falls back to the
+  other). Remove only the provider/model wording and the transcript-provenance line from the
+  UI. Provider terminology ("Native", "Whisper", "OpenAI") is not shown to users.
+- Idle: labelled pill with a mode icon. Recording: red pulsing pill + "Listening…"; a
   clear **Stop** and a **Cancel**. Transcribing: inline spinner + "Transcribing…". Result:
   editable text in field, cursor at end, **user submits manually** (unchanged).
 - Voice errors inline (§15.4), not modal red.
@@ -475,8 +490,9 @@ radius and padding.
 | `GeneralSearchScreen` | AI NL/voice search | **REFACTOR** | Promote to home; split first-launch vs results; remove telemetry/dual-mic; single context zone |
 | `RallyStreamsPage` | Technical stream registry (current home) | **REFACTOR / DEMOTE** | Not search-first; de-jargon and move to optional "Browse", or drop from default path |
 | `VideoActionSearchScreen` | Manual dropdown moments search | **REMOVE / MERGE** | Duplicates NL search + advanced filters; hardcoded country list |
-| `VoiceSearchButton` | Voice capture w/ state anim | **KEEP (restyle)** | Solid state machine; use ONE instance, restyle idle/recording |
-| Dual-mic layout + STT provenance line | A/B STT comparison | **REMOVE** | Dev artifact leaked to users |
+| `VoiceSearchButton` | Voice capture w/ state anim | **KEEP (restyle)** | Solid state machine; keep BOTH instances, restyle as labelled pills |
+| Dual-voice presentation | Two voice modes shown as dev A/B controls | **RESTYLE (both retained)** | Keep both modes; product labels ("Cloud voice" / "On-device voice"); drop provider wording |
+| STT provenance line | "Native/Cloud transcript (edited)" | **REMOVE** | Dev artifact leaked to users |
 | Telemetry chip + `_showTelemetryDialog` | Provider/cost/latency/JSON | **REMOVE** (from user UI) | Violates "hide internals"; gate behind debug flag if needed |
 | Interpreted-summary bar (pipe string) | Show interpretation | **REFACTOR → interpretation chips** | Schema-shaped; replace with removable chips |
 | `ActiveContextChipsBar` | Refinement/inherited chips + breadcrumb | **KEEP (restyle)** | Core non-chat follow-up model; merge with follow-ups zone |
@@ -538,8 +554,8 @@ radius and padding.
 **P0 — blocks the product being understood as search**
 - Make search the front door; demote the streams registry. *(MEDIUM)*
 - Remove telemetry chip + telemetry dialog from user UI. *(SMALL)*
-- Collapse dual mics → one; remove STT provenance line. *(SMALL)*
-- Fix input-row crowding/overflow on mobile (single field + inline mic). *(SMALL)*
+- Re-present both voice modes as product-facing pills; remove STT provenance line. *(SMALL)*
+- Fix input-row crowding/overflow on mobile (full-width field; voice modes below). *(SMALL)*
 
 **P1 — major UX gains**
 - Replace pipe-summary with removable interpretation chips. *(MEDIUM)*
@@ -569,9 +585,13 @@ radius and padding.
 
 ## 25. Implementation Plan (phased)
 
-**Phase 1 — Search shell + design system**
-Promote search to home; single field + inline mic; remove telemetry + second mic + provenance
-line; add `AppTheme` tokens (color/type/spacing/radius); first-launch hero (examples, recents).
+**Phase 1 — Search shell + design system (IMPLEMENTED)**
+Promote search to home; no auto-search on launch; full-width hero field with inline
+clear/submit; **both** voice modes retained and re-presented as labelled pills ("Cloud voice" /
+"On-device voice") with provider/debug framing removed; remove telemetry chip + dialog and the
+STT provenance line; add lightweight design tokens (`lib/theme/app_theme.dart`); first-launch
+hero with example queries (recent searches deferred). Streams registry retained as a secondary
+"Browse" area reachable from the search app bar.
 
 **Phase 2 — Result cards**
 Unify card shell (radius/border/elevation/type); unify the three leaderboards; format times;

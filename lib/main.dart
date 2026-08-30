@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'l10n/generated/app_localizations.dart';
-import 'screens/rally_streams_page.dart';
+import 'screens/general_search_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,10 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
       ),
       themeMode: ThemeMode.system,
-      home: const RallyStreamsPage(),
+      // Search is the front door. The technical stream registry
+      // (RallyStreamsPage) remains reachable as a secondary "Browse" area via
+      // the search screen's app bar.
+      home: const GeneralSearchScreen(),
     );
   }
 }

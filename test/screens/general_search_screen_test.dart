@@ -407,8 +407,10 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        expect(find.text('AI Rally Search'), findsOneWidget);
-        expect(find.text('Search'), findsOneWidget);
+        expect(find.text('Rally Search'), findsWidgets);
+        // Both voice modes are intentionally retained.
+        expect(find.byKey(const Key('cloud_voice_button')), findsOneWidget);
+        expect(find.byKey(const Key('native_voice_button')), findsOneWidget);
         expect(find.text('Ireland'), findsWidgets);
         expect(find.text('Rally Ireland 2026'), findsOneWidget);
       },
@@ -440,7 +442,8 @@ void main() {
 
         final searchField = find.byType(TextField).first;
         await tester.enterText(searchField, 'Show rallies in Ireland');
-        await tester.tap(find.text('Search'));
+        await tester.pump(); // inline submit appears once the field has text
+        await tester.tap(find.byKey(const Key('submit_search_button')));
         await tester.pumpAndSettle();
 
         expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
@@ -535,10 +538,11 @@ void main() {
 
       final field = find.byType(TextField).first;
       await tester.enterText(field, 'request A');
-      await tester.tap(find.text('Search'));
+      await tester.pump(); // inline submit appears once the field has text
+      await tester.tap(find.byKey(const Key('submit_search_button')));
       await tester.pump();
       await tester.enterText(field, 'request B');
-      await tester.tap(find.text('Search'));
+      await tester.tap(find.byKey(const Key('submit_search_button')));
       await tester.pump();
 
       parser.complete(
@@ -587,7 +591,8 @@ void main() {
           find.byType(TextField).first,
           'show me jump highlights from karl martin from rally ireland',
         );
-        await tester.tap(find.text('Search'));
+        await tester.pump(); // inline submit appears once the field has text
+        await tester.tap(find.byKey(const Key('submit_search_button')));
         await tester.pumpAndSettle();
         expect(find.text('Carlos Martins'), findsOneWidget);
 
@@ -628,7 +633,7 @@ void main() {
       final field = find.byType(TextField).first;
       await tester.enterText(field, 'request A');
       await tester.pump();
-      await tester.tap(find.text('Search'));
+      await tester.tap(find.byKey(const Key('submit_search_button')));
       await tester.pump();
       await tester.tap(find.byIcon(Icons.clear_rounded));
       await tester.pump();

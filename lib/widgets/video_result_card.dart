@@ -8,13 +8,27 @@ class VideoResultCard extends StatelessWidget {
   final VideoSearchResult video;
   final Function(VideoSearchResult)? onPlay;
 
+  /// When true, the clip is discoverable but streaming is gated (offline).
+  final bool offline;
+
   const VideoResultCard({
     super.key,
     required this.video,
     this.onPlay,
+    this.offline = false,
   });
 
   void _handlePlay(BuildContext context) {
+    if (offline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Found the clip — but the stream's off-stage. "
+              "You're offline, so the video can't play right now."),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
     if (onPlay != null) {
       onPlay!(video);
       return;

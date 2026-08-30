@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'screens/general_search_screen.dart';
+import 'services/offline/offline_bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  runApp(const MyApp());
+
+  // Initialise the offline search stack (local SQLite snapshot + sync). Fully
+  // guarded: on any failure this returns null and the app runs online-only.
+  final rawUrl = dotenv.env['PYTHON_BACKEND_BASE_URL']?.trim();
+  final backendBaseUrl = (rawUrl == null || rawUrl.isEmpty) ? null : Uri.tryParse(rawUrl);
+  final offlineStack = await OfflineBootstrap.initialize(backendBaseUrl: backendBaseUrl);
+
+  runApp(MyApp(offlineStack: offlineStack));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final OfflineStack? offlineStack;
+  const MyApp({super.key, this.offlineStack});
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +48,11 @@ class MyApp extends StatelessWidget {
       // Search is the front door. The technical stream registry
       // (RallyStreamsPage) remains reachable as a secondary "Browse" area via
       // the search screen's app bar.
-      home: const GeneralSearchScreen(),
+      home: GeneralSearchScreen(
+        offlineEngine: offlineStack?.engine,
+        offlineSync: offlineStack?.sync,
+        connectivityProbe: offlineStack?.connectivity,
+      ),
     );
   }
 }
-

@@ -44,10 +44,18 @@ dependencies:
   record: ^6.2.0
   speech_to_text: ^7.4.0
 
+  # Offline search: local read-only SQLite snapshot + reachability signal.
+  # No secrets and no direct MySQL — the snapshot is served by the backend.
+  sqflite: ^2.4.1
+  path_provider: ^2.1.4
+  connectivity_plus: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   crypto: ^3.0.7
+  # Host-side SQLite for offline-engine tests (no device/emulator needed).
+  sqflite_common_ffi: ^2.3.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

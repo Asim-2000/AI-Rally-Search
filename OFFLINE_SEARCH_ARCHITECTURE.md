@@ -1,11 +1,14 @@
 # Offline Search Architecture
 
-> **Status: AUDIT / DESIGN ONLY — nothing in this document is implemented yet.**
+> **Status: IMPLEMENTED (2026-08-30).**
 >
-> This is an architecture audit and proposed design for making the *normal* rally
-> search work offline, on intermittent connectivity, and on very low bandwidth.
-> It preserves the authoritative online pipeline exactly as it is today and does
-> **not** restore the legacy in-app Dart LLM / direct-MySQL search pipeline.
+> Normal rally search now works offline, on intermittent connectivity, and on
+> very low bandwidth, via a deterministic, model-free local mirror of the
+> authoritative pipeline. The online pipeline is unchanged; the legacy in-app
+> Dart LLM / direct-MySQL search pipeline was **not** restored. See
+> **Implementation Status** below for what actually shipped (files, schema,
+> real snapshot sizes, and benchmark metrics). The design sections that follow
+> describe the shipped system.
 
 ---
 
@@ -746,3 +749,93 @@ online architecture unchanged, ships nothing sensitive to the device, and never
 restores the legacy Dart AI/MySQL pipeline. The technical architecture is
 unchanged from the accepted design — these are tone, completeness, and
 claim-precision corrections only.
+
+---
+
+## Implementation Status (2026-08-30)
+
+### What shipped
+
+**Backend (additive, online pipeline untouched):**
+- `GET /v1/offline/snapshot?segment=core|full` — `backend/app/api/v1/offline.py`.
+- `backend/app/services/offline_snapshot.py` — pure, unit-tested snapshot
+  builders + precompute SQL. Precomputes `final_results`, `driver_wins`,
+  `uploader_stats` server-side (device never runs the `FINAL_STAGE` subquery).
+- Canonical person identity reproduced exactly
+  (`person:account|driver|codriver:*`); participation from
+  `entry_list → sub_event → event`; uploader **email fallback dropped** (display
+  name only — no PII on device).
+- Tests: `backend/tests/unit/test_offline_snapshot.py` (10) and
+  `backend/tests/integration/test_offline_snapshot_live.py` (6, live-DB gated).
+
+**Flutter offline engine (`lib/services/offline/`), all deterministic & model-free:**
+- `offline_text_scoring.dart` — fresh port of the online dice-bigram / Jaro-Winkler
+  / soundex / composite scorer (no import of the forbidden `lib/services/llm/*`).
+- `offline_entity_index.dart` — local resolver preserving the online safety
+  ordering exactly (`minConfidence=0.75`, `minGap=0.15`, plausible `0.50`,
+  multi-year / partial-name / duplicate-identity ambiguity).
+- `offline_query_parser.dart` — conservative deterministic parser emitting the
+  shared `SearchQuery` IR; declines safely (`SAFE_UNSUPPORTED`/no-match) rather
+  than guessing.
+- `offline_database.dart` — `sqflite` schema + **staging import with atomic,
+  transactional promotion** (a failed import always preserves the previous DB).
+- `offline_search_executor.dart` — 9 fixed parameterised SQLite strategies
+  returning the shared result models.
+- `offline_search_engine.dart`, `offline_search_router.dart`
+  (`NETWORK_FIRST_WITH_LOCAL_FALLBACK`, 4 s bandwidth-aware budget, no silent
+  swap), `offline_snapshot_sync.dart`, `offline_messaging.dart` (17-state
+  matrix), `offline_bootstrap.dart` (device wiring), plus
+  `lib/widgets/offline_banner.dart` and video-playback gating in
+  `lib/widgets/rally_video_player.dart` / `video_result_card.dart`.
+- Screen integration: `lib/screens/general_search_screen.dart` (offline params
+  are optional → tests unaffected; production wired in `lib/main.dart`).
+
+### Actual snapshot schema
+
+Implemented verbatim from the **Local Data Model** above, with these
+implementation-driven additions for execution parity: `participation`,
+`final_results`, `video_meta`, `video_actions` carry explicit `driver_id` /
+`codriver_id` columns (so the executor filters by resolved ids exactly like
+online and returns `person_id = COALESCE(driver_id, codriver_id)`);
+`final_results` carries the row `id`; `name_norm` is filled on import.
+
+### Real measured sizes (live DB, 2026-08-30)
+
+| Segment | Rows | Snapshot JSON |
+|---|---|---|
+| **core** (mandatory bootstrap, no video) | 111 rallies, 8 750 people, 1 025 stages, 9 967 participation, 326 final_results, 5 driver_wins, 259 uploader_stats | **~5.1 MB** |
+| **full** (adds 18 510 video_meta + 32 497 video_actions) | + video metadata | **~37 MB** |
+
+`core` is the default install; `full`/video metadata is the opt-in segment. (The
+37 MB is above the audit's optimistic estimate because on-demand stream + thumbnail
+URLs dominate — URLs only, never media bytes.)
+
+### Offline benchmark (deterministic corpus, `test/offline/offline_benchmark_test.dart`)
+
+| Metric | Value |
+|---|---|
+| **Wrong-confident (primary gate)** | **0** |
+| Intent accuracy | 100% |
+| Field F1 | 1.00 |
+| Entity-resolution accuracy | 100% |
+| Clarification accuracy | 100% |
+| Safe-unsupported rate | 100% |
+| Special-query accuracy | 100% (all 9 categories) |
+| Execution parity vs online oracle | 16/16 exact (all 9 intents) |
+| `OFFLINE_COVERAGE_RATE` | 88.9% (answerable queries producing direct results; the remainder are safe clarifications) |
+
+Artifacts: `backend/benchmarks/results/offline_search_<ts>/`.
+
+### Known limitations (honest scope)
+- **Cloud voice offline: NO** (network required). **On-device voice offline:
+  DEVICE_DEPENDENT** — only where the OS on-device recognizer supports it; the
+  transcript is editable and never auto-submitted.
+- **Video playback offline: NO** (discovery from local metadata only; playback
+  gated with the "stream's off-stage" state).
+- The precomputed `driver_wins` / `uploader_stats` aggregates are **global**; a
+  country/year-filtered leaderboard is safely declined offline rather than
+  answered with a wrong-scope global result.
+- Cross-script (Arabic/Urdu) transliteration is out of scope offline.
+- The in-memory entity index is rebuilt at app launch (and after the bootstrap
+  sync); a mid-session sync refreshes the executor's data immediately but the
+  resolution index refreshes on next launch.

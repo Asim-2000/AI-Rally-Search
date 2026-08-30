@@ -20,6 +20,11 @@ import '../services/llm/query_output_validator.dart';
 import '../services/search_repository.dart';
 import '../services/python_search_api_client.dart';
 import '../services/friendly_response_service.dart';
+import '../services/offline/offline_messaging.dart';
+import '../services/offline/offline_search_engine.dart';
+import '../services/offline/offline_search_router.dart';
+import '../services/offline/offline_snapshot_sync.dart';
+import '../widgets/offline_banner.dart';
 import '../widgets/action_player_modal.dart';
 import '../widgets/active_context_chips_bar.dart';
 import '../widgets/advanced_filters_sheet.dart';
@@ -70,6 +75,13 @@ class GeneralSearchScreen extends StatefulWidget {
   final ISpeechToTextService? cloudSpeechService;
   final PythonSearchApiClient? pythonApiClient;
 
+  /// Offline search stack (optional). When supplied (production, via main.dart),
+  /// the screen applies NETWORK_FIRST_WITH_LOCAL_FALLBACK and offline messaging.
+  /// When null (most tests), behaviour is exactly the online-only path.
+  final OfflineSearchEngine? offlineEngine;
+  final OfflineSnapshotSync? offlineSync;
+  final ConnectivityProbe? connectivityProbe;
+
   const GeneralSearchScreen({
     super.key,
     this.initialQuery,
@@ -80,6 +92,9 @@ class GeneralSearchScreen extends StatefulWidget {
     this.nativeSpeechService,
     this.cloudSpeechService,
     this.pythonApiClient,
+    this.offlineEngine,
+    this.offlineSync,
+    this.connectivityProbe,
   });
 
   @override
@@ -144,9 +159,21 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   String? _emptyResultsMessage;
   SearchResponse<dynamic>? _searchResponse;
 
+  // Offline / connectivity state.
+  OfflineSearchEngine? _offlineEngine;
+  OfflineSnapshotSync? _offlineSync;
+  ConnectivityProbe? _connectivityProbe;
+  OfflineUxState _offlineState = OfflineUxState.online;
+  Duration? _offlineAge;
+  bool get _offlineActive => _offlineState != OfflineUxState.online;
+  static const OfflineMessagingService _offlineMessaging = OfflineMessagingService();
+
   @override
   void initState() {
     super.initState();
+    _offlineEngine = widget.offlineEngine;
+    _offlineSync = widget.offlineSync;
+    _connectivityProbe = widget.connectivityProbe;
     final backendConfig = SearchBackendConfig.fromEnvironment();
     // Python FastAPI is the sole authoritative search backend. There is no
     // runtime legacy switch and no silent in-app Dart fallback: when the Python
@@ -266,6 +293,14 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _pendingClarification = null;
       _currentPage = 1;
     });
+
+    // NETWORK_FIRST_WITH_LOCAL_FALLBACK: if the device is plainly offline, skip
+    // the online attempt entirely and answer from the local snapshot.
+    if (queryText.isNotEmpty && _offlineEngine != null && await _isPlainlyOffline()) {
+      if (!mounted || _session.activeRequestId != nextRequestId) return;
+      await _runOfflineFallback(queryText, OfflineUxState.offlineLocalResults);
+      return;
+    }
 
     try {
       final searchContext = SearchContext(
@@ -449,9 +484,23 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _specialMessage = null;
         _emptyResultsMessage = result.friendlyMessage;
         _isLoading = false;
+        // Authoritative online answer: clear any offline chrome.
+        _offlineState = OfflineUxState.online;
+        _offlineAge = null;
       });
+      // Opportunistic, non-blocking refresh of the offline snapshot.
+      unawaited(_offlineSync?.maybeSync() ?? Future.value());
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
+      // The authoritative backend failed. If we have a local snapshot, answer
+      // from it (clearly labelled) rather than showing a dead end.
+      if (queryText.isNotEmpty && _offlineEngine != null && e is PythonApiException) {
+        await _runOfflineFallback(queryText, OfflineUxState.backendUnreachableLocalAvailable);
+        if (_usePythonBackend && spokenResult?.audioContext != null) {
+          spokenResult!.disposeAudio();
+        }
+        return;
+      }
       setState(() {
         _errorKind = _SearchErrorKind.service;
         _errorMessage = e is PythonApiException
@@ -485,6 +534,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _emptyResultsMessage = null;
     });
 
+    // Offline / low-bandwidth: execute the resolved query over the local
+    // snapshot (pagination and clarification selections included).
+    if (_offlineEngine != null && (_offlineActive || await _isPlainlyOffline())) {
+      await _executeDeterministicOffline(nextRequestId);
+      return;
+    }
+
     final repository = _repository;
     if (repository == null) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
@@ -508,6 +564,10 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       final response = await repository.search(queryToExecute);
 
       if (!mounted || _session.activeRequestId != nextRequestId) return;
+
+      // Authoritative online answer: drop any offline chrome.
+      _offlineState = OfflineUxState.online;
+      _offlineAge = null;
 
       final updatedReferents = ResultReferentContext.fromSearchResponse(
         response,
@@ -542,6 +602,182 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  // ===========================================================================
+  // OFFLINE FALLBACK
+  // ===========================================================================
+
+  Future<bool> _isPlainlyOffline() async {
+    final probe = _connectivityProbe;
+    if (probe == null) return false;
+    try {
+      return !(await probe.isOnline());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Duration?> _snapshotAge() async {
+    final last = await _offlineEngine?.database.lastSyncUtc();
+    if (last == null) return null;
+    return DateTime.now().toUtc().difference(last);
+  }
+
+  static const Duration _staleThreshold = Duration(hours: 12);
+
+  /// Runs the deterministic offline pipeline for a raw query and maps its
+  /// outcome onto the shared result/clarification/special/error state, plus the
+  /// product-tone offline banner state.
+  Future<void> _runOfflineFallback(String queryText, OfflineUxState baseState) async {
+    final engine = _offlineEngine;
+    if (engine == null) return;
+    if (!await engine.database.hasSnapshot()) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _searchResponse = null;
+        _totalCount = 0;
+        _clarificationQuestion = null;
+        _clarificationCandidates = [];
+        _pendingClarification = null;
+        _specialMessage = null;
+        _emptyResultsMessage = null;
+        _errorMessage = null;
+        _offlineState = OfflineUxState.noLocalSnapshot;
+        _offlineAge = null;
+      });
+      return;
+    }
+    final age = await _snapshotAge();
+    OfflineSearchOutcome outcome;
+    try {
+      outcome = await engine.search(queryText, limit: _pageSize, offset: (_currentPage - 1) * _pageSize);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _searchResponse = null;
+        _totalCount = 0;
+        _offlineState = OfflineUxState.offlineSafeNoMatch;
+        _emptyResultsMessage = const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+      });
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _hasSearched = true;
+      _clarificationQuestion = null;
+      _clarificationCandidates = [];
+      _pendingClarification = null;
+      _errorMessage = null;
+      _specialMessage = null;
+      _emptyResultsMessage = null;
+      _searchResponse = null;
+      _totalCount = 0;
+      _offlineAge = age;
+      switch (outcome.kind) {
+        case OfflineOutcomeKind.results:
+          _session = _session.copyWith(activeQuery: outcome.query!);
+          _searchResponse = outcome.response;
+          _totalCount = outcome.response!.totalCount;
+          final stale = age != null && age > _staleThreshold;
+          _offlineState = stale ? OfflineUxState.offlineStaleResults : baseState;
+          if (_totalCount == 0) {
+            _offlineState = OfflineUxState.offlineSafeNoMatch;
+            _emptyResultsMessage =
+                const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+          }
+          break;
+        case OfflineOutcomeKind.clarification:
+          _offlineState = OfflineUxState.offlineAmbiguity;
+          _clarificationQuestion = outcome.clarificationQuestion;
+          _clarificationCandidates = outcome.candidates;
+          _pendingClarification = PendingClarification(
+            query: SearchQuery(intent: outcome.intent ?? SearchIntent.searchRallies),
+            referents: _session.referents,
+            requestId: _session.activeRequestId,
+          );
+          break;
+        case OfflineOutcomeKind.special:
+          _offlineState = baseState;
+          _specialMessage =
+              const FriendlyResponseService().responseFor(outcome.specialCategory!);
+          break;
+        case OfflineOutcomeKind.noMatch:
+          _offlineState = OfflineUxState.offlineSafeNoMatch;
+          _emptyResultsMessage =
+              const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+          break;
+        case OfflineOutcomeKind.unsupported:
+          _offlineState = OfflineUxState.offlineQueryUnsupported;
+          _errorKind = _SearchErrorKind.service;
+          _errorMessage =
+              _offlineMessaging.messageFor(OfflineUxState.offlineQueryUnsupported).explanation;
+          break;
+      }
+    });
+  }
+
+  /// Offline execution of an already-resolved active query (pagination / a
+  /// chosen clarification candidate).
+  Future<void> _executeDeterministicOffline(int requestId) async {
+    final engine = _offlineEngine;
+    if (engine == null) return;
+    if (!await engine.database.hasSnapshot()) {
+      if (!mounted || _session.activeRequestId != requestId) return;
+      setState(() {
+        _isLoading = false;
+        _offlineState = OfflineUxState.noLocalSnapshot;
+      });
+      return;
+    }
+    final age = await _snapshotAge();
+    final offset = (_currentPage - 1) * _pageSize;
+    final queryToExecute = _session.activeQuery.copyWith(limit: _pageSize, offset: offset);
+    SearchResponse<dynamic> response;
+    try {
+      response = await engine.execute(queryToExecute);
+    } catch (_) {
+      if (!mounted || _session.activeRequestId != requestId) return;
+      setState(() {
+        _isLoading = false;
+        _offlineState = OfflineUxState.offlineSafeNoMatch;
+        _emptyResultsMessage =
+            const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
+      });
+      return;
+    }
+    if (!mounted || _session.activeRequestId != requestId) return;
+    final updatedReferents = ResultReferentContext.fromSearchResponse(
+      response,
+      previous: _session.referents,
+      queryRally: queryToExecute.targetRallyName,
+      queryDriver: queryToExecute.driverName,
+      queryRallies: queryToExecute.targetRallyNames,
+      queryDrivers: queryToExecute.driverNames,
+    );
+    final stale = age != null && age > _staleThreshold;
+    setState(() {
+      _session = _session.copyWith(activeQuery: queryToExecute, referents: updatedReferents);
+      _searchResponse = response;
+      _totalCount = response.totalCount;
+      _offlineAge = age;
+      _offlineState = stale ? OfflineUxState.offlineStaleResults : OfflineUxState.offlineLocalResults;
+      _emptyResultsMessage = response.totalCount == 0
+          ? const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults)
+          : null;
+      _isLoading = false;
+    });
+  }
+
+  /// Video discovery works offline; playback is gated (network-only).
+  void _showPlaybackGated(BuildContext context) {
+    final msg = _offlineMessaging.messageFor(OfflineUxState.videoPlaybackUnavailable);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${msg.headline} ${msg.explanation}'), duration: const Duration(seconds: 3)),
+    );
   }
 
   /// Contextual, non-technical loading copy derived from the (known) intent of
@@ -703,18 +939,24 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     final filters = <String>[];
-    if (query.driverNames.isNotEmpty)
+    if (query.driverNames.isNotEmpty) {
       filters.add('${l10n.filterDriver}: ${query.driverNames.join(', ')}');
-    if (query.rallyNames.isNotEmpty)
+    }
+    if (query.rallyNames.isNotEmpty) {
       filters.add('${l10n.filterRally}: ${query.rallyNames.join(', ')}');
-    if (query.countries.isNotEmpty)
+    }
+    if (query.countries.isNotEmpty) {
       filters.add('${l10n.filterCountry}: ${query.countries.join(', ')}');
-    if (query.cities.isNotEmpty)
+    }
+    if (query.cities.isNotEmpty) {
       filters.add('${l10n.filterCity}: ${query.cities.join(', ')}');
-    if (query.stageNames.isNotEmpty)
+    }
+    if (query.stageNames.isNotEmpty) {
       filters.add('${l10n.filterStage}: ${query.stageNames.join(', ')}');
-    if (query.years.isNotEmpty)
+    }
+    if (query.years.isNotEmpty) {
       filters.add('${l10n.filterYear}: ${query.years.join(', ')}');
+    }
 
     if (filters.isEmpty) {
       return parts.join();
@@ -1051,6 +1293,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             onRollbackHistory: _handleRollbackHistory,
             onClearAll: _handleClearAll,
           ),
+
+          // 2b. Offline / connectivity banner (product-tone: headline +
+          //     literal explanation). Never styles results as an error.
+          if (_offlineActive)
+            OfflineBanner(
+              state: _offlineState,
+              age: _offlineAge,
+              actionLabel: _offlineState == OfflineUxState.noLocalSnapshot ? 'Sync now' : null,
+              onAction: _offlineState == OfflineUxState.noLocalSnapshot
+                  ? () => unawaited(_offlineSync?.sync() ?? Future.value())
+                  : null,
+            ),
 
           // 3. Inline Clarification Card (if disambiguation required)
           if (_clarificationQuestion != null)
@@ -1631,7 +1885,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           itemCount: actions.length,
           itemBuilder: (ctx, idx) => VideoActionCard(
             action: actions[idx],
-            onPlay: (act) => ActionPlayerModal.show(ctx, act),
+            onPlay: _offlineActive
+                ? (act) => _showPlaybackGated(ctx)
+                : (act) => ActionPlayerModal.show(ctx, act),
           ),
         );
 
@@ -1640,7 +1896,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: driverVids.length,
-          itemBuilder: (ctx, idx) => VideoResultCard(video: driverVids[idx]),
+          itemBuilder: (ctx, idx) => VideoResultCard(video: driverVids[idx], offline: _offlineActive),
         );
 
       case SearchIntent.getTopUploaders:

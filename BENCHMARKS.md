@@ -831,3 +831,31 @@ The conversation-facing fixes (ACC-1/3/4) barely register on the single-turn fro
 ## Final verdict
 
 `ACCURACY_HARDENING_VALIDATED_WITH_REGRESSIONS` — safety gate passes (false-confident 0 everywhere; ACC-6 net-removed real wrong-entity executions); conversation/live runs confirm ACC-1/2/3/4 deliver their intended fixes; the frozen −4 was a small, safe ACC-6 tradeoff. **Follow-up:** the ACC-6 refinement (see section above) recovered the 2 `act_*` cases → current **312/392 (79.59%)**, still 0 false-confident, verdict `ACC6_REFINEMENT_VALIDATED`.
+
+---
+
+## Offline Search Benchmark (2026-08-30)
+
+Deterministic corpus (`test/offline/offline_benchmark_test.dart`) over the real
+live-DB snapshot, plus execution parity against an oracle captured from the
+authoritative online pipeline (`backend/scripts/generate_offline_oracle.py`).
+
+| Metric | Value |
+|---|---|
+| **Wrong-confident (primary gate)** | **0** |
+| Intent accuracy | 100% |
+| Field F1 | 1.00 |
+| Entity-resolution accuracy | 100% |
+| Clarification accuracy | 100% |
+| Safe-unsupported rate | 100% |
+| Special-query accuracy (9 categories) | 100% |
+| Execution parity vs online oracle | **16/16 exact** (all 9 intents) |
+| `OFFLINE_COVERAGE_RATE` | 88.9% |
+
+Snapshot sizes (live DB): **core ~5.1 MB**, **full ~37 MB** (video metadata
+dominates; URLs only, no media). Artifacts:
+`backend/benchmarks/results/offline_search_<ts>/`.
+
+Verdict: `OFFLINE_SEARCH_VALIDATED` — coverage is honest and narrower than the
+online LLM by design; correctness/safety are exact, and the primary
+wrong-confident gate holds at 0.

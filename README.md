@@ -311,3 +311,28 @@ Query-understanding configuration is hardened:
 - [LEARNINGS](LEARNINGS.md)
 - [SUMMARY](SUMMARY.md)
 - [CONTEXT](CONTEXT.md)
+- [OFFLINE_SEARCH_ARCHITECTURE](OFFLINE_SEARCH_ARCHITECTURE.md)
+
+## Offline / low-bandwidth search
+
+Normal rally search works offline, on intermittent connectivity, and on very low
+bandwidth — deterministically and without any on-device LLM, DB credentials, or
+direct MySQL access.
+
+- **Snapshot:** the backend serves a compact, read-only snapshot at
+  `GET /v1/offline/snapshot?segment=core|full`. The device stores it in SQLite
+  (`sqflite`). `core` (~5 MB) is the mandatory bootstrap; video metadata is an
+  opt-in `full` segment.
+- **Offline pipeline:** `raw text → local special-query matcher → deterministic
+  parser → local entity resolver → 9 fixed SQLite strategies`, all in
+  `lib/services/offline/`. It emits the same `SearchQuery`/`SearchResponse`
+  shapes as online, so the UI render path is shared.
+- **Connectivity policy:** `NETWORK_FIRST_WITH_LOCAL_FALLBACK` — online is
+  authoritative when reachable; on offline/timeout/error the clearly-labelled
+  local result is shown; a late online result is **never** swapped in silently.
+- **Safety:** the offline benchmark holds **wrong-confident = 0**, matches the
+  online oracle on all 9 intents (16/16), and clarifies rather than guesses.
+  See `test/offline/` and `OFFLINE_SEARCH_ARCHITECTURE.md`.
+- **Voice/video offline:** cloud voice = network-only; on-device voice =
+  device-dependent (transcript editable, no auto-submit); video discovery works
+  offline, playback is gated.

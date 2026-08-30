@@ -311,3 +311,29 @@ STT: `whisper-1` (provisional)
 - larger human STT validation
 - verified AWS RDS CA TLS
 - inverse rally→participants intent/capability
+
+## Offline architecture (implemented)
+
+Two pipelines share one IR (`SearchQuery`) and one result shape
+(`SearchResponse`):
+
+```
+ONLINE  (authoritative)   Flutter → FastAPI → Gemini QU → deterministic recovery
+                          → OpenEntity → SearchPlan → SearchRepository → MySQL
+
+OFFLINE (local fallback)  Flutter → LocalSpecialQueryMatcher → deterministic
+                          offline parser → local entity resolver → 9 fixed
+                          parameterised SQLite strategies → SQLite snapshot
+```
+
+- The offline path is **deterministic, model-free, and static** — not a second
+  AI stack. It reuses the online entity-scoring *maths* (re-expressed in
+  `lib/services/offline/offline_text_scoring.dart`), never the forbidden legacy
+  `lib/services/llm/*` runtime, `database_service.dart`, or `mysql_client`.
+- The snapshot is produced server-side (`GET /v1/offline/snapshot`,
+  `backend/app/services/offline_snapshot.py`) with wins/results/uploader
+  aggregates precomputed. No secrets or PII reach the device.
+- Runtime policy: `NETWORK_FIRST_WITH_LOCAL_FALLBACK`
+  (`offline_search_router.dart`) with a bounded bandwidth-aware fallback budget
+  and no silent result swaps. See `OFFLINE_SEARCH_ARCHITECTURE.md` for the full
+  schema, sizes, and benchmark metrics.

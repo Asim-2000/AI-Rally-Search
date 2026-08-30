@@ -670,3 +670,30 @@ game.
 │ + intent-specific result cards│
 └───────────────────────────────┘
 ```
+
+## Offline / connectivity UX (implemented)
+
+The cheesy rally personality now extends to every connectivity state via the
+**17-state messaging matrix** (`lib/services/offline/offline_messaging.dart`,
+rendered by `lib/widgets/offline_banner.dart`). Each state is *playful headline →
+literal explanation → obvious action*, and offline results are **never** styled
+as an error.
+
+- **Offline results:** a subtle secondary-container banner ("Still racing — even
+  without signal 🏁") above the normal result cards, with last-updated age when
+  the snapshot is stale.
+- **Clarification offline:** reuses the standard `ClarificationCard` (same chips
+  as online) — the offline resolver clarifies, never guesses.
+- **No snapshot yet:** "We haven't packed the service notes yet" + a **Sync now**
+  action (when online).
+- **Low bandwidth:** local result shown within the fallback budget; a late online
+  answer is offered explicitly ("HQ answered — show latest"), never swapped
+  silently.
+- **Video:** discovery cards render from local metadata; playback is gated with
+  "Found the clip — but the stream's off-stage".
+- **Voice:** cloud-voice-offline and on-device-voice-unavailable each get their
+  own headline + fallback action; the transcript stays editable and is never
+  auto-submitted.
+
+These are additive: the online experience is visually unchanged (no offline
+chrome when reachable).

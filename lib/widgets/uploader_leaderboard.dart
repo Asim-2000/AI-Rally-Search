@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/search_results.dart';
+import 'leaderboard_scaffold.dart';
 
 class UploaderLeaderboard extends StatelessWidget {
   final List<UploaderSearchResult> uploaders;
@@ -17,61 +18,14 @@ class UploaderLeaderboard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final title = rallyName != null ? 'Top Uploaders — $rallyName' : 'Top Community Uploaders';
 
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? Colors.white12 : Colors.grey.shade200),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return LeaderboardScaffold(
+      icon: Icons.video_library_rounded,
+      title: title,
+      subtitle: 'Ranked by video upload count',
+      countLabel: '${uploaders.length} uploaders',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [const Color(0xFF065F46), const Color(0xFF1E293B)]
-                    : [const Color(0xFF059669), const Color(0xFF10B981)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.video_library_rounded, color: Colors.white, size: 24),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Text(
-                        'Ranked by Video Upload Count',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Table header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

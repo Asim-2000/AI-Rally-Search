@@ -446,8 +446,10 @@ void main() {
         await tester.tap(find.byKey(const Key('submit_search_button')));
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
+        // Results render; no raw schema/pipe interpretation string is shown.
         expect(find.text('Rally Ireland 2026'), findsOneWidget);
+        expect(find.textContaining('Driver:'), findsNothing);
+        expect(find.textContaining('|'), findsNothing);
       },
     );
 

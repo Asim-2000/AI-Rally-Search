@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/search_results.dart';
+import 'leaderboard_scaffold.dart';
 
 class DriverWinsLeaderboard extends StatelessWidget {
   final List<DriverWinResult> drivers;
@@ -16,61 +17,14 @@ class DriverWinsLeaderboard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: isDark ? Colors.white12 : Colors.grey.shade200),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return LeaderboardScaffold(
+      icon: Icons.emoji_events_rounded,
+      title: 'Most Rally Wins',
+      subtitle: 'Ranked by career 1st-place finishes',
+      countLabel: '${drivers.length} drivers',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [const Color(0xFF78350F), const Color(0xFF1E293B)]
-                    : [const Color(0xFFD97706), const Color(0xFFF59E0B)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.emoji_events_rounded, color: Colors.white, size: 26),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Most Rally Wins Leaderboard',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        'Ranked by Career 1st-Place Rally Finishes',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Table header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

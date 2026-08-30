@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/video_action.dart';
+import '../theme/app_theme.dart';
+import 'rally_card_shell.dart';
 
 class VideoActionCard extends StatelessWidget {
   final VideoAction action;
@@ -13,57 +15,12 @@ class VideoActionCard extends StatelessWidget {
     this.isCompact = false,
   });
 
-  Color _getActionColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'jump':
-        return Colors.amber.shade700;
-      case 'drift':
-        return Colors.deepPurple;
-      case 'crash':
-        return Colors.red.shade700;
-      case 'spin':
-        return Colors.orange.shade800;
-      case 'start_line':
-        return Colors.teal;
-      case 'near_miss':
-        return Colors.blueAccent;
-      case 'offroad':
-        return Colors.brown;
-      case 'mechanical_failure':
-        return Colors.grey.shade800;
-      default:
-        return const Color(0xFF1E88E5);
-    }
-  }
-
-  IconData _getActionIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'jump':
-        return Icons.flight_takeoff_rounded;
-      case 'drift':
-        return Icons.turn_sharp_right_rounded;
-      case 'crash':
-        return Icons.warning_amber_rounded;
-      case 'spin':
-        return Icons.rotate_right_rounded;
-      case 'start_line':
-        return Icons.flag_rounded;
-      case 'near_miss':
-        return Icons.bolt_rounded;
-      case 'offroad':
-        return Icons.terrain_rounded;
-      case 'mechanical_failure':
-        return Icons.build_rounded;
-      default:
-        return Icons.play_circle_outline_rounded;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final actionColor = _getActionColor(action.actionType);
+    final visual = RallyActionVisual.forType(action.actionType, isDark: isDark);
+    final actionColor = visual.color;
 
     if (isCompact) {
       return Container(
@@ -160,20 +117,9 @@ class VideoActionCard extends StatelessWidget {
       );
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.08),
-        ),
-      ),
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      child: InkWell(
-        onTap: () => onPlay?.call(action),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
+    return RallyCardShell(
+      onTap: () => onPlay?.call(action),
+      child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -194,10 +140,10 @@ class VideoActionCard extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: 90,
                           height: 60,
-                          errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(actionColor),
+                          errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(visual),
                         )
                       else
-                        _buildFallbackThumbnail(actionColor),
+                        _buildFallbackThumbnail(visual),
                       // Play Overlay Icon
                       Container(
                         padding: const EdgeInsets.all(6),
@@ -261,7 +207,7 @@ class VideoActionCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _getActionIcon(action.actionType),
+                              visual.icon,
                               size: 12,
                               color: actionColor,
                             ),
@@ -314,17 +260,16 @@ class VideoActionCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 
-  Widget _buildFallbackThumbnail(Color actionColor) {
+  Widget _buildFallbackThumbnail(RallyActionVisual visual) {
     return Container(
       color: const Color(0xFF181824),
       child: Center(
         child: Icon(
-          _getActionIcon(action.actionType),
-          color: actionColor.withValues(alpha: 0.5),
+          visual.icon,
+          color: visual.color.withValues(alpha: 0.6),
           size: 28,
         ),
       ),

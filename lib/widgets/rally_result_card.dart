@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/search_results.dart';
+import '../theme/app_theme.dart';
+import 'rally_card_shell.dart';
 
 class RallyResultCard extends StatelessWidget {
   final RallySearchResult rally;
@@ -16,21 +18,12 @@ class RallyResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? Colors.white12 : Colors.grey.shade200,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return RallyCardShell(
+      onTap: onTap,
+      clip: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Thumbnail / Banner image
             Stack(
               children: [
@@ -83,8 +76,8 @@ class RallyResultCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: (rally.status!.toLowerCase() == 'active' ? Colors.green : Colors.blueGrey)
-                            .withValues(alpha: 0.85),
+                        color: rallyStatusColor(rally.status, isDark: isDark)
+                            .withValues(alpha: 0.90),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -154,12 +147,34 @@ class RallyResultCard extends StatelessWidget {
                       ],
                     ),
                   ],
+
+                  // Whole-card tap drills into the rally's finishers.
+                  if (onTap != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          'View results',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
-      ),
     );
   }
 

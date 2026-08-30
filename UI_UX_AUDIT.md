@@ -593,17 +593,28 @@ STT provenance line; add lightweight design tokens (`lib/theme/app_theme.dart`);
 hero with example queries (recent searches deferred). Streams registry retained as a secondary
 "Browse" area reachable from the search app bar.
 
-**Phase 2 — Result cards**
-Unify card shell (radius/border/elevation/type); unify the three leaderboards; format times;
-soften action palette; tokenize winner/top-3 gold; add rally drill affordance.
+**Phase 2 — Result surface + clarification + states (IMPLEMENTED)**
+Combined the audit's original Phases 2 and 3. Shipped: shared `RallyCardShell` (16dp radius,
+hairline border, flat elevation) applied to the rally / participation / video / video-action
+cards; shared `LeaderboardScaffold` replacing the three divergent gradient headers with one
+restrained accent-tinted header (finishers / driver-wins / uploaders); `formatRaceTime` for
+readable times (UI only); softened, icon-led action palette via `RallyActionVisual` (accent /
+warning / destructive, with `start_line`/`start line` key normalization); tokenized
+winner/top-3 gold (`kRallyGold`); rally "View results ›" drill affordance. Removed the
+schema/pipe interpreted-summary band — interpretation is now the removable
+`ActiveContextChipsBar`. Redesigned clarification (`ClarificationCard`: contextual type-derived
+title, tappable ≥44dp discriminator rows, neutral treatment). Redesigned no-results (plain
+title, removable filter chips, explicit broaden actions, clean "Did you mean" — jargon removed).
+Split errors into typed states (`_SearchErrorKind`: service-unavailable vs
+couldn't-understand). Context-aware loading copy + a lightweight `ResultsSkeleton` (pure
+Flutter, no new package). Follow-ups capped at 3. Accessibility: semantics/live-regions on
+states, ≥44dp targets, removable chips announce what they remove. Voice unchanged — **both
+modes retained**.
 
-**Phase 3 — Clarification / empty / error / loading**
-Contextual clarification with discriminators; filter-echo empty state; four typed error states;
-context-aware loading + skeletons.
-
-**Phase 4 — Voice + refinement polish + a11y**
-Single-mic recording UX (waveform/stop/cancel, inline errors, manual submit preserved); merge
-context-chips + follow-ups zone; accessibility pass; optional bottom-nav shell.
+**Phase 3 — Remaining polish (deferred)**
+Migrate the leaderboard rows and remaining cards fully onto the token type ramp; distinctive
+display typeface; richer rally imagery; load-more on mobile; optional bottom-nav shell; broader
+contrast/text-scaling audit across untouched surfaces.
 
 Each phase is independently shippable and touches only presentation.
 

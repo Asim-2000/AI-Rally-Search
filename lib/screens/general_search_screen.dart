@@ -36,7 +36,18 @@ import '../widgets/voice_search_button.dart';
 import '../services/speech/speech_to_text_service.dart';
 import '../services/speech/speech_service_factory.dart';
 import '../theme/app_theme.dart';
+import '../widgets/results_skeleton.dart';
 import 'rally_streams_page.dart';
+
+/// User-facing category of a results-area failure. Presentation only — the
+/// underlying exception/state is unchanged; this only selects friendly copy.
+enum _SearchErrorKind {
+  /// Backend/network could not be reached.
+  service,
+
+  /// The query could not be understood / turned into a search.
+  understanding,
+}
 
 /// Phase 5E Continuous Conversational Search Screen.
 ///
@@ -110,7 +121,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   SearchConversationSession _session = SearchConversationSession.initial;
 
   // Search & Clarification state
-  String? _interpretedSummary;
   String? _clarificationQuestion;
   List<EntityCandidate> _clarificationCandidates = [];
   PendingClarification? _pendingClarification;
@@ -127,8 +137,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   bool _hasSearched = false;
 
   bool _isLoading = false;
-  String _loadingStatus = 'Searching...';
+  String _loadingStatus = 'Searching…';
   String? _errorMessage;
+  _SearchErrorKind _errorKind = _SearchErrorKind.service;
   String? _specialMessage;
   String? _emptyResultsMessage;
   SearchResponse<dynamic>? _searchResponse;
@@ -321,7 +332,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           _isLoading = false;
           _specialMessage = result.friendlyMessage;
           _searchResponse = null;
-          _interpretedSummary = null;
           _clarificationCandidates = [];
         });
         return;
@@ -341,7 +351,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                   referents: result.referents,
                   requestId: nextRequestId,
                 );
-          _interpretedSummary = null;
         });
         return;
       }
@@ -350,9 +359,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         setState(() {
           if (backendSession != null) _session = backendSession;
           _isLoading = false;
+          _errorKind = _SearchErrorKind.understanding;
           _errorMessage = result.friendlyMessage ?? 'Query parsing failed';
           _clarificationCandidates = [];
-          _interpretedSummary = null;
         });
         return;
       }
@@ -423,7 +432,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         _session = updatedSession;
         _searchResponse = result.searchResponse;
         _totalCount = result.totalCount;
-        _interpretedSummary = localizedSummary;
         _lastNlResult = result;
         _clarificationQuestion = null;
         _clarificationCandidates = [];
@@ -436,13 +444,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
+        _errorKind = _SearchErrorKind.service;
         _errorMessage = e is PythonApiException
             ? e.friendlyMessage
             : const FriendlyResponseService().responseFor(
                 FriendlyResponseCategory.serverError,
               );
         _clarificationCandidates = [];
-        _interpretedSummary = null;
         _isLoading = false;
       });
     } finally {
@@ -462,7 +470,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _hasSearched = true;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
-      _loadingStatus = 'Searching rallies…';
+      _loadingStatus = _loadingCopyForIntent(_session.activeQuery.intent);
       _errorMessage = null;
       _specialMessage = null;
       _emptyResultsMessage = null;
@@ -472,6 +480,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     if (repository == null) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
+        _errorKind = _SearchErrorKind.service;
         _errorMessage = const FriendlyResponseService().responseFor(
           FriendlyResponseCategory.serverError,
         );
@@ -500,9 +509,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         queryDrivers: queryToExecute.driverNames,
       );
 
-      final l10n = AppLocalizations.of(context);
-      final summary = _buildLocalizedInterpretedSummary(queryToExecute, l10n);
-
       setState(() {
         _session = _session.copyWith(
           activeQuery: queryToExecute,
@@ -510,7 +516,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         );
         _searchResponse = response;
         _totalCount = response.totalCount;
-        _interpretedSummary = summary;
         _emptyResultsMessage = response.totalCount == 0
             ? const FriendlyResponseService().responseFor(
                 FriendlyResponseCategory.noResults,
@@ -521,11 +526,35 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     } catch (e) {
       if (!mounted || _session.activeRequestId != nextRequestId) return;
       setState(() {
+        _errorKind = _SearchErrorKind.service;
         _errorMessage = const FriendlyResponseService().responseFor(
           FriendlyResponseCategory.serverError,
         );
         _isLoading = false;
       });
+    }
+  }
+
+  /// Contextual, non-technical loading copy derived from the (known) intent of
+  /// a deterministic search. Never exposes pipeline internals.
+  String _loadingCopyForIntent(SearchIntent intent) {
+    switch (intent) {
+      case SearchIntent.searchRallies:
+        return 'Searching rallies…';
+      case SearchIntent.searchDriverRallies:
+      case SearchIntent.searchDriverWins:
+        return 'Finding rally participations…';
+      case SearchIntent.getRallyResults:
+      case SearchIntent.getRallyTopFinishers:
+        return 'Loading results…';
+      case SearchIntent.searchVideoActions:
+        return 'Finding highlights…';
+      case SearchIntent.searchDriverVideos:
+        return 'Finding videos…';
+      case SearchIntent.getTopUploaders:
+        return 'Ranking uploaders…';
+      case SearchIntent.getTopDriversByWins:
+        return 'Ranking drivers…';
     }
   }
 
@@ -552,7 +581,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _sttRawTranscript = null;
       _voiceGeneration++;
       _session = _session.clearAll();
-      _interpretedSummary = null;
       _clarificationQuestion = null;
       _clarificationCandidates = [];
       _pendingClarification = null;
@@ -775,12 +803,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
                     unawaited(_cloudSpeechService.cancelListening());
                     setState(() {
                       _selectedLanguage = lang;
-                      if (_lastNlResult?.query != null) {
-                        _interpretedSummary = _buildLocalizedInterpretedSummary(
-                          _lastNlResult!.query!,
-                          AppLocalizations.of(context),
-                        );
-                      }
                     });
                   }
                 },
@@ -1023,43 +1045,13 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               }),
             ),
 
-          // 4. Interpreted Natural-Language Feedback Bar + Telemetry
-          if (_interpretedSummary != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                border: Border(
-                  bottom: BorderSide(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _interpretedSummary!,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // 5. Results Count & Header Bar (only after a search has run)
-          if (_hasSearched)
+          // 4. Results summary line. The interpretation itself is shown as the
+          //    removable chip bar above (ActiveContextChipsBar); no raw
+          //    schema/intent/pipe string is exposed here. Shown only when there
+          //    are results to describe.
+          if (_searchResponse != null &&
+              _searchResponse!.results.isNotEmpty &&
+              !_isLoading)
             Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: isDark ? const Color(0xFF141414) : Colors.grey.shade100,
@@ -1114,7 +1106,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               _searchResponse != null &&
               _searchResponse!.results.isNotEmpty)
             SuggestedFollowUpsBar(
-              suggestions: suggestions,
+              suggestions: suggestions.take(3).toList(),
               onSuggestionSelected: _handleSuggestionSelected,
             ),
 
@@ -1245,6 +1237,285 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     );
   }
 
+  /// Collects the active query's filters as removable chips (field/value/label)
+  /// using the same deterministic removal path as [ActiveContextChipsBar].
+  List<({String field, dynamic value, String label})> _activeFilters() {
+    final q = _session.activeQuery;
+    final out = <({String field, dynamic value, String label})>[];
+    for (final r in q.rallyNames) {
+      out.add((field: 'rally', value: r, label: r));
+    }
+    for (final d in q.driverNames) {
+      out.add((field: 'driver', value: d, label: d));
+    }
+    for (final c in q.countries) {
+      if (c.toUpperCase() == 'ALL') continue;
+      out.add((field: 'country', value: c, label: c));
+    }
+    for (final y in q.years) {
+      out.add((field: 'year', value: y, label: '$y'));
+    }
+    for (final a in q.actionTypes) {
+      if (a.toUpperCase() == 'ALL') continue;
+      final label = a.isNotEmpty ? '${a[0].toUpperCase()}${a.substring(1)}' : a;
+      out.add((field: 'action', value: a, label: label));
+    }
+    for (final city in q.cities) {
+      out.add((field: 'city', value: city, label: city));
+    }
+    return out;
+  }
+
+  Widget _removableFilterChip(
+    AppPalette palette, {
+    required String label,
+    required VoidCallback onRemove,
+  }) {
+    return Semantics(
+      button: true,
+      label: 'Remove filter $label',
+      child: Material(
+        color: palette.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppRadii.control),
+        child: InkWell(
+          onTap: onRemove,
+          borderRadius: BorderRadius.circular(AppRadii.control),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: palette.primaryText,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.close_rounded, size: 15, color: palette.secondaryText),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final understanding = _errorKind == _SearchErrorKind.understanding;
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              understanding
+                  ? Icons.search_off_rounded
+                  : Icons.cloud_off_rounded,
+              size: 52,
+              color: palette.secondaryText,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                understanding
+                    ? "We couldn't turn that into a search"
+                    : 'Search is temporarily unavailable',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: palette.primaryText,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              understanding
+                  ? 'Try rephrasing — for example, “rallies in Ireland in 2025”.'
+                  : 'Please check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: palette.secondaryText),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            if (understanding)
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final q in _exampleQueries.take(2))
+                    ActionChip(
+                      label: Text(q, style: const TextStyle(fontSize: 12.5)),
+                      onPressed: () => _runExampleQuery(q),
+                    ),
+                ],
+              )
+            else
+              FilledButton.icon(
+                onPressed: () => _executeDeterministicSearch(),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Try again'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final filters = _activeFilters();
+    final candidates = _lastNlResult?.candidates ?? const [];
+    final resultLabel = _resultTypeLabel(_session.activeQuery.intent);
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off_rounded, size: 56, color: palette.secondaryText),
+            const SizedBox(height: AppSpacing.md),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                'No $resultLabel found',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: palette.primaryText,
+                ),
+              ),
+            ),
+            if (_emptyResultsMessage != null &&
+                _emptyResultsMessage!.trim().isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _emptyResultsMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: palette.secondaryText),
+              ),
+            ],
+            if (filters.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Filters',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.4,
+                  color: palette.secondaryText,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final f in filters)
+                    _removableFilterChip(
+                      palette,
+                      label: f.label,
+                      onRemove: () => _handleRemoveFilter(f.field, f.value),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Tap a filter to remove it and broaden your search.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12.5, color: palette.secondaryText),
+              ),
+            ],
+            if (candidates.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Did you mean',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.4,
+                  color: palette.secondaryText,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final cand in candidates)
+                    ActionChip(
+                      avatar: Icon(_getCandidateIcon(cand.type),
+                          size: 16, color: palette.accent),
+                      label: Text(
+                        cand.subtitle != null
+                            ? '${cand.canonicalName} · ${cand.subtitle}'
+                            : cand.canonicalName,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () => _onSelectCandidate(cand),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _handleClearAll,
+                  icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                  label: const Text('Start over'),
+                ),
+                if (_session.activeQuery.intent != SearchIntent.searchRallies)
+                  FilledButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _session = _session.copyWith(
+                          activeQuery: const SearchQuery(
+                            intent: SearchIntent.searchRallies,
+                          ),
+                        );
+                      });
+                      _executeDeterministicSearch(resetPage: true);
+                    },
+                    icon: const Icon(Icons.flag_rounded, size: 18),
+                    label: const Text('Search all rallies'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDynamicResultsView(BuildContext context) {
     // First-launch hero: no automatic search runs on open, so until the user
     // searches we show the product title + example queries instead of results.
@@ -1253,19 +1524,7 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              _loadingStatus,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return ResultsSkeleton(label: _loadingStatus);
     }
 
     if (_specialMessage != null) {
@@ -1293,123 +1552,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                color: Colors.red,
-                size: 48,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => _executeDeterministicSearch(),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildErrorState(context);
     }
 
     if (_searchResponse == null || _searchResponse!.results.isEmpty) {
-      final theme = Theme.of(context);
-      final availableCandidates = _lastNlResult?.candidates ?? const [];
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.search_off_rounded,
-                size: 64,
-                color: Colors.grey.withValues(alpha: 0.4),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _emptyResultsMessage ?? 'No search results found',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Active search context is preserved. Try removing a filter or searching for another event.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-              if (availableCandidates.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Did you mean?',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.center,
-                  children: availableCandidates.map((cand) {
-                    final icon = _getCandidateIcon(cand.type);
-                    return ActionChip(
-                      avatar: Icon(icon, size: 16, color: theme.colorScheme.primary),
-                      label: Text(
-                        cand.subtitle != null
-                            ? '${cand.canonicalName} (${cand.subtitle})'
-                            : cand.canonicalName,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      onPressed: () => _onSelectCandidate(cand),
-                    );
-                  }).toList(),
-                ),
-              ],
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 8,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _handleClearAll,
-                    icon: const Icon(Icons.clear_all_rounded),
-                    label: const Text('Reset Session'),
-                  ),
-                  FilledButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _session = _session.copyWith(
-                          activeQuery: const SearchQuery(
-                            intent: SearchIntent.searchRallies,
-                          ),
-                        );
-                      });
-                      _executeDeterministicSearch(resetPage: true);
-                    },
-                    icon: const Icon(Icons.flag_rounded),
-                    label: const Text('Show All Rallies'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildNoResultsState(context);
     }
 
     final resp = _searchResponse!;

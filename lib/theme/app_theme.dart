@@ -94,3 +94,104 @@ class AppPalette {
     destructive: Color(0xFFE5736B),
   );
 }
+
+/// Single gold token for winner / top-3 states (replaces scattered raw ambers).
+const Color kRallyGold = Color(0xFFCC9A2E);
+
+/// Restrained, icon-led visual for a video-action type. Colour variation is
+/// deliberately narrow (accent / warning / destructive) so the action *name and
+/// icon* — not a rainbow of colours — carry the meaning.
+class RallyActionVisual {
+  final Color color;
+  final IconData icon;
+  const RallyActionVisual(this.color, this.icon);
+
+  /// Normalizes both `start_line` and `start line` (etc.) to one key.
+  static String normalizeType(String type) =>
+      type.trim().toLowerCase().replaceAll(RegExp(r'[\s\-]+'), '_');
+
+  static RallyActionVisual forType(String type, {required bool isDark}) {
+    final palette = isDark ? AppPalette._dark : AppPalette._light;
+    final key = normalizeType(type);
+    switch (key) {
+      case 'crash':
+      case 'mechanical_failure':
+      case 'stuck':
+        return RallyActionVisual(palette.destructive, _iconFor(key));
+      case 'jump':
+      case 'near_miss':
+        return RallyActionVisual(palette.warning, _iconFor(key));
+      default:
+        return RallyActionVisual(palette.accent, _iconFor(key));
+    }
+  }
+
+  static IconData _iconFor(String key) {
+    switch (key) {
+      case 'jump':
+        return Icons.flight_takeoff_rounded;
+      case 'drift':
+        return Icons.turn_sharp_right_rounded;
+      case 'crash':
+        return Icons.warning_amber_rounded;
+      case 'spin':
+        return Icons.rotate_right_rounded;
+      case 'donut':
+        return Icons.data_usage_rounded;
+      case 'hairpin':
+        return Icons.u_turn_left_rounded;
+      case 'water_splash':
+        return Icons.water_drop_rounded;
+      case 'start_line':
+        return Icons.flag_rounded;
+      case 'near_miss':
+        return Icons.bolt_rounded;
+      case 'offroad':
+        return Icons.terrain_rounded;
+      case 'mechanical_failure':
+        return Icons.build_rounded;
+      case 'stuck':
+        return Icons.report_problem_rounded;
+      default:
+        return Icons.play_circle_outline_rounded;
+    }
+  }
+}
+
+/// Colour role for a rally status badge (UI only; stored status untouched).
+Color rallyStatusColor(String? status, {required bool isDark}) {
+  final palette = isDark ? AppPalette._dark : AppPalette._light;
+  switch (status?.toLowerCase()) {
+    case 'active':
+    case 'live':
+      return palette.success;
+    case 'complete':
+    case 'completed':
+    case 'finished':
+      return palette.accent;
+    case 'cancelled':
+    case 'failed':
+      return palette.destructive;
+    default:
+      return palette.secondaryText;
+  }
+}
+
+/// Formats a raw seconds string (e.g. "3600.0") as a readable race time
+/// (e.g. "1:00:00" or "2:05.5"). UI presentation only — never mutates stored
+/// values. Returns "—" when the value is missing or non-positive.
+String formatRaceTime(String? rawSeconds) {
+  if (rawSeconds == null || rawSeconds.trim().isEmpty) return '—';
+  final total = double.tryParse(rawSeconds.trim());
+  if (total == null || total <= 0) return '—';
+  final hours = total ~/ 3600;
+  final minutes = (total % 3600) ~/ 60;
+  final seconds = total % 60;
+  String two(num v) => v.toInt().toString().padLeft(2, '0');
+  if (hours > 0) {
+    return '$hours:${two(minutes)}:${two(seconds)}';
+  }
+  // Preserve one decimal for sub-hour stage/total times.
+  final secStr = seconds.toStringAsFixed(1).padLeft(4, '0');
+  return '$minutes:$secStr';
+}

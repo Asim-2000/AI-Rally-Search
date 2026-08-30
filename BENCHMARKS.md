@@ -774,7 +774,30 @@ Using the **same frozen Gemini outputs**, the newer deterministic pipeline chang
 | False confident | 0 | **0** | 0 |
 | P(success \| exact query) | 84.92% | **84.52%** | ~0 |
 
-The −4 is entirely the stricter **ACC-6** rule. Case fixes: **0**; regressions (by score): **4** — `act_0344`, `act_0352` (safe over-clarification of a misfiled person), `nsy_0207`, `nsy_0208` (ACC-6 replaced a *wrong-entity* execution — "Mayo Forestry" → driver "Simon May" — with a safe clarification; the lenient evaluator had scored the wrong execution as success). No wrong-confident was introduced anywhere.
+The −4 is entirely the stricter **ACC-6** rule. Case fixes: **0**; regressions (by score): **4** — `act_0344`, `act_0352` (safe over-clarification of a misfiled person), `nsy_0207`, `nsy_0208` (ACC-6 replaced a *wrong-entity* execution — "Mayo Forestry" → driver "Simon May" — with a safe clarification; the lenient evaluator had scored the wrong execution as success). No wrong-confident was introduced anywhere. **The `act_*` over-clarifications were subsequently fixed — see [ACC-6 Refinement](#acc-6-refinement) below.**
+
+## ACC-6 Refinement
+
+*Follow-up (`20260830_024000`) that replaced the overly-strict ACC-6 rule. Same frozen Flash-Lite outputs, same evaluator/gold, live index, **0 paid LLM calls**. The `310/392` above is preserved as historical.*
+
+Downstream frozen-replay progression (same evaluator/gold throughout):
+
+| Stage | System success | False confident |
+|---|---:|---:|
+| Pre-ACC controlled baseline | 314/392 (80.10%) | 0/392 |
+| Initial ACC hardening (strict ACC-6) | 310/392 (79.08%) | 0/392 |
+| **Refined ACC-6 (current)** | **312/392 (79.59%)** | **0/392** |
+
+New regressions after refinement: **0**.
+
+**Distinguishing signal.** Cross-type PERSON recovery now gates on rally-match *strength*, not the raw `is_ambiguous` flag: a **weak/spurious** rally candidate *below* the confidence threshold (0.75) no longer blocks recovery, while a **genuine strong** rally ambiguity (≥1 candidate at/above the threshold) still clarifies. Measured tops: `act_0344` 0.543, `act_0352` 0.518 (spurious → recover PERSON); `nsy_0207`/`nsy_0208` 0.940 (genuine → clarify RALLY).
+
+**Case-level interpretation.**
+
+- `act_0344`, `act_0352` → **genuine regressions fixed** (CLARIFY → RESOLVED, correct driver recovered).
+- `nsy_0207`, `nsy_0208` → **remain evaluator-scored failures** but are semantically **safer/correct** RALLY clarifications (the "Mayo …" phrase is genuinely ambiguous across two real editions).
+
+**The final resolver was NOT tuned to force the score back to 314/392.** Doing so would reintroduce the `nsy_*` wrong-entity executions ("Mayo …" → driver "Simon May"). Verdict: **`ACC6_REFINEMENT_VALIDATED`**. Artifacts: `backend/benchmarks/results/acc6_refinement_20260830_024000/`.
 
 ## ACC impact (frozen set)
 
@@ -803,8 +826,8 @@ The conversation-facing fixes (ACC-1/3/4) barely register on the single-turn fro
 
 ## Failure categories (new this pass)
 
-`CROSS_TYPE_RECOVERY` — 2 safe over-clarifications (`act_*`, worth a future confidence-gating refinement); `EVALUATOR`/`GOLD` leniency — 2 (`nsy_*`, previously wrong-entity executions scored as success).
+`CROSS_TYPE_RECOVERY` — 2 safe over-clarifications (`act_*`; **fixed by the ACC-6 refinement above** — now RESOLVED to the correct driver); `EVALUATOR`/`GOLD` leniency — 2 (`nsy_*`, previously wrong-entity executions scored as success; now safe clarifications).
 
 ## Final verdict
 
-`ACCURACY_HARDENING_VALIDATED_WITH_REGRESSIONS` — safety gate passes (false-confident 0 everywhere; ACC-6 net-removed real wrong-entity executions); conversation/live runs confirm ACC-1/2/3/4 deliver their intended fixes; the frozen −4 is a small, safe ACC-6 tradeoff.
+`ACCURACY_HARDENING_VALIDATED_WITH_REGRESSIONS` — safety gate passes (false-confident 0 everywhere; ACC-6 net-removed real wrong-entity executions); conversation/live runs confirm ACC-1/2/3/4 deliver their intended fixes; the frozen −4 was a small, safe ACC-6 tradeoff. **Follow-up:** the ACC-6 refinement (see section above) recovered the 2 `act_*` cases → current **312/392 (79.59%)**, still 0 false-confident, verdict `ACC6_REFINEMENT_VALIDATED`.

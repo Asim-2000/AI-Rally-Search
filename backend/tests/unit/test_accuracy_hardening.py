@@ -172,3 +172,171 @@ async def test_acc6_ambiguous_rally_clarifies_not_person():
     res = await resolver.resolve(query)
     assert res.requires_clarification
     assert res.candidates  # rally editions offered
+
+
+# ---------------------------------------------------------------------------
+# ACC-6 REFINEMENT: gate cross-type PERSON recovery on rally-match STRENGTH,
+# not the raw ambiguity flag.
+#
+# A rally is only *genuinely* ambiguous when at least one rally candidate is a
+# STRONG match (clears the confidence threshold) — e.g. multiple real editions
+# of the same event. When every rally candidate is weak/spurious retrieval
+# noise, a phrase the model misfiled into rallyNames that is really a PERSON
+# must be recoverable via a confident PERSON match.
+#
+# Distinguishing signal captured from the frozen benchmark trace:
+#   act_0344 "Aaron Duville" : rally top 0.543 (<0.75, spurious) + driver 1.0
+#   act_0352 "Aaron Nau"     : rally top 0.518 (<0.75, spurious) + driver 1.0
+#   nsy_0207 "Mayo Forestry" : rally top 0.94  (>=0.75, genuine) + driver 0.846
+#   nsy_0208 "Mayo Stages"   : rally top 0.94  (>=0.75, genuine) + driver 0.846
+# ---------------------------------------------------------------------------
+
+from app.domain.search_query import PersonRole  # noqa: E402
+from app.entity_search.models import EntityCandidate, EntityType  # noqa: E402
+from app.entity_search.resolver import DatabaseEntityResolver  # noqa: E402
+
+
+class _StubLookupRepo:
+    """Returns fixed candidate lists; the resolver re-scores them by name so the
+    score band is controlled purely by the candidate names vs the query phrase.
+    """
+
+    def __init__(self, *, rallies=None, drivers=None):
+        self._rallies = rallies or []
+        self._drivers = drivers or []
+
+    async def lookup_rallies(self, phrase, **kwargs):
+        return list(self._rallies)
+
+    async def lookup_drivers(self, phrase, **kwargs):
+        return list(self._drivers)
+
+    async def lookup_stages(self, phrase, **kwargs):
+        return []
+
+    async def lookup_cities(self, phrase, **kwargs):
+        return []
+
+    async def lookup_uploaders(self, phrase, **kwargs):
+        return []
+
+
+def _rally(name: str) -> EntityCandidate:
+    return EntityCandidate(id=f"rally:{name}", type=EntityType.RALLY, canonical_name=name, metadata={})
+
+
+def _driver(name: str, driver_id: str = "d1") -> EntityCandidate:
+    return EntityCandidate(
+        id=f"driver:{name}", type=EntityType.DRIVER, canonical_name=name,
+        metadata={"driverId": driver_id},
+    )
+
+
+async def _recover(phrase: str, *, rallies, drivers, intent=SearchIntent.SEARCH_VIDEO_ACTIONS):
+    resolver = DatabaseEntityResolver(
+        repository=_StubLookupRepo(rallies=rallies, drivers=drivers)
+    )
+    query = SearchQuery(intent=intent, rally_names=[phrase])
+    return await resolver.resolve(query)
+
+
+@pytest.mark.asyncio
+async def test_acc6r_A_spurious_rally_confident_person_recovers():
+    # act_0344 equivalent: weak/spurious rally ambiguity + confident PERSON.
+    res = await _recover(
+        "Aaron Duville",
+        rallies=[_rally("Ronde della Val Merula 2025")],  # ~0.54, spurious
+        drivers=[_driver("Aaron Duville")],               # 1.0, clear winner
+    )
+    assert not res.requires_clarification
+    assert res.resolved_query.driver_names == ["Aaron Duville"]
+    assert res.resolved_query.rally_names == []
+
+
+@pytest.mark.asyncio
+async def test_acc6r_B_spurious_rally_confident_person_recovers_variant():
+    # act_0352 equivalent.
+    res = await _recover(
+        "Aaron Nau",
+        rallies=[_rally("Rallye National du Pays de Fayence 2025")],  # ~0.5, spurious
+        drivers=[_driver("Aaron Nau")],                               # 1.0
+    )
+    assert not res.requires_clarification
+    assert res.resolved_query.driver_names == ["Aaron Nau"]
+
+
+@pytest.mark.asyncio
+async def test_acc6r_C_genuine_rally_ambiguity_clarifies_not_person():
+    # nsy_0207 equivalent: two STRONG rally editions + coincidental strong person.
+    res = await _recover(
+        "Mayo Rally",
+        rallies=[_rally("Mayo Forestry Rally 2025"), _rally("Mayo Stages Rally 2026")],  # both 0.94
+        drivers=[_driver("Simon May")],  # ~0.85, coincidental
+    )
+    assert res.requires_clarification
+    assert res.candidates
+    # never hijacked into the coincidental person
+    assert not (res.resolved_query and res.resolved_query.driver_names)
+
+
+@pytest.mark.asyncio
+async def test_acc6r_D_genuine_rally_ambiguity_clarifies_variant():
+    # nsy_0208 equivalent.
+    res = await _recover(
+        "Mayo Rally",
+        rallies=[_rally("Mayo Forestry Rally 2025"), _rally("Mayo Stages Rally 2026")],
+        drivers=[_driver("Simon May")],
+    )
+    assert res.requires_clarification
+    assert not (res.resolved_query and res.resolved_query.driver_names)
+
+
+@pytest.mark.asyncio
+async def test_acc6r_E_rally_no_match_strong_person_recovers():
+    # True rally no-match + strong PERSON -> recover PERSON (intent permits).
+    res = await _recover(
+        "Aaron Nau",
+        rallies=[],                        # no rally candidates at all
+        drivers=[_driver("Aaron Nau")],    # 1.0
+    )
+    assert not res.requires_clarification
+    assert res.resolved_query.driver_names == ["Aaron Nau"]
+
+
+@pytest.mark.asyncio
+async def test_acc6r_F_genuine_rally_ambiguity_weak_person_clarifies():
+    # Genuine strong rally ambiguity + weak PERSON -> clarify RALLY, no recovery.
+    res = await _recover(
+        "Donegal Rally",
+        rallies=[_rally("Donegal Rally 2024"), _rally("Donegal Rally 2025")],  # 0.96 each
+        drivers=[_driver("Danny Odell")],  # ~0.5, weak
+    )
+    assert res.requires_clarification
+    assert not (res.resolved_query and res.resolved_query.driver_names)
+
+
+@pytest.mark.asyncio
+async def test_acc6r_G_genuine_rally_ambiguity_strong_person_still_clarifies():
+    # Genuine strong rally ambiguity + STRONG PERSON -> RALLY clarification MUST
+    # still win. This is the core safety invariant that eliminates the nsy_*
+    # wrong-entity executions.
+    res = await _recover(
+        "Donegal Rally",
+        rallies=[_rally("Donegal Rally 2024"), _rally("Donegal Rally 2025")],  # 0.96 each
+        drivers=[_driver("Donegal Ryan")],  # ~0.98, strong coincidental person
+    )
+    assert res.requires_clarification
+    assert not (res.resolved_query and res.resolved_query.driver_names)
+
+
+@pytest.mark.asyncio
+async def test_acc6r_H_weak_rally_weak_person_safe_no_wrong_confident():
+    # Weak rally ambiguity + weak PERSON -> safe clarification, never a wrong
+    # confident PERSON execution.
+    res = await _recover(
+        "Aaron Duville",
+        rallies=[_rally("Rally Auville 2025")],  # ~0.72, spurious/weak
+        drivers=[_driver("Aron Smithy")],        # ~0.23, weak
+    )
+    # no confident winner anywhere -> must not resolve to the weak person
+    assert not (res.resolved_query and res.resolved_query.driver_names)

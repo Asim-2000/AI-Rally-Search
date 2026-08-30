@@ -2,6 +2,8 @@
 
 > Timestamp: `20260829_212927` · Purpose: measure the effect of the **new downstream pipeline** (ACC-1/2/3/4/6) on system quality using the **same frozen Gemini Flash-Lite outputs**. **The QU model and prompt did not change.** No full paid 392-case QU rerun; frozen cached replay + a 26-call live sanity check only.
 
+> **⚠️ FOLLOW-UP (`20260830_024000`):** ACC-6 was subsequently **refined** and the overly-strict rule replaced. The `310 / 392 (79.08%)` figure below is preserved as the **historical** post-hardening result; the **current** downstream result is **312 / 392 (79.59%)**, false-confident still **0 / 392**. See the new **[ACC-6 Refinement](#acc-6-refinement-follow-up-20260830_024000)** section and `../acc6_refinement_20260830_024000/acc6_refinement_report.md`.
+
 ## 1. Executive Summary
 
 | | Previous (pre-ACC) | Current (post-ACC) | Δ |
@@ -87,7 +89,7 @@ All 4 are safe (CLARIFY, 0 false-confident). No case regressed into wrong-confid
 ## 12. ACC-6 Impact — ambiguous rally before PERSON recovery
 
 - The **only** change affecting the frozen set (all 4 flips). It eliminated 2 wrong-entity executions (`nsy_*`: Mayo→"Simon May") and, as a side effect, over-blocked 2 correct person-recoveries (`act_*`) where the misfiled person was the right answer and the rally match was spurious/low-confidence.
-- **Tradeoff finding (documented, not fixed):** ACC-6's blanket "ambiguous rally blocks recovery" is slightly too broad — it treats a spurious low-confidence `plausible_candidates` rally the same as a genuine multi-edition ambiguity. A future refinement could gate recovery on rally-match *confidence* rather than the ambiguity flag alone. Left unchanged this pass (code frozen during benchmark).
+- **Tradeoff finding (documented, not fixed *in this pass*):** ACC-6's blanket "ambiguous rally blocks recovery" is slightly too broad — it treats a spurious low-confidence `plausible_candidates` rally the same as a genuine multi-edition ambiguity. A future refinement could gate recovery on rally-match *confidence* rather than the ambiguity flag alone. Left unchanged this pass (code frozen during benchmark). **→ This refinement was implemented on `20260830_024000`; see [ACC-6 Refinement](#acc-6-refinement-follow-up-20260830_024000) below.**
 
 ## 13. Conversation Results
 
@@ -112,6 +114,37 @@ Inverse "drivers that participated in Rally X", stage-level results, and true "b
 ## 18. Live Production Validation
 
 26 real Gemini Flash-Lite calls → current downstream → live MySQL (11,245-entity index). **23 RESOLVE / 2 safe CLARIFY / 1 ZERO, 0 exceptions, 0 wrong-confident.** HTTP-ish pipeline p50 **1,310 ms**, p95 **1,895 ms**. Estimated cost **~$0.0085**. Both prior measured failures (`show videos from that rally`, `crashes in ireland in 2025`) are fixed; all conversation flows succeed. See `live_validation_results.jsonl`. Not used for model selection.
+
+## ACC-6 Refinement (follow-up, `20260830_024000`)
+
+*Added after the original post-hardening run above. The `310 / 392` result is preserved as historical; the numbers here are the current downstream state.*
+
+**Why the refinement was needed.** The original ACC-6 guard blocked cross-type PERSON recovery whenever the rally resolution was flagged `is_ambiguous`. That flag conflates two structurally different situations, so it over-blocked the `act_*` cases where a person had been misfiled into `rallyNames`.
+
+**Distinguishing signal.** Gate on rally-match **strength**, not the raw ambiguity flag:
+- **Weak / spurious rally ambiguity** — the top rally candidate is **below** the confidence threshold (0.75). No rally is really a match; the ambiguity is retrieval noise. Measured: `act_0344` "Aaron Duville" top **0.543**, `act_0352` "Aaron Nau" top **0.518** (both `plausible_candidates`). → allow a confident PERSON recovery.
+- **Genuine strong rally ambiguity** — at least one rally candidate is **at or above** the threshold. Measured: `nsy_0207` "Mayo Forestry" and `nsy_0208` "Mayo Stages" both top **0.940** (`insufficient_gap`, two real editions). → preserve the RALLY clarification.
+
+**Outcome (four affected cases).**
+
+| Case | Before (strict ACC-6) | After (refined) | Meaning |
+|---|---|---|---|
+| `act_0344` | CLARIFY (fail) | **RESOLVED → driver "Aaron Duville"** | genuine regression fixed |
+| `act_0352` | CLARIFY (fail) | **RESOLVED → driver "Aaron Nau"** | genuine regression fixed |
+| `nsy_0207` | CLARIFY | **CLARIFY** (rally "Mayo Forestry") | safe clarification preserved |
+| `nsy_0208` | CLARIFY | **CLARIFY** (rally "Mayo Stages") | safe clarification preserved |
+
+**Refined frozen replay** (same frozen Flash-Lite outputs, same evaluator/gold, live index, **0 paid LLM calls**):
+
+| Metric | Pre-ACC | Strict ACC-6 (historical) | Refined ACC-6 (current) |
+|---|---:|---:|---:|
+| System success | 314 / 392 (80.10%) | 310 / 392 (79.08%) | **312 / 392 (79.59%)** |
+| False confident | 0 | 0 | **0** |
+| New regressions vs pre-ACC | — | — | **0** |
+
+**Do not treat `314 / 392` as the target.** Two of those prior "successes" (`nsy_0207`, `nsy_0208`) were **semantically wrong-entity executions** — the "Mayo …" rally phrase resolved to the driver **"Simon May"** and executed, which the lenient evaluator scored as success. The refined system keeps them as safe RALLY clarifications. Forcing the score back to 314 would mean reintroducing those wrong-entity executions. The resolver was **not** tuned to do so.
+
+Verdict: **`ACC6_REFINEMENT_VALIDATED`**.
 
 ## 19. Final Verdict
 

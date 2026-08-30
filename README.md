@@ -235,13 +235,15 @@ After deterministic hardening replay (historical baseline):
 - `P(success | exact query)`: **84.92%**
 - false confident: **0**
 
-After the ACC-1/2/3/4/6 accuracy hardening, the **same frozen Gemini outputs** were replayed through the newer downstream pipeline (no new paid QU run; the model did not change):
+After the ACC-1/2/3/4/6 accuracy hardening, the **same frozen Gemini outputs** were replayed through the newer downstream pipeline (no new paid QU run; the model did not change). Downstream-only frozen replay progression (same evaluator/gold; not interchangeable with the raw-model or historical-harness numbers above):
 
-- system success: **79.08%** (310/392) — the −4 vs the historical baseline is entirely the stricter ambiguity-before-cross-type-recovery rule (2 safe clarifications replacing previously-wrong entity executions, 2 safe over-clarifications)
-- false confident: **0**
+- pre-ACC controlled re-measurement: **80.10%** (314/392) — the A/B reference for the ACC deltas (vs the 315/392 historical-harness baseline above)
+- initial post-ACC replay: **79.08%** (310/392) — the strict ambiguity-before-cross-type-recovery rule
+- **refined ACC-6 (current): 79.59% (312/392)** — recovery now gates on rally-match *strength*
+- false confident: **0** throughout
 - conversation flows: **8/8**, adversarial: **21/22** (0 wrong-confident), live sanity check: **26 calls, 0 wrong-confident**
 
-The conversation-facing fixes (ACC-1/3/4) barely register on the single-turn frozen set; they are validated by the conversation/live runs. See `backend/benchmarks/results/post_accuracy_hardening_20260829_212927/`.
+The refined replay recovers the two `act_*` cases (confident PERSON misfiled into `rallyNames`) while keeping the two `nsy_*` "Mayo …" cases as safe RALLY clarifications. The pre-ACC `314/392` is **not** the target: two of those prior "successes" were wrong-entity executions ("Mayo …" → driver "Simon May") the lenient evaluator scored as passing. The conversation-facing fixes (ACC-1/3/4) barely register on the single-turn frozen set; they are validated by the conversation/live runs. See `backend/benchmarks/results/post_accuracy_hardening_20260829_212927/` and `backend/benchmarks/results/acc6_refinement_20260830_024000/`.
 
 ### STT
 
@@ -268,7 +270,7 @@ Current provisional STT: `whisper-1`.
 - Multi-driver fallback-ID resolution fix.
 - Python-only AI-search cutover (legacy runtime backend switch removed).
 - Query-understanding config hardening (no silent mock, fail-fast on missing key, pinned model).
-- Deterministic downstream accuracy protections: follow-up video-intent recovery (ACC-1), grounded direct-filter recovery (ACC-2), canonical driver-referent preservation (ACC-3), referent-before-clarification (ACC-4), ambiguity-before-cross-type-recovery (ACC-6).
+- Deterministic downstream accuracy protections: follow-up video-intent recovery (ACC-1), grounded direct-filter recovery (ACC-2), canonical driver-referent preservation (ACC-3), referent-before-clarification (ACC-4), strength-gated ambiguity-before-cross-type-recovery (ACC-6, refined).
 
 ## Deployment
 

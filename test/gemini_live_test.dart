@@ -13,7 +13,22 @@ void main() {
 
     TestWidgetsFlutterBinding.ensureInitialized();
     HttpOverrides.global = null;
-    await dotenv.load(fileName: '.env');
+    // Secrets are no longer bundled as an app asset. Load a developer's local
+    // on-disk .env (if present) for this live test; otherwise skip.
+    final envFile = File('.env');
+    if (envFile.existsSync()) {
+      dotenv.loadFromString(
+        envString: envFile.readAsStringSync(),
+        isOptional: true,
+      );
+    }
+    if ((dotenv.maybeGet('GEMINI_API_KEY') ?? '').isEmpty) {
+      markTestSkipped(
+        'Live Gemini test skipped: GEMINI_API_KEY unavailable. Provide a local '
+        '.env to run this test (keys are no longer shipped in the app bundle).',
+      );
+      return;
+    }
     print('Loaded .env successfully');
 
     final config = LlmConfig.fromEnvironment(defaultProvider: LlmProvider.gemini);

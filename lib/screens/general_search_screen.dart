@@ -42,7 +42,6 @@ import '../services/speech/speech_to_text_service.dart';
 import '../services/speech/speech_service_factory.dart';
 import '../theme/app_theme.dart';
 import '../widgets/results_skeleton.dart';
-import 'rally_streams_page.dart';
 
 /// User-facing category of a results-area failure. Presentation only — the
 /// underlying exception/state is unchanged; this only selects friendly copy.
@@ -1078,19 +1077,6 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
             tooltip: 'Advanced Filters',
             icon: const Icon(Icons.tune_rounded),
             onPressed: _openAdvancedFilters,
-          ),
-
-          // Browse the raw stream registry (secondary area).
-          IconButton(
-            tooltip: 'Browse streams',
-            icon: const Icon(Icons.video_library_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const RallyStreamsPage(),
-                ),
-              );
-            },
           ),
 
           // Reset Session Button

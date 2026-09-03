@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -22,7 +23,9 @@ import '../services/python_search_api_client.dart';
 import '../services/friendly_response_service.dart';
 import '../services/offline/offline_messaging.dart';
 import '../services/offline/offline_search_engine.dart';
-import '../services/offline/offline_search_router.dart';
+import '../services/latency/latency_policy.dart';
+import '../services/latency/search_latency_coordinator.dart';
+import '../services/latency/search_telemetry.dart';
 import '../services/offline/offline_snapshot_sync.dart';
 import '../widgets/offline_banner.dart';
 import '../widgets/action_player_modal.dart';
@@ -42,6 +45,29 @@ import '../services/speech/speech_to_text_service.dart';
 import '../services/speech/speech_service_factory.dart';
 import '../theme/app_theme.dart';
 import '../widgets/results_skeleton.dart';
+
+/// Rally-toned loading copy for a search whose intent is not yet known.
+const String _kCheckingTimingSheets = 'Checking the timing sheets...';
+
+/// One completed authoritative online turn, held so it can be applied now or
+/// offered for later promotion without re-issuing the request.
+class _OnlineTurn {
+  final NaturalLanguageSearchResult result;
+  final SearchConversationSession? session;
+
+  /// The generation the backend echoed back, when it echoes one.
+  final int? echoedRequestId;
+  final int? networkRoundtripMs;
+  final String? transcript;
+
+  const _OnlineTurn({
+    required this.result,
+    this.session,
+    this.echoedRequestId,
+    this.networkRoundtripMs,
+    this.transcript,
+  });
+}
 
 /// User-facing category of a results-area failure. Presentation only — the
 /// underlying exception/state is unchanged; this only selects friendly copy.
@@ -81,6 +107,14 @@ class GeneralSearchScreen extends StatefulWidget {
   final OfflineSnapshotSync? offlineSync;
   final ConnectivityProbe? connectivityProbe;
 
+  /// The single latency/fallback policy. Tests inject short budgets; there is
+  /// no second place in the app where these numbers are defined.
+  final LatencyPolicy latencyPolicy;
+
+  /// Optional sink for client latency records. Defaults to discarding them, so
+  /// instrumentation costs nothing unless deliberately enabled.
+  final SearchTelemetrySink? telemetrySink;
+
   const GeneralSearchScreen({
     super.key,
     this.initialQuery,
@@ -94,6 +128,8 @@ class GeneralSearchScreen extends StatefulWidget {
     this.offlineEngine,
     this.offlineSync,
     this.connectivityProbe,
+    this.latencyPolicy = LatencyPolicy.standard,
+    this.telemetrySink,
   });
 
   @override
@@ -164,6 +200,16 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   ConnectivityProbe? _connectivityProbe;
   OfflineUxState _offlineState = OfflineUxState.online;
   Duration? _offlineAge;
+  late final SearchLatencyCoordinator<_OnlineTurn> _coordinator;
+  late final SearchTelemetrySink _telemetrySink;
+  StreamSubscription<SearchEvent<_OnlineTurn>>? _searchSubscription;
+
+  /// A late authoritative result waiting behind an explicit "show latest"
+  /// action. Held, never applied on its own.
+  _OnlineTurn? _pendingOnlineTurn;
+  String? _pendingOnlineQueryText;
+  int? _pendingOnlineGeneration;
+  bool get _hasPendingOnlineResult => _pendingOnlineTurn != null;
   bool get _offlineActive => _offlineState != OfflineUxState.online;
   static const OfflineMessagingService _offlineMessaging = OfflineMessagingService();
 
@@ -173,6 +219,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     _offlineEngine = widget.offlineEngine;
     _offlineSync = widget.offlineSync;
     _connectivityProbe = widget.connectivityProbe;
+    _telemetrySink = widget.telemetrySink ?? const NullSearchTelemetrySink();
+    _coordinator = SearchLatencyCoordinator<_OnlineTurn>(
+      connectivity: _connectivityProbe,
+      engine: _offlineEngine,
+      policy: widget.latencyPolicy,
+    );
     final backendConfig = SearchBackendConfig.fromEnvironment();
     // Python FastAPI is the sole authoritative search backend. There is no
     // runtime legacy switch and no silent in-app Dart fallback: when the Python
@@ -212,6 +264,12 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
   @override
   void dispose() {
+    // Stops delivery of any in-flight search event. The online request itself
+    // is left to complete rather than being torn down mid-flight; its result
+    // is simply never applied.
+    _searchSubscription?.cancel();
+    _searchSubscription = null;
+    _discardPendingOnline();
     _searchController.removeListener(_onSearchControllerChanged);
     _nativeSpeechService.dispose();
     _cloudSpeechService.dispose();
@@ -264,6 +322,9 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
 
     final requestSession = _session;
     final nextRequestId = _session.activeRequestId + 1;
+    // Opaque correlation id, sent as X-Request-Id and echoed by the backend
+    // into its structured timing line. Never contains query text.
+    final traceId = newRequestId();
     if (_sttSource != null) {
       final wasEdited = _sttRawTranscript != null &&
           _sttRawTranscript!.trim().toLowerCase() != queryText.toLowerCase();
@@ -278,12 +339,17 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
         'wasEditedBeforeSubmit': wasEdited,
       };
     }
+
+    // Dropping any offer from the previous search before the new one starts is
+    // what stops a stale "show latest" from promoting a result belonging to an
+    // abandoned query.
+    _discardPendingOnline();
     setState(() {
       if (queryText.isNotEmpty) _searchController.text = queryText;
       _hasSearched = true;
       _session = _session.copyWith(activeRequestId: nextRequestId);
       _isLoading = true;
-      _loadingStatus = 'Understanding your search...';
+      _loadingStatus = _kCheckingTimingSheets;
       _errorMessage = null;
       _specialMessage = null;
       _emptyResultsMessage = null;
@@ -293,25 +359,20 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
       _currentPage = 1;
     });
 
-    // NETWORK_FIRST_WITH_LOCAL_FALLBACK: if the device is plainly offline, skip
-    // the online attempt entirely and answer from the local snapshot.
-    if (queryText.isNotEmpty && _offlineEngine != null && await _isPlainlyOffline()) {
-      if (!mounted || _session.activeRequestId != nextRequestId) return;
-      await _runOfflineFallback(queryText, OfflineUxState.offlineLocalResults);
-      return;
-    }
+    final dispatchedAt = clock.now();
 
-    try {
+    // The authoritative online turn. Whichever transport applies, the
+    // coordinator sees one future; it is started immediately and is never
+    // cancelled by a fallback.
+    Future<_OnlineTurn> runOnline() async {
       final searchContext = SearchContext(
         currentYear: DateTime.now().year,
         locale: _selectedLanguage.localeCode,
         languageCode: _selectedLanguage.languageCode,
-        referents: _session.referents,
-        previousQuery: _session.activeQuery,
+        referents: requestSession.referents,
+        previousQuery: requestSession.activeQuery,
       );
 
-      final NaturalLanguageSearchResult result;
-      SearchConversationSession? backendSession;
       if (_pythonApiClient != null && spokenResult?.audioContext != null) {
         final audio = spokenResult!.audioContext!;
         final response = await _pythonApiClient!.voice(
@@ -321,202 +382,445 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
           language: _selectedLanguage.languageCode,
           requestId: nextRequestId,
           editedTranscript: queryText.isEmpty ? null : queryText,
+          traceId: traceId,
         );
-        if (response.requestId != null && response.requestId != nextRequestId) {
-          return;
-        }
-        backendSession = response.session;
-        result = response.result;
-        final transcript = response.transcription?.text.trim() ?? '';
-        if (transcript.isNotEmpty) _searchController.text = transcript;
-      } else if (_pythonApiClient != null) {
+        return _OnlineTurn(
+          result: response.result,
+          session: response.session,
+          echoedRequestId: response.requestId,
+          networkRoundtripMs: response.networkRoundtripMs,
+          transcript: response.transcription?.text.trim(),
+        );
+      }
+      if (_pythonApiClient != null) {
         final response = await _pythonApiClient!.conversation(
           query: queryText,
           session: requestSession,
           language: _selectedLanguage.languageCode,
           requestId: nextRequestId,
+          traceId: traceId,
         );
-        if (response.requestId != null && response.requestId != nextRequestId) {
-          return;
-        }
-        backendSession = response.session;
-        result = response.result;
-      } else if (_nlSearchService != null) {
+        return _OnlineTurn(
+          result: response.result,
+          session: response.session,
+          echoedRequestId: response.requestId,
+          networkRoundtripMs: response.networkRoundtripMs,
+        );
+      }
+      if (_nlSearchService != null) {
         // Test-only injected in-app search path.
-        result = spokenResult != null
+        final result = spokenResult != null
             ? await _nlSearchService.searchSpoken(
                 spokenResult,
                 context: searchContext,
               )
             : await _nlSearchService.search(queryText, context: searchContext);
-      } else {
-        // No backend configured: surface a clean error instead of any legacy
-        // fallback.
-        throw const PythonApiException(
-          'config',
-          'Search backend is not configured (PYTHON_BACKEND_BASE_URL missing).',
-        );
+        return _OnlineTurn(result: result);
       }
+      // No backend configured: surface a clean error instead of any legacy
+      // fallback.
+      throw const PythonApiException(
+        'config',
+        'Search backend is not configured (PYTHON_BACKEND_BASE_URL missing).',
+      );
+    }
 
-      if (!mounted || _session.activeRequestId != nextRequestId) return;
+    // Detach from the previous search without awaiting: cancelling is only
+    // about stopping delivery, and awaiting it would delay dispatching the new
+    // query behind the old one's teardown. The generation guard, not the
+    // cancel, is what keeps a stale event from being applied.
+    unawaited(_searchSubscription?.cancel() ?? Future<void>.value());
+    _searchSubscription = _coordinator
+        .run(
+          generation: nextRequestId,
+          rawText: queryText,
+          online: runOnline,
+          limit: _pageSize,
+        )
+        .listen(
+          (event) => unawaited(
+            _handleSearchEvent(
+              event: event,
+              queryText: queryText,
+              traceId: traceId,
+              dispatchedAt: dispatchedAt,
+            ),
+          ),
+          onDone: () {
+            if (_usePythonBackend && spokenResult?.audioContext != null) {
+              spokenResult!.disposeAudio();
+            }
+          },
+        );
+  }
 
-      if (result.isSpecialResponse) {
-        // Easter-egg / personality response: show only the playful message.
-        // No DB results, no zero-results state, no clarification, no stale
-        // pagination. The rally conversation context (referents/active query)
-        // from any prior search is intentionally preserved.
+  /// Applies one coordinator event.
+  ///
+  /// Two guards run before anything is rendered: the widget must still be
+  /// mounted, and the event's generation must still be the active one. Between
+  /// them they cover a disposed screen and a superseded query — a late result
+  /// for query A can never overwrite query B.
+  Future<void> _handleSearchEvent({
+    required SearchEvent<_OnlineTurn> event,
+    required String queryText,
+    required String traceId,
+    required DateTime dispatchedAt,
+  }) async {
+    if (!mounted || _session.activeRequestId != event.generation) return;
+    final connectivity = event.connectivity;
+
+    switch (event.stage) {
+      case SearchStage.online:
+        await _applyOnlineTurn(event.online!, queryText, event.generation);
+        _recordSearchTelemetry(
+          traceId: traceId,
+          dispatchedAt: dispatchedAt,
+          connectivity: connectivity,
+          source: SearchResultSource.online,
+          networkRoundtripMs: event.online!.networkRoundtripMs,
+          timeToFirstResultMs: event.elapsedMs,
+        );
+
+      case SearchStage.offlineImmediate:
+        _renderOfflineOutcome(
+          event.offline!,
+          OfflineUxState.offlineLocalResults,
+          event.generation,
+        );
+        _recordSearchTelemetry(
+          traceId: traceId,
+          dispatchedAt: dispatchedAt,
+          connectivity: connectivity,
+          source: SearchResultSource.offline,
+          localParserCouldAnswer: true,
+          timeToFirstResultMs: event.elapsedMs,
+        );
+
+      case SearchStage.offlineFallback:
+        _renderOfflineOutcome(
+          event.offline!,
+          OfflineUxState.lowBandwidthLocalFallback,
+          event.generation,
+        );
+        _recordSearchTelemetry(
+          traceId: traceId,
+          dispatchedAt: dispatchedAt,
+          connectivity: connectivity,
+          source: SearchResultSource.offlineFallback,
+          localParserCouldAnswer: true,
+          fallbackTriggerMs: event.elapsedMs,
+          timeToFirstResultMs: event.elapsedMs,
+        );
+
+      case SearchStage.offlineAfterOnlineFailure:
+        _renderOfflineOutcome(
+          event.offline!,
+          OfflineUxState.backendUnreachableLocalAvailable,
+          event.generation,
+        );
+        _recordSearchTelemetry(
+          traceId: traceId,
+          dispatchedAt: dispatchedAt,
+          connectivity: connectivity,
+          source: SearchResultSource.offlineFallback,
+          localParserCouldAnswer: true,
+          fallbackTriggerMs: event.elapsedMs,
+          timeToFirstResultMs: event.elapsedMs,
+        );
+
+      case SearchStage.lateOnlineAvailable:
+        final turn = event.online!;
+        if (!_isOfferableOnlineTurn(turn)) {
+          // The request completed, but with an error rather than an answer.
+          // Offering "fresh results" that are actually a failure would be a
+          // worse trade than the saved data already on screen, so this is
+          // treated exactly like a late failure.
+          setState(() {
+            _pendingOnlineTurn = null;
+            _offlineState = OfflineUxState.backendUnreachableLocalAvailable;
+          });
+          return;
+        }
+        // The authoritative answer is ready, but saved data is on screen.
+        // Offer it; never swap it in.
         setState(() {
-          if (backendSession != null) _session = backendSession;
+          _pendingOnlineTurn = turn;
+          _pendingOnlineQueryText = queryText;
+          _pendingOnlineGeneration = event.generation;
+        });
+
+      case SearchStage.lateOnlineFailed:
+        // Local data stays exactly as it is; only the label changes.
+        setState(() {
+          _pendingOnlineTurn = null;
+          _offlineState = OfflineUxState.backendUnreachableLocalAvailable;
+        });
+
+      case SearchStage.onlineFailed:
+        await _renderSearchFailure(event.error, connectivity, event.generation);
+        _recordSearchTelemetry(
+          traceId: traceId,
+          dispatchedAt: dispatchedAt,
+          connectivity: connectivity,
+          source: SearchResultSource.online,
+        );
+    }
+  }
+
+  /// Promotes the offered authoritative result. Only ever reached by an
+  /// explicit user tap on "show latest".
+  Future<void> _showLatestOnlineResult() async {
+    final turn = _pendingOnlineTurn;
+    final queryText = _pendingOnlineQueryText;
+    final generation = _pendingOnlineGeneration;
+    // Clearing first makes repeated taps idempotent: the second tap finds no
+    // pending turn and does nothing.
+    _discardPendingOnline();
+    if (turn == null || queryText == null || generation == null) return;
+    if (!mounted || _session.activeRequestId != generation) return;
+    setState(() {
+      _offlineState = OfflineUxState.online;
+      _offlineAge = null;
+    });
+    await _applyOnlineTurn(turn, queryText, generation);
+  }
+
+  /// Whether a late online turn is worth offering in place of saved data.
+  ///
+  /// A clarification or a special response is a real authoritative outcome and
+  /// is offered; a parse or backend error is not.
+  static bool _isOfferableOnlineTurn(_OnlineTurn turn) {
+    final result = turn.result;
+    if (result.isSpecialResponse || result.requiresClarification) return true;
+    return result.isSuccess && result.query != null;
+  }
+
+  void _discardPendingOnline() {
+    _pendingOnlineTurn = null;
+    _pendingOnlineQueryText = null;
+    _pendingOnlineGeneration = null;
+  }
+
+  void _recordSearchTelemetry({
+    required String traceId,
+    required DateTime dispatchedAt,
+    required ConnectivityState connectivity,
+    required SearchResultSource source,
+    int? networkRoundtripMs,
+    int? timeToFirstResultMs,
+    int? fallbackTriggerMs,
+    bool localParserCouldAnswer = false,
+  }) {
+    _telemetrySink.record(
+      SearchTelemetry(
+        requestId: traceId,
+        totalClientMs: clock.now().difference(dispatchedAt).inMilliseconds,
+        resultSource: source,
+        connectivity: connectivity,
+        fallbackTriggered: fallbackTriggerMs != null,
+        fallbackTriggerMs: fallbackTriggerMs,
+        networkRoundtripMs: networkRoundtripMs,
+        timeToFirstResultMs: timeToFirstResultMs,
+        localParserCouldAnswer: localParserCouldAnswer,
+        lateOnlineOffered: _pendingOnlineTurn != null,
+      ),
+    );
+  }
+
+  Future<void> _renderSearchFailure(
+    Object? error,
+    ConnectivityState connectivity,
+    int generation,
+  ) async {
+    // A plainly-offline device with no snapshot is a different product state
+    // from a backend failure, and gets its own "sync now" affordance.
+    if (connectivity == ConnectivityState.offline && _offlineEngine != null) {
+      var hasSnapshot = false;
+      try {
+        hasSnapshot = await _offlineEngine!.database.hasSnapshot();
+      } catch (_) {
+        hasSnapshot = false;
+      }
+      if (!mounted || _session.activeRequestId != generation) return;
+      if (!hasSnapshot) {
+        setState(() {
           _isLoading = false;
-          _specialMessage = result.friendlyMessage;
           _searchResponse = null;
           _totalCount = 0;
-          _clarificationQuestion = null;
-          _clarificationCandidates = [];
-          _pendingClarification = null;
           _errorMessage = null;
-          _emptyResultsMessage = null;
+          _offlineState = OfflineUxState.noLocalSnapshot;
+          _offlineAge = null;
         });
         return;
       }
+    }
+    if (!mounted || _session.activeRequestId != generation) return;
+    setState(() {
+      _errorKind = _SearchErrorKind.service;
+      _errorMessage = error is PythonApiException
+          ? error.friendlyMessage
+          : const FriendlyResponseService().responseFor(
+              FriendlyResponseCategory.serverError,
+            );
+      _clarificationCandidates = [];
+      _isLoading = false;
+    });
+  }
 
-      if (result.requiresClarification) {
-        setState(() {
-          if (backendSession != null) _session = backendSession;
-          _isLoading = false;
-          _clarificationQuestion = result.clarificationQuestion;
-          _clarificationCandidates = result.candidates;
-          final pendingQuery = result.parsedQuery ?? result.query;
-          _pendingClarification = pendingQuery == null
-              ? null
-              : PendingClarification(
-                  query: pendingQuery,
-                  referents: result.referents,
-                  requestId: nextRequestId,
-                );
-        });
-        return;
-      }
+  /// Renders one authoritative online turn onto shared result state.
+  ///
+  /// Shared by the in-budget path and by "show latest", so a promoted late
+  /// result is applied through exactly the same code as a fast one.
+  Future<void> _applyOnlineTurn(
+    _OnlineTurn turn,
+    String queryText,
+    int generation,
+  ) async {
+    final result = turn.result;
+    final backendSession = turn.session;
+    if (turn.echoedRequestId != null && turn.echoedRequestId != generation) {
+      return;
+    }
+    if (!mounted || _session.activeRequestId != generation) return;
+    if (turn.transcript != null && turn.transcript!.isNotEmpty) {
+      _searchController.text = turn.transcript!;
+    }
 
-      if (!result.isSuccess || result.query == null) {
-        setState(() {
-          if (backendSession != null) _session = backendSession;
-          _isLoading = false;
-          _errorKind = _SearchErrorKind.understanding;
-          _errorMessage = result.friendlyMessage ?? 'Query parsing failed';
-          _clarificationCandidates = [];
-        });
-        return;
-      }
-
-      final parsedQuery = result.query!;
-      final l10n = AppLocalizations.of(context);
-      final localizedSummary = _buildLocalizedInterpretedSummary(
-        parsedQuery,
-        l10n,
-      );
-
-      // Determine which fields were inherited vs refined in this turn
-      final inherited = <String>{};
-      final refinements = <String>{};
-
-      if (parsedQuery.rallyNames.isNotEmpty) {
-        if (_session.activeQuery.rallyNames.isNotEmpty &&
-            _session.activeQuery.rallyNames.first ==
-                parsedQuery.rallyNames.first) {
-          inherited.add('rally');
-        } else {
-          refinements.add('rally');
-        }
-      }
-      if (parsedQuery.driverNames.isNotEmpty) {
-        if (_session.activeQuery.driverNames.isNotEmpty &&
-            _session.activeQuery.driverNames.first ==
-                parsedQuery.driverNames.first) {
-          inherited.add('driver');
-        } else {
-          refinements.add('driver');
-        }
-      }
-      if (parsedQuery.actionTypes.isNotEmpty) {
-        refinements.add('action');
-      }
-      if (parsedQuery.countries.isNotEmpty) {
-        if (_session.activeQuery.countries.isNotEmpty &&
-            _session.activeQuery.countries.first ==
-                parsedQuery.countries.first) {
-          inherited.add('country');
-        } else {
-          refinements.add('country');
-        }
-      }
-      if (parsedQuery.years.isNotEmpty) {
-        if (_session.activeQuery.years.isNotEmpty &&
-            _session.activeQuery.years.first == parsedQuery.years.first) {
-          inherited.add('year');
-        } else {
-          refinements.add('year');
-        }
-      }
-
-      final updatedSession =
-          backendSession ??
-          _session.recordTurn(
-            query: parsedQuery,
-            referents: result.referents,
-            title: queryText,
-            response: result.searchResponse,
-            interpretedSummary: localizedSummary,
-            inherited: inherited,
-            refinements: refinements,
-          );
-
+    if (result.isSpecialResponse) {
+      // Easter-egg / personality response: show only the playful message.
+      // No DB results, no zero-results state, no clarification, no stale
+      // pagination. The rally conversation context (referents/active query)
+      // from any prior search is intentionally preserved.
       setState(() {
-        _session = updatedSession;
-        _searchResponse = result.searchResponse;
-        _totalCount = result.totalCount;
-        _lastNlResult = result;
+        if (backendSession != null) _session = backendSession;
+        _isLoading = false;
+        _specialMessage = result.friendlyMessage;
+        _searchResponse = null;
+        _totalCount = 0;
         _clarificationQuestion = null;
         _clarificationCandidates = [];
         _pendingClarification = null;
         _errorMessage = null;
-        _specialMessage = null;
-        _emptyResultsMessage = result.friendlyMessage;
-        _isLoading = false;
-        // Authoritative online answer: clear any offline chrome.
+        _emptyResultsMessage = null;
         _offlineState = OfflineUxState.online;
         _offlineAge = null;
       });
-      // Opportunistic, non-blocking refresh of the offline snapshot.
-      unawaited(_offlineSync?.maybeSync() ?? Future.value());
-    } catch (e) {
-      if (!mounted || _session.activeRequestId != nextRequestId) return;
-      // The authoritative backend failed. If we have a local snapshot, answer
-      // from it (clearly labelled) rather than showing a dead end.
-      if (queryText.isNotEmpty && _offlineEngine != null && e is PythonApiException) {
-        await _runOfflineFallback(queryText, OfflineUxState.backendUnreachableLocalAvailable);
-        if (_usePythonBackend && spokenResult?.audioContext != null) {
-          spokenResult!.disposeAudio();
-        }
-        return;
-      }
+      return;
+    }
+
+    if (result.requiresClarification) {
       setState(() {
-        _errorKind = _SearchErrorKind.service;
-        _errorMessage = e is PythonApiException
-            ? e.friendlyMessage
-            : const FriendlyResponseService().responseFor(
-                FriendlyResponseCategory.serverError,
-              );
-        _clarificationCandidates = [];
+        if (backendSession != null) _session = backendSession;
         _isLoading = false;
+        _clarificationQuestion = result.clarificationQuestion;
+        _clarificationCandidates = result.candidates;
+        final pendingQuery = result.parsedQuery ?? result.query;
+        _pendingClarification = pendingQuery == null
+            ? null
+            : PendingClarification(
+                query: pendingQuery,
+                referents: result.referents,
+                requestId: generation,
+              );
+        _offlineState = OfflineUxState.online;
+        _offlineAge = null;
       });
-    } finally {
-      if (_usePythonBackend && spokenResult?.audioContext != null) {
-        spokenResult!.disposeAudio();
+      return;
+    }
+
+    if (!result.isSuccess || result.query == null) {
+      setState(() {
+        if (backendSession != null) _session = backendSession;
+        _isLoading = false;
+        _errorKind = _SearchErrorKind.understanding;
+        _errorMessage = result.friendlyMessage ?? 'Query parsing failed';
+        _clarificationCandidates = [];
+        _offlineState = OfflineUxState.online;
+        _offlineAge = null;
+      });
+      return;
+    }
+
+    final parsedQuery = result.query!;
+    final l10n = AppLocalizations.of(context);
+    final localizedSummary = _buildLocalizedInterpretedSummary(
+      parsedQuery,
+      l10n,
+    );
+
+    // Determine which fields were inherited vs refined in this turn
+    final inherited = <String>{};
+    final refinements = <String>{};
+
+    if (parsedQuery.rallyNames.isNotEmpty) {
+      if (_session.activeQuery.rallyNames.isNotEmpty &&
+          _session.activeQuery.rallyNames.first ==
+              parsedQuery.rallyNames.first) {
+        inherited.add('rally');
+      } else {
+        refinements.add('rally');
       }
     }
-  }
+    if (parsedQuery.driverNames.isNotEmpty) {
+      if (_session.activeQuery.driverNames.isNotEmpty &&
+          _session.activeQuery.driverNames.first ==
+              parsedQuery.driverNames.first) {
+        inherited.add('driver');
+      } else {
+        refinements.add('driver');
+      }
+    }
+    if (parsedQuery.actionTypes.isNotEmpty) {
+      refinements.add('action');
+    }
+    if (parsedQuery.countries.isNotEmpty) {
+      if (_session.activeQuery.countries.isNotEmpty &&
+          _session.activeQuery.countries.first == parsedQuery.countries.first) {
+        inherited.add('country');
+      } else {
+        refinements.add('country');
+      }
+    }
+    if (parsedQuery.years.isNotEmpty) {
+      if (_session.activeQuery.years.isNotEmpty &&
+          _session.activeQuery.years.first == parsedQuery.years.first) {
+        inherited.add('year');
+      } else {
+        refinements.add('year');
+      }
+    }
 
+    final updatedSession =
+        backendSession ??
+        _session.recordTurn(
+          query: parsedQuery,
+          referents: result.referents,
+          title: queryText,
+          response: result.searchResponse,
+          interpretedSummary: localizedSummary,
+          inherited: inherited,
+          refinements: refinements,
+        );
+
+    setState(() {
+      _session = updatedSession;
+      _searchResponse = result.searchResponse;
+      _totalCount = result.totalCount;
+      _lastNlResult = result;
+      _clarificationQuestion = null;
+      _clarificationCandidates = [];
+      _pendingClarification = null;
+      _errorMessage = null;
+      _specialMessage = null;
+      _emptyResultsMessage = result.friendlyMessage;
+      _isLoading = false;
+      // Authoritative online answer: clear any offline chrome.
+      _offlineState = OfflineUxState.online;
+      _offlineAge = null;
+    });
+    // Opportunistic, non-blocking refresh of the offline snapshot.
+    unawaited(_offlineSync?.maybeSync() ?? Future.value());
+  }
   Future<void> _executeDeterministicSearch({bool resetPage = false}) async {
     if (resetPage) {
       _currentPage = 1;
@@ -607,15 +911,11 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
   // OFFLINE FALLBACK
   // ===========================================================================
 
-  Future<bool> _isPlainlyOffline() async {
-    final probe = _connectivityProbe;
-    if (probe == null) return false;
-    try {
-      return !(await probe.isOnline());
-    } catch (_) {
-      return false;
-    }
-  }
+  /// Connectivity for the deterministic (pagination / clarification) path.
+  /// Reads through the coordinator so the whole screen has one notion of
+  /// "known offline" rather than two probes that can disagree.
+  Future<bool> _isPlainlyOffline() async =>
+      await _coordinator.observedConnectivity() == ConnectivityState.offline;
 
   Future<Duration?> _snapshotAge() async {
     final last = await _offlineEngine?.database.lastSyncUtc();
@@ -623,47 +923,23 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
     return DateTime.now().toUtc().difference(last);
   }
 
-  static const Duration _staleThreshold = Duration(hours: 12);
+  /// A snapshot older than this is still used, but is labelled with its age.
+  /// The value comes from the single latency policy.
+  Duration get _staleThreshold => widget.latencyPolicy.snapshotStaleAfter;
 
-  /// Runs the deterministic offline pipeline for a raw query and maps its
-  /// outcome onto the shared result/clarification/special/error state, plus the
-  /// product-tone offline banner state.
-  Future<void> _runOfflineFallback(String queryText, OfflineUxState baseState) async {
-    final engine = _offlineEngine;
-    if (engine == null) return;
-    if (!await engine.database.hasSnapshot()) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _searchResponse = null;
-        _totalCount = 0;
-        _clarificationQuestion = null;
-        _clarificationCandidates = [];
-        _pendingClarification = null;
-        _specialMessage = null;
-        _emptyResultsMessage = null;
-        _errorMessage = null;
-        _offlineState = OfflineUxState.noLocalSnapshot;
-        _offlineAge = null;
-      });
-      return;
-    }
+  /// Maps an offline outcome the coordinator already computed onto the shared
+  /// result / clarification / special / error state, plus the product-tone
+  /// offline banner state.
+  ///
+  /// Render-only: the offline pipeline is executed once, by the coordinator,
+  /// so a fallback never re-runs the local search just to display it.
+  Future<void> _renderOfflineOutcome(
+    OfflineSearchOutcome outcome,
+    OfflineUxState baseState,
+    int generation,
+  ) async {
     final age = await _snapshotAge();
-    OfflineSearchOutcome outcome;
-    try {
-      outcome = await engine.search(queryText, limit: _pageSize, offset: (_currentPage - 1) * _pageSize);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _searchResponse = null;
-        _totalCount = 0;
-        _offlineState = OfflineUxState.offlineSafeNoMatch;
-        _emptyResultsMessage = const FriendlyResponseService().responseFor(FriendlyResponseCategory.noResults);
-      });
-      return;
-    }
-    if (!mounted) return;
+    if (!mounted || _session.activeRequestId != generation) return;
     setState(() {
       _isLoading = false;
       _hasSearched = true;
@@ -1290,6 +1566,18 @@ class _GeneralSearchScreenState extends State<GeneralSearchScreen> {
               onAction: _offlineState == OfflineUxState.noLocalSnapshot
                   ? () => unawaited(_offlineSync?.sync() ?? Future.value())
                   : null,
+            ),
+
+          // 2c. A late authoritative result, offered rather than applied. The
+          //     saved data stays on screen until the user taps through, so the
+          //     result under their eyes never changes on its own.
+          if (_hasPendingOnlineResult)
+            OfflineBanner(
+              key: const Key('freshResultsBanner'),
+              state: OfflineUxState.lateOnlineResultAvailable,
+              actionLabel: 'Show latest',
+              onAction: () => unawaited(_showLatestOnlineResult()),
+              onDismiss: () => setState(_discardPendingOnline),
             ),
 
           // 3. Inline Clarification Card (if disambiguation required)

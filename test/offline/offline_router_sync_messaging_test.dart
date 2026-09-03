@@ -1,8 +1,12 @@
 
+import 'dart:io';
+
 import 'package:ai_rally_search/services/offline/offline_database.dart';
 import 'package:ai_rally_search/services/offline/offline_messaging.dart';
 import 'package:ai_rally_search/services/offline/offline_search_engine.dart';
-import 'package:ai_rally_search/services/offline/offline_search_router.dart';
+import 'package:ai_rally_search/services/latency/latency_policy.dart';
+import 'package:ai_rally_search/services/latency/search_latency_coordinator.dart';
+import 'package:ai_rally_search/services/latency/search_telemetry.dart';
 import 'package:ai_rally_search/services/offline/offline_snapshot_sync.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -66,50 +70,228 @@ void main() {
     });
   });
 
-  group('NETWORK_FIRST_WITH_LOCAL_FALLBACK router', () {
-    test('ONLINE -> authoritative online result is used', () async {
-      final router = OfflineSearchRouter<String>(connectivity: _FakeProbe(true), engine: await engine());
-      final r = await router.route(rawText: 'rallies in ireland', online: () async => 'ONLINE');
-      expect(r.mode, RouteMode.onlineAuthoritative);
-      expect(r.online, 'ONLINE');
-    });
+  group('latency coordinator (single fallback policy)', () {
+    SearchLatencyCoordinator<String> coordinator(
+      OfflineSearchEngine e, {
+      bool online = true,
+      Duration budget = const Duration(milliseconds: 50),
+      Duration overall = const Duration(seconds: 5),
+    }) =>
+        SearchLatencyCoordinator<String>(
+          connectivity: _FakeProbe(online),
+          engine: e,
+          policy: LatencyPolicy(
+            onlineResultBudget: budget,
+            overallOnlineTimeout: overall,
+          ),
+        );
 
-    test('OFFLINE -> local search used immediately (online skipped)', () async {
-      var onlineCalled = false;
-      final router = OfflineSearchRouter<String>(connectivity: _FakeProbe(false), engine: await engine());
-      final r = await router.route(rawText: 'rallies in ireland', online: () async {
-        onlineCalled = true;
-        return 'ONLINE';
-      });
-      expect(onlineCalled, isFalse);
-      expect(r.mode, RouteMode.offlineLocal);
-      expect(r.offline!.hasResults, isTrue);
-    });
+    Future<List<SearchEvent<String>>> collect(Stream<SearchEvent<String>> s) =>
+        s.toList();
 
-    test('TIMEOUT -> local fallback surfaced, online kept for explicit promotion (no silent swap)', () async {
-      final router = OfflineSearchRouter<String>(
-        connectivity: _FakeProbe(true),
-        engine: await engine(),
-        fallbackBudget: const Duration(milliseconds: 50),
-      );
-      final r = await router.route(
+    test('online within budget -> authoritative online result', () async {
+      final events = await collect(coordinator(await engine()).run(
+        generation: 1,
         rawText: 'rallies in ireland',
-        online: () => Future.delayed(const Duration(seconds: 2), () => 'ONLINE'),
-      );
-      expect(r.mode, RouteMode.lowBandwidthLocal);
-      expect(r.offline, isNotNull);
-      expect(r.pendingOnline, isNotNull); // caller decides when/if to promote
-      expect(r.uxState, OfflineUxState.lowBandwidthLocalFallback);
+        online: () async => 'ONLINE',
+      ));
+      expect(events.single.stage, SearchStage.online);
+      expect(events.single.online, 'ONLINE');
+      expect(events.single.source, SearchResultSource.online);
     });
 
-    test('BACKEND ERROR -> deterministic local fallback', () async {
-      final router = OfflineSearchRouter<String>(connectivity: _FakeProbe(true), engine: await engine());
-      final r = await router.route(
+    test('known offline -> local immediately, online never attempted', () async {
+      var onlineCalled = false;
+      final events = await collect(
+        coordinator(await engine(), online: false).run(
+          generation: 1,
+          rawText: 'rallies in ireland',
+          online: () async {
+            onlineCalled = true;
+            return 'ONLINE';
+          },
+        ),
+      );
+      expect(onlineCalled, isFalse);
+      expect(events.single.stage, SearchStage.offlineImmediate);
+      expect(events.single.offline!.hasResults, isTrue);
+    });
+
+    test('budget exceeded -> local shown, then late online is offered not applied',
+        () async {
+      final events = await collect(coordinator(await engine()).run(
+        generation: 7,
+        rawText: 'rallies in ireland',
+        online: () =>
+            Future.delayed(const Duration(milliseconds: 300), () => 'ONLINE'),
+      ));
+      expect(events.map((e) => e.stage), [
+        SearchStage.offlineFallback,
+        SearchStage.lateOnlineAvailable,
+      ]);
+      expect(events.first.source, SearchResultSource.offlineFallback);
+      // The late result is explicitly not a render: it must be offered.
+      expect(events.last.isTerminalRender, isFalse);
+      expect(events.last.online, 'ONLINE');
+      expect(events.every((e) => e.generation == 7), isTrue);
+    });
+
+    test('online fails after fallback -> local stays, no error render', () async {
+      final events = await collect(coordinator(await engine()).run(
+        generation: 1,
+        rawText: 'rallies in ireland',
+        online: () => Future.delayed(
+            const Duration(milliseconds: 300), () => throw StateError('boom')),
+      ));
+      expect(events.map((e) => e.stage), [
+        SearchStage.offlineFallback,
+        SearchStage.lateOnlineFailed,
+      ]);
+      expect(events.last.isTerminalRender, isFalse);
+    });
+
+    test('online fails before budget -> deterministic local fallback', () async {
+      final events = await collect(coordinator(await engine()).run(
+        generation: 1,
         rawText: 'rallies in ireland',
         online: () async => throw StateError('boom'),
+      ));
+      expect(events.single.stage, SearchStage.offlineAfterOnlineFailure);
+      expect(events.single.offline!.hasResults, isTrue);
+    });
+
+    test('no safe local answer -> waits for online rather than fabricating one',
+        () async {
+      final events = await collect(coordinator(await engine()).run(
+        generation: 1,
+        // Nothing in the snapshot matches, so the local parser cannot answer.
+        rawText: 'rallies in absolutelynowhere',
+        online: () =>
+            Future.delayed(const Duration(milliseconds: 300), () => 'ONLINE'),
+      ));
+      expect(events.single.stage, SearchStage.online);
+      expect(events.single.online, 'ONLINE');
+    });
+
+    test('no safe local answer and online fails -> surfaces the failure',
+        () async {
+      final events = await collect(coordinator(await engine()).run(
+        generation: 1,
+        rawText: 'rallies in absolutelynowhere',
+        online: () => Future.delayed(
+            const Duration(milliseconds: 200), () => throw StateError('boom')),
+      ));
+      expect(events.single.stage, SearchStage.onlineFailed);
+    });
+
+    test('online just inside the budget wins; just outside it falls back',
+        () async {
+      final inside = await collect(coordinator(
+        await engine(),
+        budget: const Duration(milliseconds: 300),
+      ).run(
+        generation: 1,
+        rawText: 'rallies in ireland',
+        online: () =>
+            Future.delayed(const Duration(milliseconds: 60), () => 'ONLINE'),
+      ));
+      expect(inside.single.stage, SearchStage.online);
+
+      final outside = await collect(coordinator(
+        await engine(),
+        budget: const Duration(milliseconds: 60),
+      ).run(
+        generation: 1,
+        rawText: 'rallies in ireland',
+        online: () =>
+            Future.delayed(const Duration(milliseconds: 400), () => 'ONLINE'),
+      ));
+      expect(outside.first.stage, SearchStage.offlineFallback);
+      expect(outside.last.stage, SearchStage.lateOnlineAvailable);
+    });
+
+    test('local and online completing together resolves to online', () async {
+      // Both are ready effectively at once; the rule is that an online answer
+      // inside the budget always wins, so the outcome is never a coin flip.
+      for (var i = 0; i < 12; i++) {
+        final events = await collect(coordinator(
+          await engine(),
+          budget: const Duration(milliseconds: 200),
+        ).run(
+          generation: 1,
+          rawText: 'rallies in ireland',
+          online: () async => 'ONLINE',
+        ));
+        expect(events.single.stage, SearchStage.online, reason: 'iteration $i');
+      }
+    });
+
+    // `inMemoryDatabasePath` is shared within an isolate, so an "empty" local
+    // store needs its own file to genuinely have no snapshot.
+    Future<OfflineSearchEngine> emptyEngine() async {
+      final dir = await Directory.systemTemp.createTemp('rally_empty_snapshot');
+      final db = await OfflineDatabase.open(
+        factory: databaseFactoryFfi,
+        path: '${dir.path}/empty.db',
       );
-      expect(r.mode, RouteMode.backendUnreachableLocal);
-      expect(r.offline!.hasResults, isTrue);
+      addTearDown(() async => dir.delete(recursive: true));
+      return OfflineSearchEngine.create(db);
+    }
+
+    test('a stale/missing snapshot never fabricates a local answer', () async {
+      final empty = await emptyEngine();
+      expect(await empty.database.hasSnapshot(), isFalse);
+      final events = await collect(
+        SearchLatencyCoordinator<String>(
+          connectivity: _FakeProbe(true),
+          engine: empty,
+          policy: const LatencyPolicy(
+            onlineResultBudget: Duration(milliseconds: 40),
+            overallOnlineTimeout: Duration(seconds: 5),
+          ),
+        ).run(
+          generation: 1,
+          rawText: 'rallies in ireland',
+          online: () =>
+              Future.delayed(const Duration(milliseconds: 200), () => 'ONLINE'),
+        ),
+      );
+      expect(events.single.stage, SearchStage.online);
+    });
+
+    test('offline device with no snapshot reports failure, not a fake result',
+        () async {
+      final events = await collect(
+        SearchLatencyCoordinator<String>(
+          connectivity: _FakeProbe(false),
+          engine: await emptyEngine(),
+          policy: const LatencyPolicy(),
+        ).run(
+          generation: 1,
+          rawText: 'rallies in ireland',
+          online: () async => 'ONLINE',
+        ),
+      );
+      expect(events.single.stage, SearchStage.onlineFailed);
+    });
+
+    test('no offline stack at all falls through to the online path', () async {
+      final events = await collect(
+        SearchLatencyCoordinator<String>(
+          connectivity: null,
+          engine: null,
+          policy: const LatencyPolicy(
+            onlineResultBudget: Duration(milliseconds: 30),
+            overallOnlineTimeout: Duration(seconds: 5),
+          ),
+        ).run(
+          generation: 1,
+          rawText: 'rallies in ireland',
+          online: () =>
+              Future.delayed(const Duration(milliseconds: 150), () => 'ONLINE'),
+        ),
+      );
+      expect(events.single.stage, SearchStage.online);
     });
   });
 

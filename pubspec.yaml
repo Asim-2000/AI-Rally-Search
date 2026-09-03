@@ -39,6 +39,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.1
   http: ^1.2.0
+  # Zone-overridable clock. Search latency is measured through it so the same
+  # code reports real durations in production and fake-clock durations under
+  # widget tests, instead of a Stopwatch that only ever sees wall time.
+  clock: ^1.1.1
   video_player: ^2.14.0
   record: ^6.2.0
   speech_to_text: ^7.4.0

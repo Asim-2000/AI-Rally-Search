@@ -10,7 +10,7 @@ void main() {
   testWidgets('App launches on the search-first home', (
     WidgetTester tester,
   ) async {
-    await dotenv.load(fileName: '.env');
+    await dotenv.load(fileName: 'assets/config/app_config.env');
 
     await tester.pumpWidget(const MyApp());
     await tester.pump();

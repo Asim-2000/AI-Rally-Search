@@ -18,6 +18,7 @@ import '../models/supported_language.dart';
 import '../models/video_action.dart';
 import 'search_repository.dart';
 import 'friendly_response_service.dart';
+import 'latency/latency_policy.dart';
 import 'llm/natural_language_search_service.dart';
 import 'llm/query_parse_result.dart';
 
@@ -31,12 +32,17 @@ class SearchBackendConfig {
   final Duration voiceTimeout;
   final Map<String, String> headers;
 
-  const SearchBackendConfig({
+  /// Timeouts come from [LatencyPolicy] rather than being declared here, so
+  /// the client and the fallback coordinator can never disagree about how long
+  /// an online request is allowed to take.
+  SearchBackendConfig({
     this.pythonBaseUrl,
-    this.typedTimeout = const Duration(seconds: 35),
-    this.voiceTimeout = const Duration(seconds: 75),
+    LatencyPolicy policy = LatencyPolicy.standard,
+    Duration? typedTimeout,
+    Duration? voiceTimeout,
     this.headers = const {},
-  });
+  })  : typedTimeout = typedTimeout ?? policy.overallOnlineTimeout,
+        voiceTimeout = voiceTimeout ?? policy.overallVoiceTimeout;
 
   factory SearchBackendConfig.fromEnvironment() {
     final url = dotenv.isInitialized
@@ -102,13 +108,31 @@ class PythonApiException implements Exception {
 class PythonConversationResponse {
   final SearchConversationSession session;
   final NaturalLanguageSearchResult result;
+
+  /// The client's session generation counter, echoed by the backend. Used to
+  /// reject a response that belongs to a superseded search.
   final int? requestId;
+
+  /// The end-to-end correlation id (`X-Request-Id`). Joins this response to
+  /// the backend's structured timing line for the same request.
+  final String? traceId;
+
+  /// Measured wall time of the HTTP call, for client-side latency records.
+  final int? networkRoundtripMs;
+
+  /// Backend phase breakdown, present only when the backend runs with debug
+  /// timings enabled. Never shown to users.
+  final Map<String, dynamic>? backendTimings;
+
   final SpeechTranscriptionResult? transcription;
   final Map<String, dynamic> telemetry;
   const PythonConversationResponse({
     required this.session,
     required this.result,
     this.requestId,
+    this.traceId,
+    this.networkRoundtripMs,
+    this.backendTimings,
     this.transcription,
     this.telemetry = const {},
   });
@@ -145,6 +169,9 @@ class CloudTranscriptionResponse {
 }
 
 class PythonSearchApiClient {
+  /// End-to-end correlation header, matched by the backend timing middleware.
+  static const String requestIdHeader = 'X-Request-Id';
+
   final Uri baseUrl;
   final http.Client _http;
   final Duration typedTimeout;
@@ -154,10 +181,13 @@ class PythonSearchApiClient {
   PythonSearchApiClient({
     required this.baseUrl,
     http.Client? httpClient,
-    this.typedTimeout = const Duration(seconds: 35),
-    this.voiceTimeout = const Duration(seconds: 75),
+    LatencyPolicy policy = LatencyPolicy.standard,
+    Duration? typedTimeout,
+    Duration? voiceTimeout,
     this.headers = const {},
-  }) : _http = httpClient ?? http.Client();
+  })  : _http = httpClient ?? http.Client(),
+        typedTimeout = typedTimeout ?? policy.overallOnlineTimeout,
+        voiceTimeout = voiceTimeout ?? policy.overallVoiceTimeout;
 
   factory PythonSearchApiClient.fromConfig(
     SearchBackendConfig config, {
@@ -210,14 +240,25 @@ class PythonSearchApiClient {
     required SearchConversationSession session,
     required String language,
     required int requestId,
+    String? traceId,
   }) async {
-    final body = await _postJson('/v1/conversation/search', {
-      'query': query,
-      'session': _sessionToJson(session),
-      'language': language,
-      'requestId': requestId,
-    }, typedTimeout);
-    return _decodeConversation(body);
+    final stopwatch = Stopwatch()..start();
+    final body = await _postJson(
+      '/v1/conversation/search',
+      {
+        'query': query,
+        'session': _sessionToJson(session),
+        'language': language,
+        'requestId': requestId,
+      },
+      typedTimeout,
+      traceId: traceId,
+    );
+    stopwatch.stop();
+    return _decodeConversation(
+      body,
+      networkRoundtripMs: stopwatch.elapsedMilliseconds,
+    );
   }
 
   Future<PythonConversationResponse> voice({
@@ -227,7 +268,9 @@ class PythonSearchApiClient {
     required String language,
     required int requestId,
     String? editedTranscript,
+    String? traceId,
   }) async {
+    final stopwatch = Stopwatch()..start();
     final uri = _uri('/v1/voice/search', {
       'filename': filename,
       'language': language,
@@ -240,13 +283,21 @@ class PythonSearchApiClient {
       () => _http
           .post(
             uri,
-            headers: {...headers, 'Content-Type': 'application/octet-stream'},
+            headers: {
+              ...headers,
+              'Content-Type': 'application/octet-stream',
+              requestIdHeader: ?traceId,
+            },
             body: audioBytes,
           )
           .timeout(voiceTimeout),
     );
+    stopwatch.stop();
     final body = _decodeBody(response);
-    final decoded = _decodeConversation(body);
+    final decoded = _decodeConversation(
+      body,
+      networkRoundtripMs: stopwatch.elapsedMilliseconds,
+    );
     final raw = Map<String, dynamic>.from(
       body['transcription'] as Map? ?? const {},
     );
@@ -285,6 +336,9 @@ class PythonSearchApiClient {
       session: decoded.session,
       result: decoded.result,
       requestId: decoded.requestId,
+      traceId: decoded.traceId,
+      networkRoundtripMs: decoded.networkRoundtripMs,
+      backendTimings: decoded.backendTimings,
       transcription: transcription,
       telemetry: Map<String, dynamic>.from(
         body['telemetry'] as Map? ?? const {},
@@ -295,13 +349,20 @@ class PythonSearchApiClient {
   Future<Map<String, dynamic>> _postJson(
     String path,
     Map<String, dynamic> payload,
-    Duration timeout,
-  ) async {
+    Duration timeout, {
+    String? traceId,
+  }) async {
     final response = await _send(
       () => _http
           .post(
             _uri(path),
-            headers: {...headers, 'Content-Type': 'application/json'},
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json',
+              // Correlation only: an opaque id the backend echoes into its
+              // structured timing line. Carries no user or query content.
+              requestIdHeader: ?traceId,
+            },
             body: jsonEncode(payload),
           )
           .timeout(timeout),
@@ -350,7 +411,10 @@ class PythonSearchApiClient {
   Uri _uri(String path, [Map<String, String>? query]) =>
       baseUrl.resolve(path).replace(queryParameters: query);
 
-  PythonConversationResponse _decodeConversation(Map<String, dynamic> body) {
+  PythonConversationResponse _decodeConversation(
+    Map<String, dynamic> body, {
+    int? networkRoundtripMs,
+  }) {
     final resultMap = Map<String, dynamic>.from(
       body['result'] as Map? ?? const {},
     );
@@ -415,6 +479,11 @@ class PythonSearchApiClient {
       session: session,
       result: result,
       requestId: _nullableInt(body['requestId']),
+      traceId: body['traceId']?.toString(),
+      networkRoundtripMs: networkRoundtripMs,
+      backendTimings: resultMap['timings'] is Map
+          ? Map<String, dynamic>.from(resultMap['timings'] as Map)
+          : null,
     );
   }
 

@@ -1,0 +1,35 @@
+[
+  {
+    "scenario": "ONLINE",
+    "stages": [
+      "online"
+    ],
+    "result_source": "online",
+    "silent_swap": false
+  },
+  {
+    "scenario": "OFFLINE",
+    "stages": [
+      "offlineImmediate"
+    ],
+    "result_source": "offline",
+    "silent_swap": false
+  },
+  {
+    "scenario": "TIMEOUT",
+    "stages": [
+      "offlineFallback",
+      "lateOnlineAvailable"
+    ],
+    "result_source": "offline_fallback",
+    "silent_swap": false
+  },
+  {
+    "scenario": "BACKEND_ERROR",
+    "stages": [
+      "offlineAfterOnlineFailure"
+    ],
+    "result_source": "offline_fallback",
+    "silent_swap": false
+  }
+]

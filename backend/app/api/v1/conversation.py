@@ -1,8 +1,11 @@
+from functools import lru_cache
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from ...config import Settings, get_settings
+from ...observability import Phase, current_timings
 from ...db.engine import get_connection
 from ...domain.conversation_session import SearchConversationSession
 from ...entity_search.adapter import EntitySearchLookupAdapter
@@ -13,7 +16,11 @@ from ...query_understanding.provider import ProviderConfig
 from ...query_understanding.providers import AnthropicProvider, GeminiProvider, MockProvider, OpenAIProvider
 from ...query_understanding.service import QueryUnderstandingService
 from ...repositories.search_repository import SearchRepository
-from ...services.conversational_search_service import ConversationalSearchResult, ConversationalSearchService
+from ...services.conversational_search_service import (
+    ConversationalSearchResult,
+    ConversationalSearchService,
+    record_result_attributes,
+)
 
 router = APIRouter(prefix="/v1/conversation")
 
@@ -33,6 +40,30 @@ class ConversationSearchResponse(BaseModel):
     session: SearchConversationSession
     result: ConversationalSearchResult
     request_id: int | None = Field(default=None, alias="requestId")
+    trace_id: str | None = Field(default=None, alias="traceId")
+
+
+@lru_cache(maxsize=4)
+def _cached_query_service(
+    provider: str,
+    model: str,
+    api_key: str | None,
+    base_url: str | None,
+    temperature: float,
+    timeout_seconds: float,
+    max_retries: int,
+    provider_type: type,
+) -> QueryUnderstandingService:
+    config = ProviderConfig(
+        provider=provider,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        temperature=temperature,
+        timeout_seconds=timeout_seconds,
+        max_retries=max_retries,
+    )
+    return QueryUnderstandingService(provider_type(config))
 
 
 def _build_query_service(settings: Settings) -> QueryUnderstandingService:
@@ -83,16 +114,19 @@ def _build_query_service(settings: Settings) -> QueryUnderstandingService:
                 "missing. Provide the API key or change the provider."
             )
 
-    config = ProviderConfig(
-        provider=name,
-        model=settings.query_understanding_model,
-        api_key=api_key,
-        base_url=urls.get(name),
-        temperature=settings.query_understanding_temperature,
-        timeout_seconds=settings.query_understanding_timeout_seconds,
-        max_retries=settings.query_understanding_max_retries,
+    # Validation above runs on every call and still fails fast; only the
+    # construction of the (stateless) service and provider is memoised, so
+    # each request no longer rebuilds them.
+    return _cached_query_service(
+        name,
+        settings.query_understanding_model,
+        api_key,
+        urls.get(name),
+        settings.query_understanding_temperature,
+        settings.query_understanding_timeout_seconds,
+        settings.query_understanding_max_retries,
+        provider_types[name],
     )
-    return QueryUnderstandingService(provider_types[name](config))
 
 
 from ...entity_search.warmup import (
@@ -122,14 +156,28 @@ async def get_conversational_service(
 async def search_conversation(
     request: ConversationSearchRequest,
     service: ConversationalSearchService = Depends(get_conversational_service),
+    settings: Settings = Depends(get_settings),
 ) -> ConversationSearchResponse:
+    timings = current_timings()
+    if timings is not None:
+        # Everything before the handler body — dependency resolution, which is
+        # where the DB connection is checked out and the entity index awaited.
+        timings.add(
+            Phase.DEPENDENCIES,
+            max(0.0, timings.total_ms - sum(timings.phases.values())),
+        )
     updated_session, result = await service.search(
         request.query,
         session=request.session,
         language=request.language,
+        expose_timings=settings.expose_debug_timings,
     )
+    if timings is not None:
+        record_result_attributes(timings, result)
+        timings.mark_handler_complete()
     return ConversationSearchResponse(
         session=updated_session,
         result=result,
         request_id=request.request_id,
+        trace_id=result.request_id,
     )

@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "1-4b19d6e0547dcab0-full",
+  "table_counts": {
+    "rallies": 111,
+    "people": 8750,
+    "stages": 1025,
+    "participation": 9967,
+    "final_results": 326,
+    "driver_wins": 5,
+    "uploader_stats": 259,
+    "video_meta": 18510,
+    "video_actions": 32497
+  }
+}

@@ -39,7 +39,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.1
   http: ^1.2.0
-  mysql_client: ^0.0.27
+  # Zone-overridable clock. Search latency is measured through it so the same
+  # code reports real durations in production and fake-clock durations under
+  # widget tests, instead of a Stopwatch that only ever sees wall time.
+  clock: ^1.1.1
   video_player: ^2.14.0
   record: ^6.2.0
   speech_to_text: ^7.4.0
@@ -77,9 +80,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
+  # Public, non-sensitive client configuration only. The device never bundles
+  # server secrets (DB credentials, API keys) — those stay server-side.
   assets:
-    - .env
+    - assets/config/app_config.env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

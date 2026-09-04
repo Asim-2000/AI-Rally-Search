@@ -13,6 +13,7 @@ from ..domain.search_intent import SearchIntent
 from ..domain.search_query import SearchQuery
 from ..domain.summary import generate_interpreted_summary
 from ..entity_search.models import EntityCandidate, EntityResolution, SearchEntityType
+from ..observability import Phase, RequestTimings, current_request_id, current_timings
 from ..entity_search.resolver import DatabaseEntityResolver
 from ..query_understanding.context import SearchContext
 from ..query_understanding.service import QueryUnderstandingService
@@ -80,6 +81,15 @@ class ConversationalSearchResult(BaseModel):
     entity_resolution_latency_ms: float = Field(default=0, alias="entityResolutionLatencyMs")
     db_latency_ms: float = Field(default=0, alias="dbLatencyMs")
     total_latency_ms: float = Field(default=0, alias="totalLatencyMs")
+    # Correlation id for this request, carried end to end as the X-Request-Id
+    # header. Named `traceId` on the wire to stay distinct from the existing
+    # integer `requestId`, which is the client's session generation counter and
+    # serves a different purpose (stale-response rejection).
+    #
+    # The full phase breakdown lives in structured logs keyed by the same id,
+    # and is echoed into `timings` only when EXPOSE_DEBUG_TIMINGS is on.
+    request_id: str | None = Field(default=None, alias="traceId")
+    timings: dict[str, Any] | None = None
 
     @property
     def is_success(self) -> bool:
@@ -88,6 +98,23 @@ class ConversationalSearchResult(BaseModel):
     @property
     def total_count(self) -> int:
         return self.search_response.total_count if self.search_response else 0
+
+
+def record_result_attributes(
+    timings: RequestTimings, result: "ConversationalSearchResult"
+) -> None:
+    """Adds the outcome attributes of one turn to the timing record.
+
+    Called from both the service and the endpoint: the service so a directly
+    obtained debug snapshot is complete, the endpoint so the emitted log line
+    is complete even when the service is substituted.
+    """
+    timings.update(
+        intent=str(result.search_plan.intent) if result.search_plan else None,
+        clarification=result.requires_clarification,
+        error_code=result.error_code,
+        result_count=result.total_count,
+    )
 
 
 class ConversationalSearchService:
@@ -364,8 +391,42 @@ class ConversationalSearchService:
         session: SearchConversationSession | None = None,
         language: str | None = None,
         current_year: int = 2026,
+        expose_timings: bool = False,
+    ) -> tuple[SearchConversationSession, ConversationalSearchResult]:
+        """Runs one conversational turn and stamps it with request identity.
+
+        Every early return inside `_search` is a legitimate outcome
+        (clarification, no-match, parse failure), and each one is worth timing.
+        Stamping here rather than at each return site keeps the ~12 exit paths
+        from drifting apart.
+        """
+        timings = current_timings()
+        updated_session, result = await self._search(
+            natural_query,
+            session=session,
+            language=language,
+            current_year=current_year,
+        )
+        request_id = current_request_id()
+        snapshot: dict[str, Any] | None = None
+        if timings is not None:
+            record_result_attributes(timings, result)
+            if expose_timings:
+                snapshot = timings.snapshot()
+        return updated_session, result.model_copy(
+            update={"request_id": request_id, "timings": snapshot}
+        )
+
+    async def _search(
+        self,
+        natural_query: str,
+        *,
+        session: SearchConversationSession | None = None,
+        language: str | None = None,
+        current_year: int = 2026,
     ) -> tuple[SearchConversationSession, ConversationalSearchResult]:
         current_session = session or SearchConversationSession()
+        timings = current_timings()
         started = time.perf_counter()
         clean = natural_query.strip()
 
@@ -411,6 +472,16 @@ class ConversationalSearchService:
             context=search_context,
         )
         parse_ms = (time.perf_counter() - parse_start) * 1000
+        if timings is not None:
+            timings.add(Phase.QUERY_UNDERSTANDING, parse_ms)
+            timings.update(
+                query_understanding_source="gemini",
+                gemini_called=True,
+                model=parse_result.model,
+                provider=parse_result.provider,
+                provider_attempts=parse_result.attempts,
+                provider_retries=parse_result.provider_retries,
+            )
 
         if parse_result.requires_clarification:
             elapsed = (time.perf_counter() - started) * 1000
@@ -435,6 +506,7 @@ class ConversationalSearchService:
             )
             return request_session, result
 
+        recovery_start = time.perf_counter()
         parsed_query, neutralized_temporal_filters = self._neutralize_ungrounded_temporal_filters(
             parse_result.query,
             clean,
@@ -453,6 +525,10 @@ class ConversationalSearchService:
         parsed_query = self._apply_referent_fallback(
             parsed_query, request_session.referents
         )
+        if timings is not None:
+            timings.add(
+                Phase.DETERMINISTIC_RECOVERY, (time.perf_counter() - recovery_start) * 1000
+            )
         missing_subject_question = self._missing_required_subject(parsed_query)
         if missing_subject_question is not None:
             elapsed = (time.perf_counter() - started) * 1000
@@ -527,6 +603,8 @@ class ConversationalSearchService:
                 context=search_context,
             )
             er_ms = (time.perf_counter() - er_start) * 1000
+            if timings is not None:
+                timings.add(Phase.ENTITY_RESOLUTION, er_ms)
             candidates = resolution_result.candidates
             resolutions = resolution_result.resolutions
 
@@ -569,12 +647,15 @@ class ConversationalSearchService:
             })
 
         # Step 4: Deterministic SearchPlan Compilation & Validation
+        plan_start = time.perf_counter()
         try:
             search_plan = self.plan_builder.build(resolved_query, resolutions=resolutions)
             if trusted_rally_ids:
                 search_plan = search_plan.model_copy(update={
                     "event_ids": [*trusted_rally_ids, *search_plan.event_ids],
                 })
+            if timings is not None:
+                timings.add(Phase.SEARCH_PLAN, (time.perf_counter() - plan_start) * 1000)
         except UnresolvedEntityError as exc:
             elapsed = (time.perf_counter() - started) * 1000
             result = ConversationalSearchResult(
@@ -618,6 +699,8 @@ class ConversationalSearchService:
             try:
                 search_response = await self.repository.search(search_plan)
                 db_ms = (time.perf_counter() - db_start) * 1000
+                if timings is not None:
+                    timings.add(Phase.REPOSITORY_DB, db_ms)
             except Exception as exc:
                 elapsed = (time.perf_counter() - started) * 1000
                 result = ConversationalSearchResult(

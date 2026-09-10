@@ -239,7 +239,7 @@ void main() {
       expect(find.textContaining('transcript'), findsNothing);
     });
 
-    testWidgets('browse/streams affordance remains reachable from search', (
+    testWidgets('direct-DB browse/streams affordance is removed', (
       tester,
     ) async {
       final repo = CountingSearchRepository();
@@ -253,9 +253,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The Browse entry point exists in the app bar (navigation target is the
-      // RallyStreamsPage, which is retained, not deleted).
-      expect(find.byIcon(Icons.video_library_outlined), findsOneWidget);
+      // The old "Browse streams" entry point navigated to RallyStreamsPage,
+      // which connected the device directly to RDS/MySQL. That screen and its
+      // direct-DB access have been removed; the affordance must be gone.
+      expect(find.byIcon(Icons.video_library_outlined), findsNothing);
     });
   });
 }

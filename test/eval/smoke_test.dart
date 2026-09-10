@@ -16,10 +16,21 @@ void main() {
     print('🏎️  AI RALLY SEARCH — OPENAI LIVE SMOKE TEST (5 BENCHMARK CASES)');
     print('================================================================');
 
-    // Load .env
+    // Secrets are no longer bundled as an app asset. Load a developer's local
+    // on-disk .env (if present) for this live test; otherwise skip.
     final envFile = File('.env');
     if (envFile.existsSync()) {
-      await dotenv.load(fileName: '.env');
+      dotenv.loadFromString(
+        envString: envFile.readAsStringSync(),
+        isOptional: true,
+      );
+    }
+    if ((dotenv.maybeGet('OPENAI_API_KEY') ?? '').isEmpty) {
+      markTestSkipped(
+        'Live OpenAI test skipped: OPENAI_API_KEY unavailable. Provide a local '
+        '.env to run this test (keys are no longer shipped in the app bundle).',
+      );
+      return;
     }
 
     final parser = OpenAIQueryParser();

@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-09-03T20-12-12-529188Z",
+  "corpus_size": 41,
+  "intent_accuracy": 1.0,
+  "field_f1": 1.0,
+  "entity_accuracy": 1.0,
+  "clarification_accuracy": 1.0,
+  "safe_unsupported_rate": 1.0,
+  "special_accuracy": 1.0,
+  "wrong_confident": 0,
+  "offline_coverage_rate": 0.8888888888888888,
+  "execution_parity_pass": 16,
+  "execution_parity_total": 16
+}

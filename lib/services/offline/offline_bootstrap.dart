@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'offline_database.dart';
 import 'offline_search_engine.dart';
-import 'offline_search_router.dart';
+import '../latency/search_latency_coordinator.dart';
 import 'offline_snapshot_sync.dart';
 
 /// Reachability signal backed by `connectivity_plus`. A best-effort hint only —

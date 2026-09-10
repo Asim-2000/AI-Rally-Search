@@ -2,7 +2,7 @@ import 'package:ai_rally_search/l10n/generated/app_localizations.dart';
 import 'package:ai_rally_search/screens/general_search_screen.dart';
 import 'package:ai_rally_search/services/offline/offline_database.dart';
 import 'package:ai_rally_search/services/offline/offline_search_engine.dart';
-import 'package:ai_rally_search/services/offline/offline_search_router.dart';
+import 'package:ai_rally_search/services/latency/search_latency_coordinator.dart';
 import 'package:ai_rally_search/widgets/offline_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

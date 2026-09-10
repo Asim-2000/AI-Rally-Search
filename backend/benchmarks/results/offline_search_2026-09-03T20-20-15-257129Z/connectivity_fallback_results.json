@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": "ONLINE",
+    "mode": "onlineAuthoritative",
+    "ux_state": "online",
+    "silent_swap": false
+  },
+  {
+    "scenario": "OFFLINE",
+    "mode": "offlineLocal",
+    "ux_state": "offlineLocalResults",
+    "silent_swap": false
+  },
+  {
+    "scenario": "TIMEOUT",
+    "mode": "lowBandwidthLocal",
+    "ux_state": "lowBandwidthLocalFallback",
+    "silent_swap": false
+  },
+  {
+    "scenario": "BACKEND_ERROR",
+    "mode": "backendUnreachableLocal",
+    "ux_state": "backendUnreachableLocalAvailable",
+    "silent_swap": false
+  }
+]

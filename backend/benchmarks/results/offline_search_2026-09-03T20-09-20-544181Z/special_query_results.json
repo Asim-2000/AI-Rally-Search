@@ -1,0 +1,47 @@
+[
+  {
+    "query": "what is the weather",
+    "category": "weather",
+    "intercepted": true
+  },
+  {
+    "query": "hello",
+    "category": "greeting",
+    "intercepted": true
+  },
+  {
+    "query": "thanks",
+    "category": "thanks",
+    "intercepted": true
+  },
+  {
+    "query": "who are you",
+    "category": "identity",
+    "intercepted": true
+  },
+  {
+    "query": "what can you do",
+    "category": "capabilities",
+    "intercepted": true
+  },
+  {
+    "query": "tell me a joke",
+    "category": "joke",
+    "intercepted": true
+  },
+  {
+    "query": "are you alive",
+    "category": "alive",
+    "intercepted": true
+  },
+  {
+    "query": "who is the best rally driver of all time",
+    "category": "rallyOpinion",
+    "intercepted": true
+  },
+  {
+    "query": "what is the capital of france",
+    "category": "unsupported",
+    "intercepted": true
+  }
+]

@@ -1,0 +1,16 @@
+{"name":"rallies_ireland_2025","intent":"SEARCH_RALLIES","online_total":24,"offline_total":24,"match":true}
+{"name":"rallies_ireland_all","intent":"SEARCH_RALLIES","online_total":35,"offline_total":35,"match":true}
+{"name":"rallies_portugal","intent":"SEARCH_RALLIES","online_total":7,"offline_total":7,"match":true}
+{"name":"rallies_year_2026","intent":"SEARCH_RALLIES","online_total":54,"offline_total":54,"match":true}
+{"name":"rally_aluksne_byid","intent":"SEARCH_RALLIES","online_total":1,"offline_total":1,"match":true}
+{"name":"driver_rallies_freeman","intent":"SEARCH_DRIVER_RALLIES","online_total":9,"offline_total":9,"match":true}
+{"name":"driver_wins_moffett","intent":"SEARCH_DRIVER_WINS","online_total":1,"offline_total":1,"match":true}
+{"name":"rally_results_aluksne","intent":"GET_RALLY_RESULTS","online_total":1,"offline_total":1,"match":true}
+{"name":"rally_results_donegal","intent":"GET_RALLY_RESULTS","online_total":1,"offline_total":1,"match":true}
+{"name":"top_finishers_aluksne","intent":"GET_RALLY_TOP_FINISHERS","online_total":81,"offline_total":81,"match":true}
+{"name":"top_finishers_donegal","intent":"GET_RALLY_TOP_FINISHERS","online_total":164,"offline_total":164,"match":true}
+{"name":"top_uploaders_global","intent":"GET_TOP_UPLOADERS","online_total":259,"offline_total":259,"match":true}
+{"name":"top_drivers_by_wins","intent":"GET_TOP_DRIVERS_BY_WINS","online_total":5,"offline_total":5,"match":true}
+{"name":"driver_videos_freeman","intent":"SEARCH_DRIVER_VIDEOS","online_total":53,"offline_total":53,"match":true}
+{"name":"video_actions_jumps","intent":"SEARCH_VIDEO_ACTIONS","online_total":3077,"offline_total":3077,"match":true}
+{"name":"video_actions_crashes","intent":"SEARCH_VIDEO_ACTIONS","online_total":1627,"offline_total":1627,"match":true}

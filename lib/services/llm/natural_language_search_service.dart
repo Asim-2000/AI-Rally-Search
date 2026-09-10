@@ -202,12 +202,11 @@ class NaturalLanguageSearchService {
   NaturalLanguageSearchService({
     required this.parser,
     required this.entityResolver,
-    ISearchRepository? repository,
+    required this.repository,
     VoiceEntityRecoveryService? voiceRecoveryService,
     SpecialQueryMatcher? specialQueryMatcher,
     FriendlyResponseService? friendlyResponses,
-  }) : repository = repository ?? SearchRepository(),
-       voiceRecoveryService =
+  }) : voiceRecoveryService =
            voiceRecoveryService ?? const VoiceEntityRecoveryService(),
        specialQueryMatcher = specialQueryMatcher ?? const SpecialQueryMatcher(),
        friendlyResponses = friendlyResponses ?? const FriendlyResponseService();

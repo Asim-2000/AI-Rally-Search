@@ -1,0 +1,6 @@
+{
+  "cloud_voice_offline": "NO (network required)",
+  "on_device_voice_offline": "DEVICE_DEPENDENT (only where OS on-device recognizer supports it)",
+  "auto_submit": false,
+  "transcript_editable": true
+}

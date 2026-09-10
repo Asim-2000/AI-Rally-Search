@@ -6,7 +6,9 @@ import 'services/offline/offline_bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  // Loads PUBLIC client config only (API base URL, non-secret speech settings).
+  // Server secrets (DB credentials, API keys) are never bundled in the app.
+  await dotenv.load(fileName: 'assets/config/app_config.env');
 
   // Initialise the offline search stack (local SQLite snapshot + sync). Fully
   // guarded: on any failure this returns null and the app runs online-only.

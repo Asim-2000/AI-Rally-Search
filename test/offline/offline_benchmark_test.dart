@@ -6,7 +6,9 @@ import 'package:ai_rally_search/models/search_query.dart';
 import 'package:ai_rally_search/services/offline/offline_database.dart';
 import 'package:ai_rally_search/services/offline/offline_query_parser.dart';
 import 'package:ai_rally_search/services/offline/offline_search_engine.dart';
-import 'package:ai_rally_search/services/offline/offline_search_router.dart';
+import 'package:ai_rally_search/services/latency/latency_policy.dart';
+import 'package:ai_rally_search/services/latency/search_latency_coordinator.dart';
+import 'package:ai_rally_search/services/latency/search_telemetry.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -395,10 +397,34 @@ class _Probe implements ConnectivityProbe {
 
 Future<List<Map<String, dynamic>>> _connectivityScenarios(OfflineSearchEngine engine) async {
   final results = <Map<String, dynamic>>[];
-  Future<void> run(String scenario, ConnectivityProbe probe, Future<String> Function() online, {Duration budget = const Duration(seconds: 4)}) async {
-    final router = OfflineSearchRouter<String>(connectivity: probe, engine: engine, fallbackBudget: budget);
-    final r = await router.route(rawText: 'rallies in ireland in 2025', online: online);
-    results.add({'scenario': scenario, 'mode': r.mode.name, 'ux_state': r.uxState.name, 'silent_swap': false});
+  Future<void> run(
+    String scenario,
+    ConnectivityProbe probe,
+    Future<String> Function() online, {
+    Duration budget = const Duration(seconds: 4),
+  }) async {
+    final coordinator = SearchLatencyCoordinator<String>(
+      connectivity: probe,
+      engine: engine,
+      policy: LatencyPolicy(
+        onlineResultBudget: budget,
+        overallOnlineTimeout: const Duration(seconds: 10),
+      ),
+    );
+    final events = await coordinator
+        .run(generation: 1, rawText: 'rallies in ireland in 2025', online: online)
+        .toList();
+    // A late authoritative result is offered, never applied, so no scenario can
+    // silently swap what the user is looking at.
+    final swapped = events
+        .where((e) => e.stage == SearchStage.lateOnlineAvailable)
+        .any((e) => e.isTerminalRender);
+    results.add({
+      'scenario': scenario,
+      'stages': events.map((e) => e.stage.name).toList(),
+      'result_source': events.first.source.wireName,
+      'silent_swap': swapped,
+    });
   }
 
   await run('ONLINE', _Probe(true), () async => 'ONLINE');

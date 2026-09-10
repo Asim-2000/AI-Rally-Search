@@ -6,6 +6,7 @@ enum OfflineUxState {
   offlineLocalResults,
   offlineStaleResults,
   lowBandwidthLocalFallback,
+  lateOnlineResultAvailable,
   backendUnreachableLocalAvailable,
   backendUnreachableLocalUnsupported,
   noLocalSnapshot,
@@ -49,9 +50,14 @@ class OfflineMessagingService {
       'Show results; offer refresh when online',
     ),
     OfflineUxState.lowBandwidthLocalFallback: OfflineMessage(
-      'Bit of a slow stage out there…',
-      "We're using local rally data while the connection catches up.",
+      'Taking the service road',
+      'Showing saved rally data while the connection catches up.',
       'Show local now; keep trying online',
+    ),
+    OfflineUxState.lateOnlineResultAvailable: OfflineMessage(
+      'HQ has fresh results',
+      'The full search finished. Saved data is on screen until you switch.',
+      'Show latest',
     ),
     OfflineUxState.backendUnreachableLocalAvailable: OfflineMessage(
       "The pit crew can't reach HQ right now",

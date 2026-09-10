@@ -43,6 +43,16 @@ class Settings(BaseSettings):
     db_user: str = ""
     db_password: SecretStr = SecretStr("")
     db_use_ssl: bool = False
+    # Connection pooling. Sized for a small Railway container: enough warm
+    # connections to absorb bursts without exhausting MySQL's max_connections
+    # across workers. `recycle` stays well under a typical 8h wait_timeout.
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
+    db_pool_timeout_seconds: float = 10.0
+    db_pool_recycle_seconds: int = 1800
+    # Per-request phase timings are attached to the response only when this is
+    # on. Production correlates via request_id in structured logs instead.
+    expose_debug_timings: bool = False
     entity_search_fallback_mode: str = "FALLBACK"
     query_understanding_provider: str = "mock"
     query_understanding_model: str = "mock-parser-v1"
